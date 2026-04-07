@@ -161,9 +161,10 @@ export default function Customers({ darkMode }) {
         </div>
 
         {/* TABLE HEADER */}
+        {/* TABLE HEADER */}
         <div className="px-4 pt-3">
           <div
-            className={`grid grid-cols-7 px-4 py-3 text-sm font-semibold rounded-lg ${
+            className={`grid grid-cols-[60px_2.2fr_2fr_1.6fr_1fr_1.4fr_1fr] px-4 py-3 text-sm font-semibold rounded-lg ${
               darkMode ? "bg-gray-600 text-white" : "bg-gray-100 text-gray-700"
             }`}
           >
@@ -181,30 +182,27 @@ export default function Customers({ darkMode }) {
           {customers.map((customer) => (
             <div
               key={customer.id}
-              className={`grid grid-cols-7 items-center px-4 py-4 border-b last:border-b-0 ${
+              className={`grid grid-cols-[60px_2.2fr_2fr_1.6fr_1fr_1.4fr_1fr] items-center px-4 py-4 border-b last:border-b-0 ${
                 darkMode ? "border-gray-600" : "border-gray-100"
               }`}
             >
-              {/* ID */}
               <span>{customer.id}</span>
 
-              {/* Name */}
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
-                <span className="font-medium">{customer.name}</span>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 bg-gray-300 rounded-full shrink-0"></div>
+                <span className="font-medium truncate">{customer.name}</span>
               </div>
 
-              {/* Email */}
-              <span className={darkMode ? "text-gray-300" : "text-gray-500"}>
+              <span
+                className={`truncate ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+              >
                 {customer.email}
               </span>
 
-              {/* Phone */}
               <span className={darkMode ? "text-gray-300" : "text-gray-500"}>
                 {customer.phone}
               </span>
 
-              {/* Status */}
               <span
                 className={`text-xs font-semibold px-3 py-1 rounded-full w-fit ${
                   customer.status === "Active"
@@ -217,20 +215,18 @@ export default function Customers({ darkMode }) {
                 {customer.status}
               </span>
 
-              {/* Joined */}
               <span className={darkMode ? "text-gray-300" : "text-gray-500"}>
                 {customer.joined}
               </span>
 
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                <button className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100">
+              <div className="flex items-center gap-2 justify-start ">
+                <button className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 cursor-pointer">
                   <Pencil size={16} />
                 </button>
-                <button className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100">
+                <button className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer">
                   <Trash2 size={16} />
                 </button>
-                <button className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100">
+                <button className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer">
                   <Eye size={16} />
                 </button>
               </div>
