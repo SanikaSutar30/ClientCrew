@@ -95,8 +95,12 @@ const sourceData = [
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-
+        <div>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <p className="text-sm text-gray-500">
+            Monitor your business metrics and performance
+          </p>
+        </div>
         <div className="relative">
           <div
             onClick={() => setOpen(!open)}
@@ -536,16 +540,13 @@ const sourceData = [
               <div
                 key={customer.id}
                 className="grid grid-cols-[2fr_2fr_auto] items-center px-3 py-2 hover:bg-gray-100 rounded-xl transition cursor-pointer dark:hover:bg-gray-300"
-
               >
                 {/* Name */}
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 bg-gray-300 rounded-full">
                     <span className="w-full h-full rounded-full overflow-hidden block">
-                    <img
-src="/assets/Profile4.jpg"
-                      alt=""
-                    /></span>
+                      <img src="/assets/Profile4.jpg" alt="" />
+                    </span>
                   </div>
                   <span className="font-medium">{customer.name}</span>
                 </div>
