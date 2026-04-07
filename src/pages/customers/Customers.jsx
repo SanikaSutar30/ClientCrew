@@ -1,62 +1,78 @@
+// This is a React component for managing customers in a frontend application. It includes features such as searching, filtering, sorting, pagination, and adding new customers through a modal form. The component uses state to manage the list of customers and the UI interactions.
+// The AddCustomer component is a child component that renders a modal form for adding a new customer. It receives props from the Customers component to control its visibility and to pass the new customer data back up when the form is submitted.
+// The Customers component also includes action buttons for exporting customer data and navigating to the add customer form, as well as stats cards that display summary information about the customers. The main table displays the list of customers with options to edit, delete, or view details for each customer.
+// The component is styled using Tailwind CSS classes and includes support for dark mode based on the `darkMode` prop.
+// Note: The actual data management (e.g., fetching from an API, updating, deleting) is not implemented in this code and would need to be added for a fully functional application.
+// The code is structured to allow for easy integration with a backend API in the future, where the customer data would be fetched and manipulated through API calls rather than being stored in local state.
+// The component also includes pagination logic to handle large lists of customers, allowing users to navigate through pages of customer data. The search and filter functionality allows users to quickly find specific customers based on their name, email, or status.
+// Overall, this component provides a comprehensive UI for managing customers in a frontend application, with a focus on usability and functionality.
+// The Customers component is the main component for displaying and managing customers. It includes a header with action buttons, stats cards, a search and filter row, a table of customers, and pagination controls. The AddCustomer component is used as a modal form for adding new customers to the list. The component uses state to manage the list of customers, the search term, filters, sort order, pagination, and the visibility of the add customer modal.
+// The component is designed to be responsive and supports dark mode styling based on the `darkMode` prop. The customer data is currently stored in local state for demonstration purposes, but it can be easily integrated with a backend API for real data management. The component includes features such as searching, filtering, sorting, and pagination to enhance the user experience when managing a large list of customers.
 import { Search, Plus, Download, Eye, Pencil, Trash2 } from "lucide-react";
+// 
 import { useState } from "react";
-// Mock customer data- in real app, this would come from an API
-const customers = [
-  {
-    id: 1,
-    name: "Rahul Sharma",
-    email: "rahul@gmail.com",
-    phone: "+91 9876543210",
-    status: "Active",
-    joined: "Jan 12, 2024",
-  },
-  {
-    id: 2,
-    name: "Amit Patil",
-    email: "amit@gmail.com",
-    phone: "+91 9123456789",
-    status: "Active",
-    joined: "Feb 03, 2024",
-  },
-  {
-    id: 3,
-    name: "Priya Singh",
-    email: "priya@gmail.com",
-    phone: "+91 9988776655",
-    status: "Pending",
-    joined: "Mar 18, 2024",
-  },
-  {
-    id: 4,
-    name: "John Doe",
-    email: "john@gmail.com",
-    phone: "+91 8877655443",
-    status: "Inactive",
-    joined: "Apr 02, 2024",
-  },
-  {
-    id: 5,
-    name: "Neha Verma",
-    email: "neha@gmail.com",
-    phone: "+91 9284711223",
-    status: "Active",
-    joined: "Apr 10, 2024",
-  },
-  {
-    id: 6,
-    name: "Suresh Reddy",
-    email: "suresh@gmail.com",
-    phone: "+91 9032144556",
-    status: "Active",
-    joined: "May 22, 2024",
-  },
-];
+import AddCustomer from "./AddCustomer";
 
+
+// This component is the main page for managing customers. It includes a header with action buttons, stats cards, a search and filter row, a table of customers, and pagination controls. It also manages the state for the list of customers, search term, filters, sort order, pagination, and the visibility of the add customer modal. The AddCustomer component is used as a modal form for adding new customers to the list.
 export default function Customers({ darkMode }) {
+  // Sample customer data stored in state. In a real application, this would likely come from an API call.
+  const [customers, setCustomers] = useState([
+    {
+      id: 1,
+      name: "Rahul Sharma",
+      email: "rahul@gmail.com",
+      phone: "+91 9876543210",
+      status: "Active",
+      joinedDate: "2024-01-12",
+    },
+    {
+      id: 2,
+      name: "Amit Patil",
+      email: "amit@gmail.com",
+      phone: "+91 9123456789",
+      status: "Active",
+      joinedDate: "2024-02-03",
+    },
+    {
+      id: 3,
+      name: "Priya Singh",
+      email: "priya@gmail.com",
+      phone: "+91 9988776655",
+      status: "Pending",
+      joinedDate: "2024-03-18",
+    },
+    {
+      id: 4,
+      name: "John Doe",
+      email: "john@gmail.com",
+      phone: "+91 8877655443",
+      status: "Inactive",
+      joinedDate: "2024-04-02",
+    },
+    {
+      id: 5,
+      name: "Neha Verma",
+      email: "neha@gmail.com",
+      phone: "+91 9284711223",
+      status: "Active",
+      joinedDate: "2024-04-10",
+    },
+    {
+      id: 6,
+      name: "Suresh Reddy",
+      email: "suresh@gmail.com",
+      phone: "+91 9032144556",
+      status: "Active",
+      joinedDate: "2024-05-22",
+    },
+  ]);
   // State for search term, status filter, and sort order
   const [searchTerm, setSearchTerm] = useState("");
+
   // Status filter can be "All", "Active", "Pending", or "Inactive"
   const [statusFilter, setStatusFilter] = useState("All");
+
   // Sort order can be "Newest" or "Oldest"
   const [sortOrder, setSortOrder] = useState("Newest");
 
@@ -74,12 +90,22 @@ export default function Customers({ darkMode }) {
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
-      const dateA = new Date(a.joined);
-      const dateB = new Date(b.joined);
+      const dateA = new Date(a.joinedDate);
+      const dateB = new Date(b.joinedDate);
 
       return sortOrder === "Newest" ? dateB - dateA : dateA - dateB;
     });
-
+  
+// 
+  const handleAddCustomer = (newCustomer) => {
+    setCustomers((prev) => [
+      {
+        id: prev.length + 1, // temporary (backend will handle later)
+        ...newCustomer,
+      },
+      ...prev, // add on top
+    ]);
+  };
   // Pagination logic
   const [currentPage, setCurrentPage] = useState(1);
   //  In a real app, itemsPerPage might be a user setting or come from API response
@@ -87,15 +113,24 @@ export default function Customers({ darkMode }) {
 
   const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
 
+  // Ensure currentPage is within valid range after filtering
   const safeCurrentPage =
     totalPages === 0 ? 1 : Math.min(currentPage, totalPages);
 
+  // Calculate the customers to display on the current page
   const paginatedCustomers = filteredCustomers.slice(
     (safeCurrentPage - 1) * itemsPerPage,
     safeCurrentPage * itemsPerPage,
   );
+
+  // State to control visibility of the Add Customer modal
+  const [showAddModal, setShowAddModal] = useState(false);
   return (
     <div className="space-y-6">
+      {showAddModal && (
+        <AddCustomer darkMode={darkMode} setShowAddModal={setShowAddModal}
+          onAddCustomer={handleAddCustomer} />
+      )}
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <div>
@@ -118,7 +153,11 @@ export default function Customers({ darkMode }) {
             Export
           </button>
 
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-[#0f766e] text-white hover:opacity-90 cursor-pointer">
+          <button
+            // navigate to a customer creation form
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-[#0f766e] text-white hover:opacity-90 cursor-pointer"
+          >
             <Plus size={16} />
             Add Customer
           </button>
@@ -221,7 +260,6 @@ export default function Customers({ darkMode }) {
         </div>
 
         {/* TABLE HEADER */}
-        {/* TABLE HEADER */}
         <div className="px-4 pt-3">
           <div
             className={`grid grid-cols-[60px_2.2fr_2fr_1.6fr_1fr_1.4fr_1fr] px-4 py-3 text-sm font-semibold rounded-lg ${
@@ -283,7 +321,8 @@ export default function Customers({ darkMode }) {
                 </span>
 
                 <span className={darkMode ? "text-gray-300" : "text-gray-500"}>
-                  {customer.joined}
+                  {/*  */}
+                  {new Date(customer.joinedDate).toLocaleDateString()}
                 </span>
 
                 <div className="flex items-center gap-2 justify-start">
