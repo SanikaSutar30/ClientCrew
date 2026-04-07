@@ -1,4 +1,56 @@
-import { Search, Plus, Download } from "lucide-react";
+import { Search, Plus, Download, Eye, Pencil, Trash2 } from "lucide-react";
+
+// Mock customer data- in real app, this would come from an API
+const customers = [
+  {
+    id: 1,
+    name: "Rahul Sharma",
+    email: "rahul@gmail.com",
+    phone: "+91 9876543210",
+    status: "Active",
+    joined: "Jan 12, 2024",
+  },
+  {
+    id: 2,
+    name: "Amit Patil",
+    email: "amit@gmail.com",
+    phone: "+91 9123456789",
+    status: "Active",
+    joined: "Feb 03, 2024",
+  },
+  {
+    id: 3,
+    name: "Priya Singh",
+    email: "priya@gmail.com",
+    phone: "+91 9988776655",
+    status: "Pending",
+    joined: "Mar 18, 2024",
+  },
+  {
+    id: 4,
+    name: "John Doe",
+    email: "john@gmail.com",
+    phone: "+91 8877655443",
+    status: "Inactive",
+    joined: "Apr 02, 2024",
+  },
+  {
+    id: 5,
+    name: "Neha Verma",
+    email: "neha@gmail.com",
+    phone: "+91 9284711223",
+    status: "Active",
+    joined: "Apr 10, 2024",
+  },
+  {
+    id: 6,
+    name: "Suresh Reddy",
+    email: "suresh@gmail.com",
+    phone: "+91 9032144556",
+    status: "Active",
+    joined: "May 22, 2024",
+  },
+];
 
 export default function Customers({ darkMode }) {
   return (
@@ -125,9 +177,65 @@ export default function Customers({ darkMode }) {
           </div>
         </div>
 
-        {/* EMPTY STATE */}
-        <div className="p-6 text-center text-gray-500 text-sm">
-          No customers found
+        <div className="px-4 pb-4">
+          {customers.map((customer) => (
+            <div
+              key={customer.id}
+              className={`grid grid-cols-7 items-center px-4 py-4 border-b last:border-b-0 ${
+                darkMode ? "border-gray-600" : "border-gray-100"
+              }`}
+            >
+              {/* ID */}
+              <span>{customer.id}</span>
+
+              {/* Name */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+                <span className="font-medium">{customer.name}</span>
+              </div>
+
+              {/* Email */}
+              <span className={darkMode ? "text-gray-300" : "text-gray-500"}>
+                {customer.email}
+              </span>
+
+              {/* Phone */}
+              <span className={darkMode ? "text-gray-300" : "text-gray-500"}>
+                {customer.phone}
+              </span>
+
+              {/* Status */}
+              <span
+                className={`text-xs font-semibold px-3 py-1 rounded-full w-fit ${
+                  customer.status === "Active"
+                    ? "bg-green-100 text-green-600"
+                    : customer.status === "Pending"
+                      ? "bg-orange-100 text-orange-600"
+                      : "bg-red-100 text-red-600"
+                }`}
+              >
+                {customer.status}
+              </span>
+
+              {/* Joined */}
+              <span className={darkMode ? "text-gray-300" : "text-gray-500"}>
+                {customer.joined}
+              </span>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2">
+                <button className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100">
+                  <Pencil size={16} />
+                </button>
+                <button className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100">
+                  <Trash2 size={16} />
+                </button>
+                <button className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100">
+                  <Eye size={16} />
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
