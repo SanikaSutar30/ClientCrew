@@ -85,16 +85,15 @@ export default function Customers({ darkMode }) {
   //  In a real app, itemsPerPage might be a user setting or come from API response
   const itemsPerPage = 5;
 
+  const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
 
-const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
+  const safeCurrentPage =
+    totalPages === 0 ? 1 : Math.min(currentPage, totalPages);
 
-const safeCurrentPage =
-  totalPages === 0 ? 1 : Math.min(currentPage, totalPages);
-
-const paginatedCustomers = filteredCustomers.slice(
-  (safeCurrentPage - 1) * itemsPerPage,
-  safeCurrentPage * itemsPerPage,
-);
+  const paginatedCustomers = filteredCustomers.slice(
+    (safeCurrentPage - 1) * itemsPerPage,
+    safeCurrentPage * itemsPerPage,
+  );
   return (
     <div className="space-y-6">
       {/* HEADER */}
@@ -177,7 +176,7 @@ const paginatedCustomers = filteredCustomers.slice(
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                setCurrentPage(1); // Reset to first page on new search 
+                setCurrentPage(1); // Reset to first page on new search
               }}
               className="bg-transparent outline-none ml-2 w-full text-sm"
             />
@@ -346,7 +345,7 @@ const paginatedCustomers = filteredCustomers.slice(
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`w-9 h-9 rounded-lg text-sm font-medium transition ${
+                  className={`w-9 h-9 rounded-lg text-sm font-medium transition cursor-pointer ${
                     currentPage === page
                       ? "bg-[#0f766e] text-white"
                       : darkMode
