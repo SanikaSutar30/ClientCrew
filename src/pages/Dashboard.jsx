@@ -422,9 +422,10 @@ const sourceData = [
                 className="flex items-center justify-between gap-3"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full bg-gray-300"></div>
-
-                  <div>
+                  <div className="w-11 h-11 rounded-full bg-gray-300">
+                    <img src="../assets/Profile.jpg" alt="" />
+                  </div>
+                  <div> 
                     <h3
                       className={`text-base font-semibold ${
                         darkMode ? "text-white" : "text-black"

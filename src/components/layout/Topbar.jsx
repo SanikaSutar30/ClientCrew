@@ -39,7 +39,7 @@ function Topbar({ darkMode, setDarkMode }) {
     <div
       className={`h-16 flex items-center justify-between px-6 
         
-  ${darkMode ? "bg-gray-800 text-white" : "bg-gray-100 text-black"}
+  ${darkMode ? "bg-gray-800 text-black" : "bg-gray-100 text-black"}
 `}
     >
       {/* LEFT: Search */}
