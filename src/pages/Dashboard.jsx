@@ -273,6 +273,7 @@ const sourceData = [
             </div>
           </div>
 
+          
           <div className="flex items-end justify-between mt-4">
             <h2
               className={`text-2xl font-bold ${darkMode ? "text-white" : "text-black"}`}
@@ -288,7 +289,14 @@ const sourceData = [
       </div>
 
       {/* Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-gray-100">
+      <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 bg-gray-100 ${
+        darkMode ? "bg-gray-800" : "bg-gray-100"
+       } p-6 rounded-2xl border ${
+         darkMode           ? "border-gray-600"
+                           : "border-gray-200"
+        }`}>      
+    
+       {/*  */}
         <div
           className={`lg:col-span-2 p-6 rounded-2xl shadow-sm ${
             darkMode
@@ -540,7 +548,7 @@ const sourceData = [
             {recentCustomers.slice(0, 4).map((customer) => (
               <div
                 key={customer.id}
-                className="grid grid-cols-[2fr_2fr_auto] items-center px-3 py-2 hover:bg-gray-100 rounded-xl transition cursor-pointer dark:hover:bg-gray-300"
+                className="grid grid-cols-[2fr_2fr_auto] items-center px-3 py-2 hover:bg-gray-100 rounded-xl transition cursor-pointer dark:hover:bg-gray-500"
               >
                 {/* Name */}
                 <div className="flex items-center gap-2">
