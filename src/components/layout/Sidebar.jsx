@@ -11,7 +11,7 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
-import LogoutConfirmModal from "./LogoutConfirmModal";
+import LogoutConfirmModal from "../../pages/LogoutConfirmModal";
 
 const menu = [
   {
