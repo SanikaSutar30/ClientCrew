@@ -8,18 +8,22 @@
 // Overall, this component provides a comprehensive UI for managing customers in a frontend application, with a focus on usability and functionality.
 // The Customers component is the main component for displaying and managing customers. It includes a header with action buttons, stats cards, a search and filter row, a table of customers, and pagination controls. The AddCustomer component is used as a modal form for adding new customers to the list. The component uses state to manage the list of customers, the search term, filters, sort order, pagination, and the visibility of the add customer modal.
 // The component is designed to be responsive and supports dark mode styling based on the `darkMode` prop. The customer data is currently stored in local state for demonstration purposes, but it can be easily integrated with a backend API for real data management. The component includes features such as searching, filtering, sorting, and pagination to enhance the user experience when managing a large list of customers.
-import { Search, Plus, Download, Eye, Pencil, Trash2 } from "lucide-react";
-//
-import { useState } from "react";
-import AddCustomer from "./AddCustomer";
-// 
-import { useOutletContext } from "react-router-dom";
 
-// This component is the main page for managing customers. It includes a header with action buttons, stats cards, a search and filter row, a table of customers, and pagination controls. It also manages the state for the list of customers, search term, filters, sort order, pagination, and the visibility of the add customer modal. The AddCustomer component is used as a modal form for adding new customers to the list.
+import { useState } from "react";
+// Importing icons from lucide-react for use in the UI
+import { Search, Plus, Download, Eye, Pencil, Trash2 } from "lucide-react";
+// useOutletContext is used to access the context provided by the parent layout, which includes the dark mode setting.
+import { useOutletContext } from "react-router-dom";
+// Importing the AddCustomer component which is used as a modal form for adding new customers.
+import AddCustomer from "./AddCustomer";
+
 export default function Customers() {
-  // Get dark mode setting from context (if using React Router's OutletContext)
+
+  // Get dark mode value from layout outlet context
   const { darkMode } = useOutletContext();
-  // Sample customer data stored in state. In a real application, this would likely come from an API call.
+
+  // Customer list stored in local state for now.
+  // Later this can come from Spring Boot API response.
   const [customers, setCustomers] = useState([
     {
       id: 1,
@@ -70,24 +74,48 @@ export default function Customers() {
       joinedDate: "2024-05-22",
     },
   ]);
-  // State for search term, status filter, and sort order
+
+  // Table control states
+  // These states are used to manage the search term, status filter, sort order, and current page for pagination.
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Status filter can be "All", "Active", "Pending", or "Inactive"
+  // Status filter state with default value "All"
   const [statusFilter, setStatusFilter] = useState("All");
-
-  // Sort order can be "Newest" or "Oldest"
+  // Sort order state with default value "Newest"
   const [sortOrder, setSortOrder] = useState("Newest");
+  // Current page state for pagination with default value 1
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Filter and sort customers based on search term, status filter, and sort order
+  // Modal visibility state
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  // Fixed page size for now.
+  // Later backend pagination can control this.
+  const itemsPerPage = 5;
+
+  // Add new customer to top of table.
+  // Later this logic can be replaced by POST API call.
+  const handleAddCustomer = (newCustomer) => {
+    setCustomers((prev) => [
+      {
+        id: prev.length + 1,
+        ...newCustomer,
+      },
+      ...prev,
+    ]);
+    setCurrentPage(1);
+  };
+
+  // Filter + sort customers
+  // This logic filters the customers based on the search term and status filter, and then sorts them by joined date according to the selected sort order. The filtered and sorted list is then used for pagination and display in the table.
   const filteredCustomers = customers
     .filter((customer) => {
+      const search = searchTerm.toLowerCase();
       const matchesSearch =
-        customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.id.toString().includes(searchTerm);
+        customer.id.toString().includes(searchTerm) ||
+        customer.name.toLowerCase().includes(search) ||
+        customer.email.toLowerCase().includes(search) ||
+        customer.phone.includes(searchTerm);
 
-      // Status filter logic: If the status filter is set to "All", all customers match. Otherwise, only customers whose status matches the selected filter will match.
       const matchesStatus =
         statusFilter === "All" || customer.status === statusFilter;
 
@@ -100,77 +128,69 @@ export default function Customers() {
       return sortOrder === "Newest" ? dateB - dateA : dateA - dateB;
     });
 
-  // Handler for adding a new customer. This function takes the new customer data, creates a new customer object with a temporary ID, and updates the customers state by adding the new customer to the top of the list. In a real application, you would likely send this data to a backend API and receive an ID in response, rather than generating it on the frontend.
-  const handleAddCustomer = (newCustomer) => {
-    setCustomers((prev) => [
-      {
-        id: prev.length + 1, // temporary (backend will handle later)
-        ...newCustomer,
-      },
-      ...prev, // add on top
-    ]);
-  };
-
-  // Pagination logic
-  // currentPage state to track the current page number. itemsPerPage is set to 5, which means each page will display 5 customers. totalPages is calculated based on the length of the filteredCustomers array divided by itemsPerPage. safeCurrentPage ensures that the current page number is always within the valid range (1 to totalPages). paginatedCustomers is a slice of the filteredCustomers array that contains only the customers that should be displayed on the current page.
-  const [currentPage, setCurrentPage] = useState(1);
-
-  //  In a real app, itemsPerPage might be a user setting or come from API response
-  const itemsPerPage = 5;
-
-
-  // Calculate total pages based on the number of filtered customers and items per page. This determines how many pages of customers there will be for pagination.
+  // Pagination calculations
+  // This logic calculates the total number of pages based on the length of the filtered customers and the number of items per page. It also ensures that the current page is within valid bounds, especially when filters are applied that may reduce the number of customers. The paginatedCustomers variable then slices the filtered list to get only the customers that should be displayed on the current page.
   const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
-
-  // Ensure currentPage is within valid range after filtering
+  // Ensure current page is within valid bounds after filtering
   const safeCurrentPage =
     totalPages === 0 ? 1 : Math.min(currentPage, totalPages);
 
-  // Calculate the customers to display on the current page
+  // Get customers for current page based on pagination
   const paginatedCustomers = filteredCustomers.slice(
     (safeCurrentPage - 1) * itemsPerPage,
     safeCurrentPage * itemsPerPage,
   );
 
-  // State to control visibility of the Add Customer modal
-  const [showAddModal, setShowAddModal] = useState(false);
+  // Utility function to return badge color by status
+  // This function takes a customer status as input and returns the appropriate Tailwind CSS classes for the background and text color of the status badge. It uses a switch statement to determine the classes based on the status value (e.g., "Active", "Pending", "Inactive") and provides a default case for any unrecognized status.
+  const getStatusClasses = (status) => {
+    switch (status) {
+      case "Active":
+        return "bg-green-100 text-green-600";
+      case "Pending":
+        return "bg-orange-100 text-orange-600";
+      case "Inactive":
+        return "bg-red-100 text-red-600";
+      default:
+        return "bg-gray-100 text-gray-600";
+    }
+  };
+
+
   return (
-    // The main container for the Customers page. It includes conditional rendering for the AddCustomer modal, a header with action buttons, stats cards, a search and filter row, a table of customers, and pagination controls. The styling adapts to dark mode based on the `darkMode` prop.
+    // Main container with vertical spacing between sections
     <div className="space-y-6">
-      // Conditional rendering of the AddCustomer modal. When `showAddModal` is true, the AddCustomer component is rendered as a modal form. The `darkMode`, `setShowAddModal`, and `handleAddCustomer` props are passed down to the AddCustomer component to control its appearance and functionality.
+      {/* Add Customer modal */}
       {showAddModal && (
         <AddCustomer
-          
-          // The `darkMode` prop is passed to the AddCustomer component to allow it to adapt its styling based on the current theme. The `setShowAddModal` function is passed down to allow the AddCustomer component to control its own visibility (e.g., to close the modal after adding a customer). The `handleAddCustomer` function is passed down as a callback that the AddCustomer component can call when a new customer is added, allowing the Customers component to update its state with the new customer data.
           darkMode={darkMode}
-          // The `setShowAddModal` function is passed down to the AddCustomer component to allow it to control its own visibility. This means that when the form in the AddCustomer component is submitted, it can call `setShowAddModal(false)` to close the modal after adding a new customer.
           setShowAddModal={setShowAddModal}
-          // The `handleAddCustomer` function is passed down as a callback to the AddCustomer component. When a new customer is added through the form in the AddCustomer component, it can call this function with the new customer data, allowing the Customers component to update its state and include the new customer in the list.
           onAddCustomer={handleAddCustomer}
         />
       )}
 
-
-      {/* HEADER */}
-      // The header section of the Customers page includes the title "Customers" and a subtitle that describes the purpose of the page. It also contains action buttons for exporting customer data and adding a new customer. The styling of the text adapts to dark mode based on the `darkMode` prop, ensuring that the text is visible and appropriately styled in both light and dark themes.
+      {/* Page header */}
+      {/* The header section includes the page title, a description, and action buttons for exporting data and adding a new customer. The export button is styled with an icon and changes appearance on hover, while the add customer button opens the modal form when clicked. */}
       <div className="flex items-center justify-between">
+
+        {/* // Page title and description */}
         <div>
-          // The main title of the page, "Customers", is displayed in a large, bold font. Below the title, there is a subtitle that provides additional context about the page, indicating that it is for managing customers and their information. The text color of the subtitle adapts to dark mode based on the `darkMode` prop, ensuring that it remains readable in both themes.
+          {/* // The page title "Customers" is displayed prominently, with a smaller description below it that provides context about managing customers and their information. The text color of the description changes based on the dark mode setting to ensure readability. */}
           <h1 className="text-2xl font-bold">Customers</h1>
           
-          // The subtitle provides additional context about the page, indicating that it is for managing customers and their information. The text color of the subtitle adapts to dark mode based on the `darkMode` prop, ensuring that it remains readable in both themes. The subtitle is styled with a smaller font size and a muted color to differentiate it from the main title while still providing useful information to the user.
+          {/* // The description text provides additional context about the page's purpose, which is to manage customers and their information. The text color adapts to the dark mode setting for better visibility. */}
           <p
-            className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+            className={`text-sm ${
+              darkMode ? "text-gray-300" : "text-gray-500"
+            }`}
           >
             Manage your customers and their information
           </p>
         </div>
 
-        {/* ACTION BUTTONS */}
-        // The action buttons include an "Export" button with a download icon and an "Add Customer" button with a plus icon. The "Export" button is styled with a background color and text color that adapts to dark mode, and it includes a hover effect for better user interaction. The "Add Customer" button is styled with a distinct background color to make it stand out, and it also includes a hover effect. When the "Add Customer" button is clicked, it sets the `showAddModal` state to true, which triggers the display of the AddCustomer modal form.
+        {/* Header action buttons */}
+        {/* // The action buttons include an export button and an add customer button. The export button is styled with a download icon and changes appearance on hover, while the add customer button is styled with a plus icon and opens the add customer modal when clicked. Both buttons adapt their styles based on the dark mode setting for consistency with the overall theme of the application. */}
         <div className="flex gap-3">
-
-          // The "Export" button includes a download icon from the `lucide-react` library and is styled to adapt to dark mode. It has a hover effect that changes the background color for better user interaction. The button is intended to allow users to export customer data, although the actual export functionality would need to be implemented separately.
           <button
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium shadow-sm border cursor-pointer transition ${
               darkMode
@@ -178,54 +198,55 @@ export default function Customers() {
                 : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
             }`}
           >
-            // The Download icon from the `lucide-react` library is used to visually represent the export action for customer data. It is placed inside the "Export" button to indicate that clicking the button will trigger an export of the customer data, although the actual export functionality would need to be implemented separately.
+            {/* // The export button includes a download icon from the lucide-react library and is styled to provide visual feedback on hover. The button's appearance changes based on the dark mode setting to ensure it fits well with the overall theme of the application. When clicked, this button would typically trigger a function to export the customer data, although that functionality is not implemented in this code snippet. */}
             <Download size={16} />
             Export
           </button>
 
-          // The "Add Customer" button includes a plus icon from the `lucide-react` library and is styled with a distinct background color to make it stand out. It has a hover effect that changes the opacity for better user interaction. When this button is clicked, it sets the `showAddModal` state to true, which triggers the display of the AddCustomer modal form where users can enter details for a new customer. The button is designed to be easily noticeable and encourages users to add new customers to the system.
+          
+          {/* // The add customer button includes a plus icon and is styled to stand out as a primary action. When clicked, it sets the `showAddModal` state to true, which triggers the rendering of the AddCustomer component as a modal form for adding a new customer. The button's styles also adapt to the dark mode setting to maintain visual consistency across the application. */}
           <button
-            // navigate to a customer creation form
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-[#0f766e] text-white hover:opacity-90 cursor-pointer"
           >
-            // The Plus icon from the `lucide-react` library is used to visually represent the action of adding a new customer. It is placed inside the "Add Customer" button to indicate that clicking the button will allow users to add a new customer to the system by opening the AddCustomer modal form.
+{/* // The add customer button includes a plus icon from the lucide-react library and is styled to be visually distinct as a primary action. When clicked, it sets the `showAddModal` state to true, which triggers the rendering of the AddCustomer component as a modal form for adding a new customer. The button's appearance is designed to fit well with both light and dark themes, ensuring it remains prominent and easy to find for users who want to add new customers to the list. */}
             <Plus size={16} />
             Add Customer
           </button>
         </div>
       </div>
 
-      {/* STATS CARDS */}
-      // The stats cards section displays summary information about the customers, such as total customers, active customers, new customers this month, and inactive customers. Each card is styled with a background color and border that adapts to dark mode. The text color also adapts to ensure readability in both themes. The cards are arranged in a responsive grid layout that adjusts based on the screen size, providing a clear and concise overview of key customer metrics at a glance.
+      {/* Top stats cards */}
+      {/* // The stats cards section displays summary information about the customers, such as total customers, active customers, new customers this month, and inactive customers. Each card is styled with a background color and border that adapts to the dark mode setting. The cards are arranged in a responsive grid layout that adjusts based on the screen size, ensuring they look good on both desktop and mobile devices. The text colors also adapt to the dark mode setting for better readability. This section provides users with a quick overview of their customer base at a glance. */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        {
-          // The stats cards are generated by mapping over an array of objects, where each object contains a title and a value for a specific customer metric. For each item in the array, a card is created with styling that adapts to dark mode. The title is displayed in a smaller font with a muted color, while the value is displayed in a larger, bold font to make it stand out. This allows users to quickly see important customer statistics at a glance.
-          [
+        {[
           { title: "Total Customers", value: "256" },
           { title: "Active Customers", value: "231" },
           { title: "New This Month", value: "12" },
           { title: "Inactive", value: "25" },
-        ].map((item, index) => (
+        ].map((item) => (
           <div
-            key={index}
+            key={item.title}
             className={`p-5 rounded-xl shadow-sm ${
               darkMode
                 ? "bg-gray-700 border border-gray-600"
-                : "bg-white text-black border border-gray-200 "
+                : "bg-white border border-gray-200 text-black"
             }`}
           >
-            // The title of the stat card is displayed in a smaller font size with a muted color that adapts to dark mode. This provides context for the value being displayed, indicating what the number represents (e.g., total customers, active customers, etc.). The styling ensures that the title is readable and visually distinct from the value, while still fitting within the overall design of the card.
+            {/* // The title of each stats card is displayed in a smaller font size with a medium weight, and the text color adapts to the dark mode setting for better visibility. The value of each stat is displayed prominently in a larger font size with a bold weight, and its color also changes based on the dark mode setting to ensure it stands out against the card's background. This design allows users to quickly identify and understand the key metrics related to their customers. */}
             <p
-              className={`text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+              className={`text-sm font-medium ${
+                darkMode ? "text-gray-300" : "text-gray-500"
+              }`}
             >
               {item.title}
             </p>
 
-            // The value of the stat card is displayed in a larger, bold font to make it stand out. The text color adapts to dark mode to ensure readability in both themes. This allows users to quickly see important customer statistics at a glance, with the value being the focal point of the card.
+            {/*// The value of each stat is displayed prominently in a larger font size with a bold weight, and its color also changes based on the dark mode setting to ensure it stands out against the card's background. This design allows users to quickly identify and understand the key metrics related to their customers. The values are currently hardcoded for demonstration purposes, but in a real application, they would be dynamically calculated based on the customer data. */}
             <h2
-              className={`text-2xl font-bold mt-2 ${darkMode ? "text-white" : "text-black"}`}
+              className={`text-2xl font-bold mt-2 ${
+                darkMode ? "text-white" : "text-black"
+              }`}
             >
               {item.value}
             </h2>
@@ -233,8 +254,8 @@ export default function Customers() {
         ))}
       </div>
 
-      {/* MAIN TABLE CARD */}
-      // The main table card is a container that holds the search and filter row, the table header, the table body with customer rows, and the pagination controls. The styling of the card adapts to dark mode, with background color and border color changing based on the `darkMode` prop. The card is designed to be visually distinct from the rest of the page, providing a clear area for managing and viewing customer data. The card includes padding and rounded corners for a polished look, and it serves as the main area where users can interact with the customer data through searching, filtering, sorting, and pagination.
+      {/* Main table card */}
+      {/* // The main table card is a container that holds the search and filter row, the table of customers, and the pagination controls. It is styled with a background color and border that adapt to the dark mode setting, and it has rounded corners and a shadow for visual separation from the background. The card is designed to be responsive, with padding that adjusts based on the screen size to ensure a good user experience on both desktop and mobile devices. This section serves as the primary interface for users to view and manage their customers, providing tools for searching, filtering, sorting, and navigating through the customer data. */}
       <div
         className={`rounded-xl shadow-sm overflow-hidden ${
           darkMode
@@ -242,15 +263,14 @@ export default function Customers() {
             : "bg-white border border-gray-200 text-black"
         }`}
       >
-        {/* SEARCH + FILTER ROW */}
-        // The search and filter row is a flex container that includes a search input and filter dropdowns for status and sort order. The search input allows users to search for customers by name, email, or ID, while the filter dropdowns allow users to filter customers by their status (e.g., Active, Pending, Inactive) and sort them by their joined date (Newest or Oldest). The styling of the search input and filter dropdowns adapts to dark mode, ensuring that they are visually consistent with the overall theme of the page. The row is designed to be user-friendly and provides essential tools for managing and navigating through the customer data effectively.
+        {/* Search and filter row */}
+        {/* // The search and filter row allows users to search for customers by name, email, or phone number, and to filter customers based on their status (e.g., Active, Pending, Inactive). It also includes a dropdown for sorting the customers by their joined date. The search box and filter dropdowns are styled to adapt to the dark mode setting, ensuring they remain visually consistent with the overall theme of the application. This row provides users with powerful tools to quickly find and organize their customer data according to their needs. */}
         <div
           className={`flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 border-b ${
             darkMode ? "border-gray-600" : "border-gray-200"
           }`}
         >
-          {/* SEARCH */}
-          // The search input is a flex container that includes a search icon and an input field. The search icon is from the `lucide-react` library and is styled with a gray color to indicate its purpose. The input field allows users to enter a search term to filter the customer list based on their name, email, or ID. The styling of the input field adapts to dark mode, with background color, text color, and placeholder color changing based on the `darkMode` prop. The input field is designed to be user-friendly and provides a clear visual indication of its purpose through the use of the search icon.
+          {/* Search box */}
           <div
             className={`flex items-center px-3 py-2 rounded-lg w-full md:w-80 border ${
               darkMode
@@ -258,17 +278,16 @@ export default function Customers() {
                 : "bg-gray-50 border-gray-200"
             }`}
           >
-            // The Search icon from the `lucide-react` library is used to visually represent the search functionality for filtering the customer list. It is placed inside the search input container to indicate that users can enter a search term to filter customers by their name, email, or ID. The icon is styled with a gray color to differentiate it from the input text and to provide a clear visual cue for the search functionality.
+            {/*// The search box includes a search icon from the lucide-react library and an input field for entering the search term. The input field is styled to be transparent with no outline, allowing it to blend seamlessly with the background of the search box. The text color and placeholder color adapt to the dark mode setting for better visibility. When the user types in the search box, it updates the `searchTerm` state, which is used to filter the list of customers displayed in the table below. This allows users to quickly find specific customers based on their name, email, or phone number. */}
             <Search size={16} className="text-gray-500" />
-
-            // The input field allows users to enter a search term to filter the customer list based on their name, email, or ID. The value of the input is controlled by the `searchTerm` state, and it updates the state on change. The styling of the input field adapts to dark mode, with background color, text color, and placeholder color changing based on the `darkMode` prop. The input field is designed to be user-friendly and provides a clear visual indication of its purpose through the use of the search icon. When the user types in the search input, it filters the customer list in real-time based on the entered search term.
+            
             <input
               type="text"
               placeholder="Search customers..."
               value={searchTerm}
               onChange={(e) => {
-                setSearchTerm(e.target.value);// Update the search term state as the user types in the input field. This allows for real-time filtering of the customer list based on the entered search term.
-                setCurrentPage(1); // Reset to first page on new search
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
               }}
               className={`bg-transparent outline-none ml-2 w-full text-sm ${
                 darkMode
@@ -278,23 +297,22 @@ export default function Customers() {
             />
           </div>
 
-          {/* FILTERS */}
-          // The filter section includes two dropdowns: one for filtering customers by their status (All, Active, Pending, Inactive) and another for sorting customers by their joined date (Newest or Oldest). The dropdowns are styled to adapt to dark mode, with background color, border color, and text color changing based on the `darkMode` prop. When the user changes the status filter or sort order, the current page is reset to 1 to ensure that the user sees the first page of results in the new filtered or sorted order. This allows users to easily manage and navigate through the customer data based on their preferences.
+          {/* Filter dropdowns */}
+         {/* // The filter dropdowns include a status filter and a sort order dropdown. The status filter allows users to filter customers based on their status (e.g., Active, Pending, Inactive), while the sort order dropdown allows users to sort customers by their joined date (e.g., Newest, Oldest). Both dropdowns are styled to adapt to the dark mode setting, ensuring they fit well with the overall theme of the application. When a user selects an option from either dropdown, it updates the corresponding state (`statusFilter` or `sortOrder`), which is then used to filter and sort the list of customers displayed in the table below. This provides users with powerful tools to organize their customer data according to their preferences. */}
           <div className="flex gap-3">
             <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
-                setCurrentPage(1); // Reset to first page on filter change
+                setCurrentPage(1);
               }}
-              
-              className={`px-3 py-2 rounded-lg text-sm border  bg-transparent cursor-pointer ${
+              className={`px-3 py-2 rounded-lg text-sm bg-transparent border cursor-pointer ${
                 darkMode
                   ? "bg-gray-600 border-gray-500 text-white"
                   : "bg-gray-50 border-gray-200 text-gray-700"
               }`}
             >
-              // The status filter dropdown allows users to filter customers based on their status. The options include "All" (which shows all customers regardless of status), "Active", "Pending", and "Inactive". When the user selects a different status from the dropdown, the `statusFilter` state is updated, and the current page is reset to 1 to ensure that the user sees the first page of results in the new filtered order. This provides an easy way for users to manage and view customers based on their status.
+             {/*/ The status filter dropdown includes options for filtering customers based on their status. The "All" option allows users to see all customers regardless of their status, while the "Active", "Pending", and "Inactive" options allow users to filter the list to show only customers with the selected status. The dropdown is styled to fit well with both light and dark themes, ensuring it remains visually consistent with the overall design of the application. When a user selects an option from this dropdown, it updates the `statusFilter` state, which is then used to filter the list of customers displayed in the table below. This allows users to quickly narrow down their customer list based on specific criteria. */}
               <option value="All">All Status</option>
               <option value="Active">Active</option>
               <option value="Pending">Pending</option>
@@ -302,44 +320,34 @@ export default function Customers() {
             </select>
 
             
-            // Sorting options for customers based on their joined date. The user can choose to sort by "Newest" or "Oldest". When the sort order is changed, the current page is reset to 1 to ensure that the user sees the first page of results in the new sort order.
+            {/*// The sort order dropdown includes options for sorting customers by their joined date. The "Newest" option sorts customers from the most recently joined to the oldest, while the "Oldest" option sorts customers from the oldest to the most recently joined. This allows users to quickly organize their customer list based on when customers joined. The dropdown is styled to fit well with both light and dark themes, ensuring it remains visually consistent with the overall design of the application. When a user selects an option from this dropdown, it updates the `sortOrder` state, which is then used to sort the list of customers displayed in the table below. This provides users with an easy way to view their customers in a preferred order. */}
             <select
-              
               value={sortOrder}
-
-              // When the sort order is changed, the current page is reset to 1 to ensure that the user sees the first page of results in the new sort order.
               onChange={(e) => {
                 setSortOrder(e.target.value);
-                setCurrentPage(1); // Reset to first page on sort change
+                setCurrentPage(1);
               }}
-
-              // Sorting options for customers based on their joined date. The user can choose to sort by "Newest" or "Oldest". When the sort order is changed, the current page is reset to 1 to ensure that the user sees the first page of results in the new sort order.
               className={`px-3 py-2 rounded-lg text-sm border cursor-pointer ${
                 darkMode
                   ? "bg-gray-700 border-gray-500 text-white"
                   : "bg-gray-50 border-gray-200 text-gray-700"
-                   
               }`}
             >
-              // Sorting options for customers based on their joined date. The user can choose to sort by "Newest" or "Oldest". When the sort order is changed, the current page is reset to 1 to ensure that the user sees the first page of results in the new sort order.
               <option value="Newest">Newest</option>
               <option value="Oldest">Oldest</option>
             </select>
           </div>
         </div>
 
-        {/* TABLE HEADER */}
+        {/* Table header */}
+        {/* // The table header defines the columns for the customer data, including ID, Customer Name, Email, Phone, Status, Joined Date, and Actions. The header row is styled with a background color and text color that adapt to the dark mode setting, and it has padding and rounded corners for visual separation from the table body. The column titles are displayed in a smaller font size with a bold weight to distinguish them from the customer data that will be displayed in the rows below. This header provides a clear structure for the customer data and helps users understand what information is being presented in each column of the table. */}
         <div className="px-4 pt-3">
-          // The table header is a grid layout that defines the columns for the customer data. It includes columns for ID, Customer Name, Email, Phone, Status, Joined Date, and Actions. The header row is styled with a background color and text color that adapts to dark mode based on the `darkMode` prop. The column widths are defined using CSS grid template columns to ensure proper spacing and alignment of the data in the table body.
-
           <div
             className={`grid grid-cols-[60px_2.2fr_2fr_1.6fr_1fr_1.4fr_1fr] px-4 py-3 text-sm font-semibold rounded-lg ${
               darkMode ? "bg-gray-600 text-white" : "bg-gray-100 text-gray-700"
             }`}
           >
-            // Each column header is defined as a span element with appropriate text. The headers include "ID", "Customer Name", "Email", "Phone", "Status", "Joined", and "Actions". The styling of the header row adapts to dark mode based on the `darkMode` prop, ensuring that the text is visible and the background color provides sufficient contrast in both light and dark themes.
-    
-            <span>ID</span>  
+            <span>ID</span>
             <span>Customer Name</span>
             <span>Email</span>
             <span>Phone</span>
@@ -349,45 +357,45 @@ export default function Customers() {
           </div>
         </div>
 
-        // TABLE BODY
+        {/* Table body */}
+        {/* // The table body displays the list of customers based on the current search, filter, and sort settings. Each row represents a customer and includes their ID, name, email, phone number, status (displayed as a badge), joined date, and action buttons for editing, deleting, or viewing details. The rows are styled to have a border at the bottom and change background color on hover for better interactivity. The text colors adapt to the dark mode setting to ensure readability. This section allows users to easily view and manage their customers, with clear options for taking actions on each customer directly from the table. */}
         <div className="px-4 pb-4">
-          // If there are no customers after filtering, display a message in the center of the table area. The message is styled to be subtle and is centered both vertically and horizontally within the available space. The text color adapts to dark mode based on the `darkMode` prop.
-        
           {filteredCustomers.length === 0 ? (
-            // If there are no customers after filtering, display a message in the center of the table area. The message is styled to be subtle and is centered both vertically and horizontally within the available space. The text color adapts to dark mode based on the `darkMode` prop.
-
-            <div className="text-center py-6 text-gray-500 text-sm cursor-pointer">
+            <div className="text-center py-6 text-gray-500 text-sm">
               No customers found
             </div>
           ) : (
-              // The customer rows are generated by mapping over the `paginatedCustomers` array, which contains only the customers that should be displayed on the current page after filtering and sorting. Each row displays the customer's information and action buttons for editing, deleting, or viewing details. The styling adapts to dark mode based on the `darkMode` prop.
-
             paginatedCustomers.map((customer) => (
               <div
-                // Each customer row is clickable and displays the customer's information in a grid layout. The row includes the customer's ID, name with an avatar, email, phone number, status with a colored badge, joined date formatted as MM/DD/YYYY, and action buttons for editing, deleting, or viewing details of the customer. The styling changes on hover to indicate that the row is clickable, and it adapts to dark mode based on the `darkMode` prop.
                 key={customer.id}
-                className={`grid grid-cols-[60px_2.2fr_2fr_1.6fr_1fr_1.4fr_1fr] items-center px-3 py-2 border-b last:border-b-0 hover:bg-gray-100 rounded-xl transition cursor-pointer dark:hover:bg-gray-500 ${
-                  darkMode ? "border-gray-600" : "border-gray-100"
+                className={`grid grid-cols-[60px_2.2fr_2fr_1.6fr_1fr_1.4fr_1fr] items-center px-3 py-2 border-b last:border-b-0 hover:bg-gray-100 rounded-xl transition cursor-pointer ${
+                  darkMode
+                    ? "border-gray-600 hover:bg-gray-500"
+                    : "border-gray-100"
                 }`}
               >
-                // ID
+                {/* ID */}
+              
+                {/*  The customer ID is displayed in the first column of the table row. The text color adapts to the dark mode setting to ensure it remains visible against the background. This ID serves as a unique identifier for each customer and can be used for reference when managing customer data or performing actions such as editing or deleting a customer. */}
                 <span className={darkMode ? "text-white" : "text-black"}>
                   {customer.id}
                 </span>
 
-               // Customer Name with Avatar
+                {/* Name with avatar */}
+                {/* // The customer name is displayed in the second column of the table row, accompanied by a placeholder avatar (a gray circle) to the left of the name. The name is styled with a medium font weight and is truncated if it exceeds the available space to ensure it fits well within the column. The text color adapts to the dark mode setting for better visibility. This design allows users to quickly identify customers by their name while also providing a visual cue with the avatar, which can be replaced with actual profile pictures in a real application. */}
                 <div className="flex items-center gap-3 min-w-0">
-                  // Placeholder avatar image
                   <div className="w-10 h-10 bg-gray-300 rounded-full shrink-0"></div>
-                  // Customer name with truncation for long names
                   <span
-                    className={`font-medium truncate ${darkMode ? "text-white" : "text-black"}`}
+                    className={`font-medium truncate ${
+                      darkMode ? "text-white" : "text-black"
+                    }`}
                   >
                     {customer.name}
                   </span>
                 </div>
 
-                // Email with truncation for long emails
+                {/* Email */}
+                {/* // The customer's email address is displayed in the third column of the table row. The text is styled to be truncated if it exceeds the available space, ensuring it fits well within the column. The text color adapts to the dark mode setting for better visibility. This allows users to quickly see the email address associated with each customer, which can be useful for communication or reference when managing customer data. */}
                 <span
                   className={`truncate ${
                     darkMode ? "text-gray-300" : "text-gray-500"
@@ -396,48 +404,38 @@ export default function Customers() {
                   {customer.email}
                 </span>
 
-                // Phone number
+                {/* Phone */}
+                {/* // The customer's phone number is displayed in the fourth column of the table row. The text color adapts to the dark mode setting for better visibility. This allows users to quickly see the contact information for each customer, which can be useful for communication or reference when managing customer data. The phone number is displayed in a standard format, making it easy for users to recognize and use when needed. */}
                 <span className={darkMode ? "text-gray-300" : "text-gray-500"}>
                   {customer.phone}
                 </span>
 
-                // Status with colored badge
+                {/* Status badge */}
+                {/* // The customer's status is displayed in the fifth column of the table row as a badge. The badge is styled with a background color and text color that correspond to the customer's status (e.g., green for Active, orange for Pending, red for Inactive). The text is displayed in a smaller font size with a bold weight, and the badge has padding and rounded corners for better visual appeal. This allows users to quickly identify the status of each customer at a glance, which can be helpful for managing customer relationships and prioritizing actions based on their status. The getStatusClasses function is used to determine the appropriate styles for the badge based on the customer's status. */}
                 <span
-                  className={`text-xs font-semibold px-3 py-1 rounded-full w-fit ${
-                    // Green for Active, Orange for Pending, Red for Inactive
-                    customer.status === "Active"
-                      ? "bg-green-100 text-green-600"
-                      : customer.status === "Pending"
-                        ? "bg-orange-100 text-orange-600"
-                        : "bg-red-100 text-red-600"
-                  }`}
+                  className={`text-xs font-semibold px-3 py-1 rounded-full w-fit ${getStatusClasses(
+                    customer.status,
+                  )}`}
                 >
                   {customer.status}
                 </span>
 
-                //  Joined date formatted as MM/DD/YYYY
+                {/* Joined date */}
+                {/* // The date when the customer joined is displayed in the sixth column of the table row. The date is formatted to a more readable format using the `toLocaleDateString` method, which converts the date string into a localized date format. The text color adapts to the dark mode setting for better visibility. This allows users to quickly see when each customer joined, which can be useful for tracking customer history and understanding their relationship with the business. The joined date provides context about how long a customer has been associated with the company, which can be helpful for making informed decisions when managing customer data. */}
                 <span className={darkMode ? "text-gray-300" : "text-gray-500"}>
-                  // Format the joined date to a more readable format
                   {new Date(customer.joinedDate).toLocaleDateString()}
                 </span>
 
-                // Action buttons (View, Edit, Delete)
+                {/* Row action buttons */}
+                {/* // The action buttons for each customer are displayed in the last column of the table row. These buttons include options for editing, deleting, and viewing details of the customer. Each button is styled with a background color and text color that correspond to its function (e.g., green for edit, red for delete, blue for view). The buttons have padding and rounded corners for better visual appeal, and they change appearance on hover to provide visual feedback to the user. This allows users to quickly take actions on each customer directly from the table, making it easier to manage customer data efficiently. The icons used in the buttons are from the lucide-react library, providing a clear visual representation of each action. */}
                 <div className="flex items-center gap-2 justify-start">
-                  // Edit button with pencil icon
                   <button className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 cursor-pointer">
-                    // The Pencil icon represents the edit action for the customer
                     <Pencil size={16} />
                   </button>
-
-                  // Delete button with trash icon
                   <button className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer">
-                    // The Trash2 icon represents the delete action for the customer
                     <Trash2 size={16} />
                   </button>
-
-                  // View button with eye icon
                   <button className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer">
-                    // The Eye icon represents the view details action for the customer
                     <Eye size={16} />
                   </button>
                 </div>
@@ -446,49 +444,41 @@ export default function Customers() {
           )}
         </div>
 
-        // PAGINATION CONTROLS
+        {/* Pagination */}
+        {/* // The pagination controls are displayed at the bottom of the table card, allowing users to navigate through multiple pages of customer data. The controls include a display of the current range of customers being shown (e.g., "Showing 1 to 5 of 256 customers") and buttons for navigating to the previous and next pages, as well as buttons for directly accessing specific pages. The buttons are styled to adapt to the dark mode setting and provide visual feedback on hover. The previous and next buttons are disabled when the user is on the first or last page, respectively, to prevent invalid navigation. This pagination system helps users manage large lists of customers by breaking them into manageable chunks and providing easy navigation between them. */}
         <div
           className={`flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-4 py-4 border-t ${
             darkMode ? "border-gray-600" : "border-gray-200"
           }`}
         >
-          // Showing X to Y of Z customers
           <p
             className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-500"}`}
           >
             Showing{" "}
             <span className="font-medium">
-              // Calculate the starting index of the current page. If there are no customers, show 0.
-            
               {filteredCustomers.length === 0
                 ? 0
-                : (currentPage - 1) * itemsPerPage + 1}
+                : (safeCurrentPage - 1) * itemsPerPage + 1}
             </span>{" "}
             to{" "}
-            // Calculate the ending index of the current page. It should not exceed the total number of filtered customers.
             <span className="font-medium">
-              // If there are no customers, show 0. Otherwise, show the minimum of the last index of the current page and the total number of filtered customers.
-            
-              {Math.min(currentPage * itemsPerPage, filteredCustomers.length)}
+              {Math.min(
+                safeCurrentPage * itemsPerPage,
+                filteredCustomers.length,
+              )}
             </span>{" "}
-            of <span className="font-medium">
-              // Show the total number of customers that match the current search and filter criteria.
-              {filteredCustomers.length}</span>{" "}
+            of <span className="font-medium">{filteredCustomers.length}</span>{" "}
             customers
           </p>
 
           
-          // Pagination buttons (Previous, page numbers, Next)
+          {/* // The pagination buttons include "Previous" and "Next" buttons for navigating between pages, as well as buttons for directly accessing specific pages. The "Previous" button is disabled when the user is on the first page, and the "Next" button is disabled when the user is on the last page or when there are no customers to display. The page number buttons are generated dynamically based on the total number of pages, and the current page is highlighted to indicate which page the user is currently viewing. The buttons are styled to adapt to the dark mode setting and provide visual feedback on hover, making it easy for users to navigate through their customer data efficiently. */}
           <div className="flex items-center gap-2">
-            // Previous button, disabled on the first page
             <button
-              // When clicked, it decreases the current page number by 1, but not below 1. It is disabled when the current page is 1 to prevent going to a non-existent page.
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-
-              // The button is disabled when the current page is 1, which means the user cannot go to a previous page because they are already on the first page. The styling changes to indicate that the button is disabled (e.g., reduced opacity and cursor not allowed).
-              disabled={currentPage === 1}
+              disabled={safeCurrentPage === 1}
               className={`px-3 py-2 rounded-lg text-sm border transition ${
-                currentPage === 1
+                safeCurrentPage === 1
                   ? "opacity-50 cursor-not-allowed"
                   : "cursor-pointer hover:bg-gray-50"
               } ${
@@ -500,17 +490,15 @@ export default function Customers() {
               Previous
             </button>
 
-            // Page number buttons, highlighted when active
-          
+            
+            {/* // The page number buttons are generated dynamically based on the total number of pages calculated from the filtered customer list. Each button displays the page number and allows users to jump directly to that page when clicked. The current page is highlighted with a different background color and text color to indicate which page the user is currently viewing. The buttons are styled to adapt to the dark mode setting, ensuring they fit well with the overall theme of the application. This dynamic generation of page buttons provides users with an easy way to navigate through their customer data, especially when dealing with a large number of customers that span multiple pages. */}
             {Array.from({ length: totalPages }, (_, index) => index + 1).map(
               (page) => (
-                // Each page number button, when clicked, sets the current page to that number. The button is styled differently if it is the active page (currentPage === page) to indicate which page the user is currently on.
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
                   className={`w-9 h-9 rounded-lg text-sm font-medium transition cursor-pointer ${
-                    // If this page number is the current page, it gets a distinct background and text color to indicate that it is active. Otherwise, it has a default style that changes on hover.
-                    currentPage === page
+                    safeCurrentPage === page
                       ? "bg-[#0f766e] text-white"
                       : darkMode
                         ? "bg-gray-600 text-white hover:bg-gray-500"
@@ -522,18 +510,16 @@ export default function Customers() {
               ),
             )}
 
-            
-            // Next button, disabled on the last page or when there are no customers
+            {/* Next button */}
+           {/* // The "Next" button allows users to navigate to the next page of customer data. It is disabled when the user is on the last page or when there are no customers to display, preventing invalid navigation. The button is styled to adapt to the dark mode setting and provides visual feedback on hover, making it easy for users to continue navigating through their customer data efficiently. This button, along with the "Previous" button and page number buttons, forms a complete pagination system that helps users manage large lists of customers effectively. */}
             <button
-              // When clicked, it increases the current page number by 1, but not above the total number of pages. It is disabled when the current page is the last page or when there are no customers to prevent going to a non-existent page.
+              // Disable next button if we're on the last page or if there are no customers
               onClick={() =>
                 setCurrentPage((prev) => Math.min(prev + 1, totalPages || 1))
               }
-
-              // The button is disabled when the current page is the last page (currentPage === totalPages) or when there are no customers (totalPages === 0). This prevents the user from trying to navigate to a next page that does not exist. The styling changes to indicate that the button is disabled (e.g., reduced opacity and cursor not allowed).
-              disabled={currentPage === totalPages || totalPages === 0}
+              disabled={safeCurrentPage === totalPages || totalPages === 0}
               className={`px-3 py-2 rounded-lg text-sm border transition ${
-                currentPage === totalPages || totalPages === 0
+                safeCurrentPage === totalPages || totalPages === 0
                   ? "opacity-50 cursor-not-allowed"
                   : "cursor-pointer hover:bg-gray-50"
               } ${
