@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Calendar, ChevronDown } from "lucide-react";
 import { Users, UserCheck, Folder, Activity } from "lucide-react";
+import AddCustomer from "./customers/AddCustomer";
 import {
   LineChart,
   Line,
@@ -50,33 +51,82 @@ const customerGrowthData = [
   { month: "Jun", customers: 250 },
 ];
 
-const recentCustomers = [
-  { id: 1, name: "Rahul Sharma", email: "rahul@gmail.com", status: "New" },
-  { id: 2, name: "Amit Patil", email: "amit@gmail.com", status: "Active" },
-  { id: 3, name: "Priya Singh", email: "priya@gmail.com", status: "Pending" },
-  { id: 4, name: "John Doe", email: "john@gmail.com", status: "Inactive" },
-  { id: 5, name: "Sneha Verma", email: "sneha@gmail.com", status: "Active" },
-  { id: 6, name: "Rohit Mehta", email: "rohit@gmail.com", status: "New" },
-  { id: 7, name: "Anjali Desai", email: "anjali@gmail.com", status: "Pending" },
-  { id: 8, name: "Karan Patel", email: "karan@gmail.com", status: "Active" },
-  { id: 9, name: "Neha Kulkarni", email: "neha@gmail.com", status: "Inactive" },
-];
-
 export default function Dashboard() {
   const { darkMode } = useOutletContext();
 
-  const [selectedFilter, setSelectedFilter] = useState("This Month");
-  const [open, setOpen] = useState(false);
+    // Modal visibility state
+    const [showAddModal, setShowAddModal] = useState(false);
 
-  const options = ["Today", "This Week", "This Month", "This Year"];
-  const currentData = dashboardData[selectedFilter];
+const [selectedFilter, setSelectedFilter] = useState("This Month");
+const [open, setOpen] = useState(false);
 
-  // initialize navigate for view all button
-  const navigate = useNavigate();
-  // state for chart filter (monthly/weekly)
-  const [chartFilter, setChartFilter] = useState("Monthly");
+const [customers, setCustomers] = useState([
+  {
+    id: 1,
+    name: "Rahul Sharma",
+    email: "rahul@gmail.com",
+    phone: "+91 9876543210",
+    status: "Active",
+    joinedDate: "2024-01-12",
+    image: "../assets/Profile.jpg",
+  },
+  {
+    id: 2,
+    name: "Amit Patil",
+    email: "amit@gmail.com",
+    phone: "+91 9123456789",
+    status: "Active",
+    joinedDate: "2024-02-03",
+    image: "../assets/Profile2.jpg",
 
-  // dummy data for source distribution and top customers, replace with real data when API is ready
+  },
+  {
+    id: 3,
+    name: "Priya Singh",
+    email: "priya@gmail.com",
+    phone: "+91 9988776655",
+    status: "Pending",
+    joinedDate: "2024-03-18",
+    image: "../assets/Profile3.jpg",
+  },
+  {
+    id: 4,
+    name: "John Doe",
+    email: "john@gmail.com",
+    phone: "+91 8877655443",
+    status: "Inactive",
+    joinedDate: "2024-04-02",
+    image: "../assets/Profile4.jpg",
+  },
+  {
+    id: 5,
+    name: "Neha Verma",
+    email: "neha@gmail.com",
+    phone: "+91 9284711223",
+    status: "Active",
+    joinedDate: "2024-04-10",
+    image: "../assets/Profile5.jpg",
+  },
+  {
+    id: 6,
+    name: "Suresh Reddy",
+    email: "suresh@gmail.com",
+    phone: "+91 9032144556",
+    status: "Active",
+    joinedDate: "2024-05-22",
+    image: "../assets/Profile6.jpg",
+  },
+]);
+
+const options = ["Today", "This Week", "This Month", "This Year"];
+const currentData = dashboardData[selectedFilter];
+
+// initialize navigate for view all button
+const navigate = useNavigate();
+// state for chart filter (monthly/weekly)
+const [chartFilter, setChartFilter] = useState("Monthly");
+
+// dummy data for source distribution and top customers, replace with real data when API is ready
 const sourceData = [
   { name: "Direct", value: 45, color: "#0f766e" },
   { name: "Referral", value: 25, color: "#3b82f6" },
@@ -84,16 +134,28 @@ const sourceData = [
   { name: "Others", value: 10, color: "#6366f1" },
 ];
 
-  // top customers data
-//   const topCustomers = [
-//     { id: 1, name: "Rahul Sharma", revenue: "₹12,000" },
-//     { id: 2, name: "Amit Patil", revenue: "₹9,500" },
-//     { id: 3, name: "Priya Singh", revenue: "₹8,200" },
-//     { id: 4, name: "John Doe", revenue: "₹7,000" },
-//   ];
+const handleAddCustomer = (newCustomer) => {
+  setCustomers((prev) => [
+    {
+      id: prev.length + 1,
+      ...newCustomer,
+    },
+    ...prev,
+  ]);
+ setShowAddModal(false);
+};
+  
+
 
   return (
     <div className="space-y-6">
+      {showAddModal && (
+        <AddCustomer
+          darkMode={darkMode}
+          setShowAddModal={setShowAddModal}
+          onAddCustomer={handleAddCustomer}
+        />
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
@@ -273,7 +335,6 @@ const sourceData = [
             </div>
           </div>
 
-          
           <div className="flex items-end justify-between mt-4">
             <h2
               className={`text-2xl font-bold ${darkMode ? "text-white" : "text-black"}`}
@@ -289,14 +350,14 @@ const sourceData = [
       </div>
 
       {/* Chart */}
-      <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 bg-gray-100 ${
-        darkMode ? "bg-gray-800" : "bg-gray-100"
-       } p-6 rounded-2xl border ${
-         darkMode           ? "border-gray-600"
-                           : "border-gray-200"
-        }`}>      
-    
-       {/*  */}
+      <div
+        className={`grid grid-cols-1 lg:grid-cols-3 gap-6 bg-gray-100 ${
+          darkMode ? "bg-gray-800" : "bg-gray-100"
+        } p-6 rounded-2xl border ${
+          darkMode ? "border-gray-600" : "border-gray-200"
+        }`}
+      >
+        {/*  */}
         <div
           className={`lg:col-span-2 p-6 rounded-2xl shadow-sm ${
             darkMode
@@ -424,16 +485,20 @@ const sourceData = [
           </div>
 
           <div className="space-y-4 max-h-[320px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-            {recentCustomers.map((customer) => (
+            {customers.map((customer) => (
               <div
                 key={customer.id}
                 className="flex items-center justify-between gap-3"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full bg-gray-300">
-                    <img src="../assets/Profile.jpg" alt="" />
+                  <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-300 shrink-0">
+                    <img
+                      src={customer.image}
+                      alt={customer.name}
+                      className="w-full h-full object-cover object-top"
+                    />
                   </div>
-                  <div> 
+                  <div>
                     <h3
                       className={`text-base font-semibold ${
                         darkMode ? "text-white" : "text-black"
@@ -479,7 +544,11 @@ const sourceData = [
               : "bg-white border border-gray-100"
           }`}
         >
-          <h2 className="text-xl font-semibold mb-4">Customer Source</h2>
+          <h2
+            className={`text-xl font-semibold mb-4 ${darkMode ? "text-white" : "text-black"}`}
+          >
+            Customer Source
+          </h2>
 
           <div className="flex items-center justify-between gap-4">
             <div className="w-[150px] h-[150px]">
@@ -530,7 +599,11 @@ const sourceData = [
               : "bg-white border border-gray-100"
           }`}
         >
-          <h2 className="text-xl font-semibold mb-4">Top Customers</h2>
+          <h2
+            className={`text-xl font-semibold mb-4 ${darkMode ? "text-white" : "text-black"}`}
+          >
+            Top Customers
+          </h2>
 
           {/* Header */}
           <div
@@ -545,17 +618,23 @@ const sourceData = [
 
           {/* Rows */}
           <div className="space-y-3">
-            {recentCustomers.slice(0, 4).map((customer) => (
+            {customers.slice(0, 4).map((customer) => (
               <div
                 key={customer.id}
-                className="grid grid-cols-[2fr_2fr_auto] items-center px-3 py-2 hover:bg-gray-100 rounded-xl transition cursor-pointer dark:hover:bg-gray-500"
+                className={`grid grid-cols-[2fr_2fr_auto] items-center px-3 py-2 rounded-xl transition cursor-pointer ${
+                  darkMode ? "hover:bg-gray-600" : "hover:bg-gray-100"
+                }`}
               >
                 {/* Name */}
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 bg-gray-300 rounded-full">
-                    <span className="w-full h-full rounded-full overflow-hidden block">
-                      <img src="/assets/Profile4.jpg" alt="" />
-                    </span>
+                    <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-300 shrink-0">
+                      <img
+                        src={customer.image}
+                        alt={customer.name}
+                        className="w-full h-full object-cover object-top"
+                      />
+                    </div>
                   </div>
                   <span className="font-medium">{customer.name}</span>
                 </div>
@@ -596,11 +675,15 @@ const sourceData = [
               : "bg-white border border-gray-100"
           }`}
         >
-          <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+          <h2
+            className={`text-xl font-semibold mb-4 ${darkMode ? "text-white" : "text-black"}`}
+          >
+            Quick Actions
+          </h2>
 
           <div className="grid grid-cols-2 gap-2">
             <button
-              onClick={() => navigate("/customers/add")}
+              onClick={() => setShowAddModal(true)}
               className={`p-2 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
                 darkMode
                   ? "bg-gray-600 border-gray-500 hover:bg-gray-500"
@@ -610,7 +693,11 @@ const sourceData = [
               <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-[#0f766e] text-white flex items-center justify-center">
                 👤
               </div>
-              <p className="font-medium">Add Customer</p>
+              <p
+                className={`font-medium ${darkMode ? "text-white" : "text-black"}`}
+              >
+                Add Customer
+              </p>
             </button>
 
             <button
@@ -624,7 +711,11 @@ const sourceData = [
               <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-blue-500 text-white flex items-center justify-center">
                 📄
               </div>
-              <p className="font-medium">View Reports</p>
+              <p
+                className={`font-medium ${darkMode ? "text-white" : "text-black"}`}
+              >
+                View Reports
+              </p>
             </button>
 
             <button
@@ -638,7 +729,11 @@ const sourceData = [
               <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-yellow-500 text-white flex items-center justify-center">
                 👥
               </div>
-              <p className="font-medium">Manage Users</p>
+              <p
+                className={`font-medium ${darkMode ? "text-white" : "text-black"}`}
+              >
+                Manage Users
+              </p>
             </button>
 
             <button
@@ -652,7 +747,11 @@ const sourceData = [
               <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-red-500 text-white flex items-center justify-center">
                 ⚙️
               </div>
-              <p className="font-medium">Settings</p>
+              <p
+                className={`font-medium ${darkMode ? "text-white" : "text-black"}`}
+              >
+                Settings
+              </p>
             </button>
           </div>
         </div>
