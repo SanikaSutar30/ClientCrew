@@ -1,5 +1,5 @@
-import React from 'react'
-import { NavLink } from "react-router-dom";
+import { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
+import LogoutConfirmModal from "./LogoutConfirmModal";
 
 const menu = [
   {
@@ -40,16 +41,37 @@ const menu = [
 ];
 
 function Sidebar({ darkMode }) {
+  // Store logout modal state
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Enable page navigation
+  const navigate = useNavigate();
+
+  // Handle logout and redirect to register page
+  const handleLogout = () => {
+    setShowLogoutModal(false);
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    sessionStorage.clear();
+    navigate("/register");
+  };
+
   return (
     <div
-      className={`w-64 h-full flex flex-col justify-between
-  ${
-    darkMode
-      ? "bg-gray-100 text-black" // 🌙 Dark mode → Sidebar LIGHT
-      : "bg-gray-800 text-white" // ☀️ Light mode → Sidebar DARK
-  }`}
+      className={`w-64 h-full flex flex-col justify-between ${
+        darkMode ? "bg-gray-100 text-black" : "bg-gray-800 text-white"
+      }`}
     >
       <div>
+        {/* Logout modal */}
+        {showLogoutModal && (
+          <LogoutConfirmModal
+            darkMode={darkMode}
+            setShowLogoutModal={setShowLogoutModal}
+            onConfirmLogout={handleLogout}
+          />
+        )}
+
         {/* Logo */}
         <div className="flex items-center gap-3 px-6 py-5">
           <div className="bg-[#0f766e] w-10 h-10 rounded-lg flex items-center justify-center font-bold hover:bg-[#115e59]">
@@ -58,7 +80,7 @@ function Sidebar({ darkMode }) {
           <h1 className="text-lg font-semibold">ClientCrew</h1>
         </div>
 
-        {/* Menu */}
+        {/* Sidebar menu */}
         <div className="px-4 space-y-6">
           {menu.map((section, idx) => (
             <div key={idx}>
@@ -74,15 +96,13 @@ function Sidebar({ darkMode }) {
                       key={i}
                       to={item.path}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2 rounded-lg transition all duration-200
-  
-${
-  isActive
-    ? "bg-[#0f766e] text-white"
-    : darkMode
-    ? "text-gray-700 hover:bg-gray-200 hover:text-black"
-    : "text-gray-300 hover:bg-white/10 hover:text-white"
-}`
+                        `flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${
+                          isActive
+                            ? "bg-[#0f766e] text-white"
+                            : darkMode
+                              ? "text-gray-700 hover:bg-gray-200 hover:text-black"
+                              : "text-gray-300 hover:bg-white/10 hover:text-white"
+                        }`
                       }
                     >
                       <Icon size={18} />
@@ -96,9 +116,16 @@ ${
         </div>
       </div>
 
-      {/* Logout */}
+      {/* Logout button */}
       <div className="p-4">
-        <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-white/10">
+        <button
+          onClick={() => setShowLogoutModal(true)}
+          className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg transition ${
+            darkMode
+              ? "hover:bg-gray-200 text-black"
+              : "hover:bg-white/10 text-white"
+          }`}
+        >
           <LogOut size={18} />
           Logout
         </button>
@@ -107,4 +134,4 @@ ${
   );
 }
 
-export default Sidebar
+export default Sidebar;
