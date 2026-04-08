@@ -6,6 +6,7 @@ export default function Notifications() {
   const { darkMode } = useOutletContext();
 
   const [activeTab, setActiveTab] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [notifications, setNotifications] = useState([
     {
@@ -45,7 +46,31 @@ export default function Notifications() {
       isRead: true,
       type: "login",
     },
+    {
+      id: 6,
+      message: "Project Alpha deadline has been updated.",
+      time: "1d ago",
+      isRead: false,
+      type: "report",
+    },
+    {
+      id: 7,
+      message: "Priya Singh submitted a new support request.",
+      time: "1d ago",
+      isRead: true,
+      type: "customer",
+      image: "../assets/Profile3.jpg",
+    },
+    {
+      id: 8,
+      message: "Security settings were updated successfully.",
+      time: "2d ago",
+      isRead: false,
+      type: "security",
+    },
   ]);
+
+  const itemsPerPage = 5;
 
   const unreadCount = notifications.filter((item) => !item.isRead).length;
 
@@ -54,6 +79,15 @@ export default function Notifications() {
       ? notifications.filter((item) => !item.isRead)
       : notifications;
 
+  const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage);
+  const safeCurrentPage =
+    totalPages === 0 ? 1 : Math.min(currentPage, totalPages);
+
+  const paginatedNotifications = filteredNotifications.slice(
+    (safeCurrentPage - 1) * itemsPerPage,
+    safeCurrentPage * itemsPerPage,
+  );
+
   const handleMarkAllAsRead = () => {
     setNotifications((prev) =>
       prev.map((item) => ({
@@ -61,6 +95,12 @@ export default function Notifications() {
         isRead: true,
       })),
     );
+    setCurrentPage(1);
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
   };
 
   const renderIcon = (type) => {
@@ -115,7 +155,7 @@ export default function Notifications() {
         >
           <div className="flex items-center gap-8">
             <button
-              onClick={() => setActiveTab("all")}
+              onClick={() => handleTabChange("all")}
               className={`pb-2 text-sm border-b-2 cursor-pointer transition ${
                 activeTab === "all"
                   ? darkMode
@@ -130,7 +170,7 @@ export default function Notifications() {
             </button>
 
             <button
-              onClick={() => setActiveTab("unread")}
+              onClick={() => handleTabChange("unread")}
               className={`pb-2 text-sm border-b-2 cursor-pointer transition ${
                 activeTab === "unread"
                   ? darkMode
@@ -168,7 +208,7 @@ export default function Notifications() {
               No unread notifications
             </div>
           ) : (
-            filteredNotifications.map((item) => (
+            paginatedNotifications.map((item) => (
               <div
                 key={item.id}
                 className={`flex items-center justify-between px-6 py-2 border-b last:border-b-0 cursor-pointer transition-all duration-200 ${
@@ -224,6 +264,92 @@ export default function Notifications() {
             ))
           )}
         </div>
+
+        {/* Pagination section */}
+        {filteredNotifications.length > 0 && (
+          <div
+            className={`flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-6 py-4 border-t ${
+              darkMode ? "border-gray-600" : "border-gray-200"
+            }`}
+          >
+            <p
+              className={`text-sm ${
+                darkMode ? "text-gray-300" : "text-gray-500"
+              }`}
+            >
+              Showing{" "}
+              <span className="font-medium">
+                {(safeCurrentPage - 1) * itemsPerPage + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-medium">
+                {Math.min(
+                  safeCurrentPage * itemsPerPage,
+                  filteredNotifications.length,
+                )}
+              </span>{" "}
+              of{" "}
+              <span className="font-medium">
+                {filteredNotifications.length}
+              </span>{" "}
+              notifications
+            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={safeCurrentPage === 1}
+                className={`px-3 py-2 rounded-lg text-sm border transition ${
+                  safeCurrentPage === 1
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer hover:bg-gray-50"
+                } ${
+                  darkMode
+                    ? "bg-gray-600 border-gray-500 text-white hover:bg-gray-500"
+                    : "bg-white border-gray-200 text-gray-700"
+                }`}
+              >
+                Previous
+              </button>
+
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+                (page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-9 h-9 rounded-lg text-sm font-medium transition cursor-pointer ${
+                      safeCurrentPage === page
+                        ? "bg-[#0f766e] text-white"
+                        : darkMode
+                          ? "bg-gray-600 text-white hover:bg-gray-500"
+                          : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ),
+              )}
+
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages || 1))
+                }
+                disabled={safeCurrentPage === totalPages || totalPages === 0}
+                className={`px-3 py-2 rounded-lg text-sm border transition ${
+                  safeCurrentPage === totalPages || totalPages === 0
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer hover:bg-gray-50"
+                } ${
+                  darkMode
+                    ? "bg-gray-600 border-gray-500 text-white hover:bg-gray-500"
+                    : "bg-white border-gray-200 text-gray-700"
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
