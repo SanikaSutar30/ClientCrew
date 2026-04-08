@@ -43,7 +43,7 @@ export default function ViewCustomer({
           }`}
         >
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-            <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-300 shrink-0">
+            <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-300 shrink-0 border border-gray-400 cursor-pointer">
               <img
                 src={customer.image}
                 alt={customer.name}
