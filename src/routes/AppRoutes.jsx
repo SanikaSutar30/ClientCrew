@@ -9,6 +9,7 @@ import Employees from "../pages/Employees";
 import Reports from "../pages/Reports";
 import Notifications from "../pages/Notifications";
 import Settings from "../pages/Settings";
+import Register from "../pages/Register";
 
 export default function AppRoutes() {
   return (
@@ -27,6 +28,7 @@ export default function AppRoutes() {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
+        <Route path="/register" element={<Register />} />
       </Routes>
     </BrowserRouter>
   );
