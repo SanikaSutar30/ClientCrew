@@ -103,6 +103,11 @@ export default function Notifications() {
     setCurrentPage(1);
   };
 
+  const handleNotificationClick = (id) => {
+    setNotifications((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, isRead: true } : item)),
+    );
+  };
   const renderIcon = (type) => {
     switch (type) {
       case "security":
@@ -211,6 +216,7 @@ export default function Notifications() {
             paginatedNotifications.map((item) => (
               <div
                 key={item.id}
+                onClick={() => handleNotificationClick(item.id)}
                 className={`flex items-center justify-between px-6 py-2 border-b last:border-b-0 cursor-pointer transition-all duration-200 ${
                   darkMode
                     ? "border-gray-600 hover:bg-gray-600"
