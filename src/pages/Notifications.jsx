@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate } from "react-router-dom";
 import { User, FileText, Shield, LogIn } from "lucide-react";
 
 export default function Notifications() {
   const { darkMode } = useOutletContext();
+  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -102,11 +103,14 @@ export default function Notifications() {
     setActiveTab(tab);
     setCurrentPage(1);
   };
-
-  const handleNotificationClick = (id) => {
+  const handleNotificationClick = (item) => {
     setNotifications((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, isRead: true } : item)),
+      prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n)),
     );
+
+    if (item.link) {
+      navigate(item.link);
+    }
   };
   const renderIcon = (type) => {
     switch (type) {
@@ -216,7 +220,7 @@ export default function Notifications() {
             paginatedNotifications.map((item) => (
               <div
                 key={item.id}
-                onClick={() => handleNotificationClick(item.id)}
+                onClick={() => handleNotificationClick(item)}
                 className={`flex items-center justify-between px-6 py-2 border-b last:border-b-0 cursor-pointer transition-all duration-200 ${
                   darkMode
                     ? "border-gray-600 hover:bg-gray-600"
