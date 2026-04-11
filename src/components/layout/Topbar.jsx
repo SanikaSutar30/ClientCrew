@@ -1,4 +1,14 @@
-import { Search, Bell, MessageCircle, Moon } from "lucide-react";
+import {
+  Search,
+  Bell,
+  MessageCircle,
+  Moon,
+  User,
+  Settings,
+  HelpCircle,
+  LogOut,
+  ChevronDown,
+} from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -8,10 +18,12 @@ function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
   // Dropdown states
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   // Refs for outside click
   const messageRef = useRef(null);
   const notificationRef = useRef(null);
+  const profileRef = useRef(null);
 
   // Unread notification count
   const unreadCount = notifications.filter((item) => !item.isRead).length;
@@ -28,6 +40,10 @@ function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
         !notificationRef.current.contains(event.target)
       ) {
         setShowNotifications(false);
+      }
+
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfileMenu(false);
       }
     }
 
@@ -77,6 +93,11 @@ function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
     }
   };
 
+  const handleProfileOptionClick = (path) => {
+    setShowProfileMenu(false);
+    navigate(path);
+  };
+
   return (
     <div
       className={`h-16 flex items-center justify-between px-6 ${
@@ -101,6 +122,7 @@ function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
             onClick={() => {
               setShowMessages((prev) => !prev);
               setShowNotifications(false);
+              setShowProfileMenu(false);
             }}
             className="bg-white p-2 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50"
           >
@@ -123,6 +145,7 @@ function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
             onClick={() => {
               setShowNotifications((prev) => !prev);
               setShowMessages(false);
+              setShowProfileMenu(false);
             }}
             className="relative bg-white p-2 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50"
           >
@@ -137,7 +160,6 @@ function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
 
           {showNotifications && (
             <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg z-50 overflow-hidden border border-gray-200">
-              {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
                 <p className="text-sm font-semibold text-gray-800">
                   Notifications
@@ -151,7 +173,6 @@ function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
                 </button>
               </div>
 
-              {/* List */}
               <div className="max-h-80 overflow-y-auto">
                 {notifications.length === 0 ? (
                   <p className="text-sm text-gray-500 px-4 py-6 text-center">
@@ -187,7 +208,6 @@ function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
                 )}
               </div>
 
-              {/* Footer */}
               <div className="px-4 py-3 text-center">
                 <button
                   onClick={() => {
@@ -212,15 +232,102 @@ function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
         </div>
 
         {/* Profile */}
-        <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50 min-w-[180px]">
-          <div className="w-9 h-9 bg-gray-300 rounded-full"></div>
+        <div className="relative" ref={profileRef}>
+          <div
+            onClick={() => {
+              setShowProfileMenu((prev) => !prev);
+              setShowNotifications(false);
+              setShowMessages(false);
+            }}
+            className="flex items-center gap-3 bg-white px-4 py-2 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50 min-w-[220px]"
+          >
+            <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
 
-          <div className="flex flex-col leading-tight">
-            <span className="text-sm font-semibold text-gray-800">
-              Admin Name
-            </span>
-            <span className="text-xs text-gray-500">Administrator</span>
+            <div className="flex flex-col leading-tight flex-1">
+              <span className="text-sm font-semibold text-gray-800">Admin</span>
+              <span className="text-xs text-gray-500">Administrator</span>
+            </div>
+
+            <ChevronDown
+              size={18}
+              className={`text-green-600 transition-transform ${
+                showProfileMenu ? "rotate-180" : ""
+              }`}
+            />
           </div>
+
+          {showProfileMenu && (
+            <div className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-xl z-50 border border-gray-200 overflow-hidden">
+              {/* Header */}
+              <div className="px-5 py-4 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 bg-gray-300 rounded-full"></div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      Admin
+                    </h3>
+                    <p className="text-sm text-gray-500">admin@company.com</p>
+                    <p className="text-sm text-green-600 mt-1">● Online</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Menu */}
+              <div className="py-2">
+                <button
+                  onClick={() => handleProfileOptionClick("/my-profile")}
+                  className="w-full flex items-center gap-3 px-5 py-3 text-left hover:bg-gray-50 text-gray-700 cursor-pointer"
+                >
+                  <User size={20} />
+                  <span className="text-sm font-medium">My Profile</span>
+                </button>
+
+                <button
+                  onClick={() => handleProfileOptionClick("/settings")}
+                  className="w-full flex items-center gap-3 px-5 py-3 text-left hover:bg-gray-50 text-gray-700 cursor-pointer"
+                >
+                  <Settings size={20} />
+                  <span className="text-sm font-medium">Account Settings</span>
+                </button>
+
+                <button
+                  onClick={() => handleProfileOptionClick("/notifications")}
+                  className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-gray-50 text-gray-700 cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <Bell size={20} />
+                    <span className="text-sm font-medium">Notifications</span>
+                  </div>
+
+                  {unreadCount > 0 && (
+                    <span className="bg-red-500 text-white text-xs font-semibold min-w-[24px] h-6 px-2 rounded-full flex items-center justify-center">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => handleProfileOptionClick("/help-support")}
+                  className="w-full flex items-center gap-3 px-5 py-3 text-left hover:bg-gray-50 text-gray-700 cursor-pointer"
+                >
+                  <HelpCircle size={20} />
+                  <span className="text-sm font-medium">Help & Support</span>
+                </button>
+              </div>
+
+              {/* Footer */}
+              <div className="border-t border-gray-200 p-2">
+                <button
+                  onClick={() => handleProfileOptionClick("/logout")}
+                  className="w-full flex items-center gap-3 px-3 py-3 text-left text-red-500 hover:bg-red-50 rounded-xl cursor-pointer"
+                >
+                  <LogOut size={20} />
+                  <span className="text-sm font-semibold">Logout</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
