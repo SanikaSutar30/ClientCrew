@@ -2,6 +2,23 @@ import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Camera, Upload } from "lucide-react";
 
+// ToggleSwitch component defined outside the main component
+const ToggleSwitch = ({ checked, onClick, darkMode }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`w-14 h-8 flex items-center rounded-full p-1 transition cursor-pointer ${
+      checked ? "bg-[#0f766e]" : darkMode ? "bg-gray-500" : "bg-gray-300"
+    }`}
+  >
+    <span
+      className={`w-6 h-6 bg-white rounded-full shadow-md transform transition ${
+        checked ? "translate-x-6" : "translate-x-0"
+      }`}
+    ></span>
+  </button>
+);
+
 export default function Settings() {
   const { darkMode } = useOutletContext();
 
@@ -18,6 +35,19 @@ export default function Settings() {
     confirmPassword: "",
   });
 
+  // State for toggling password visibility
+  const [securitySettings, setSecuritySettings] = useState({
+    showCurrentPassword: true,
+    showNewPassword: true,
+    showConfirmPassword: true,
+  });
+
+  // State for notification settings
+  const [notificationSettings, setNotificationSettings] = useState({
+    emailNotifications: true,
+    newCustomerAlerts: true,
+  });
+
   const cardClass = darkMode
     ? "bg-gray-700 border border-gray-600 shadow-sm rounded-2xl"
     : "bg-white border border-gray-200 shadow-sm rounded-2xl";
@@ -29,6 +59,7 @@ export default function Settings() {
     ? "w-full px-4 py-3 rounded-xl border bg-gray-600 border-gray-500 text-white outline-none"
     : "w-full px-4 py-3 rounded-xl border bg-gray-50 border-gray-200 text-gray-700 outline-none";
 
+  // Handlers for form changes
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
     setProfileData((prev) => ({
@@ -37,14 +68,30 @@ export default function Settings() {
     }));
   };
 
+  // Handler for password field changes
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-    const handlePasswordChange = (e) => {
-      const { name, value } = e.target;
-      setPasswordData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    };
+  // Handlers for toggling password visibility and notification settings
+  const handleSecurityToggle = (field) => {
+    setSecuritySettings((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+  };
+
+  // Handler for toggling notification settings
+  const handleNotificationToggle = (field) => {
+    setNotificationSettings((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+  };
 
   return (
     <div className="space-y-6">
@@ -156,7 +203,57 @@ export default function Settings() {
                 Security Preferences
               </h2>
             </div>
-            <div className="p-6 min-h-[180px]"></div>
+
+            <div className="px-6 py-2">
+              <div
+                className={`flex items-center justify-between py-4 border-b ${dividerClass}`}
+              >
+                <span
+                  className={`text-base font-medium ${
+                    darkMode ? "text-white" : "text-gray-800"
+                  }`}
+                >
+                  Show Current Password
+                </span>
+                <ToggleSwitch
+                  checked={securitySettings.showCurrentPassword}
+                  onClick={() => handleSecurityToggle("showCurrentPassword")}
+                  darkMode={darkMode}
+                />
+              </div>
+
+              <div
+                className={`flex items-center justify-between py-4 border-b ${dividerClass}`}
+              >
+                <span
+                  className={`text-base font-medium ${
+                    darkMode ? "text-white" : "text-gray-800"
+                  }`}
+                >
+                  Show New Password
+                </span>
+                <ToggleSwitch
+                  checked={securitySettings.showNewPassword}
+                  onClick={() => handleSecurityToggle("showNewPassword")}
+                  darkMode={darkMode}
+                />
+              </div>
+
+              <div className="flex items-center justify-between py-4">
+                <span
+                  className={`text-base font-medium ${
+                    darkMode ? "text-white" : "text-gray-800"
+                  }`}
+                >
+                  Show Confirm Password
+                </span>
+                <ToggleSwitch
+                  checked={securitySettings.showConfirmPassword}
+                  onClick={() => handleSecurityToggle("showConfirmPassword")}
+                  darkMode={darkMode}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Notification Settings */}
@@ -166,7 +263,40 @@ export default function Settings() {
                 Notification Settings
               </h2>
             </div>
-            <div className="p-6 min-h-[150px]"></div>
+
+            <div className="px-6 py-2">
+              <div
+                className={`flex items-center justify-between py-4 border-b ${dividerClass}`}
+              >
+                <span
+                  className={`text-base font-medium ${
+                    darkMode ? "text-white" : "text-gray-800"
+                  }`}
+                >
+                  Email Notifications
+                </span>
+                <ToggleSwitch
+                  checked={notificationSettings.emailNotifications}
+                  onClick={() => handleNotificationToggle("emailNotifications")}
+                  darkMode={darkMode}
+                />
+              </div>
+
+              <div className="flex items-center justify-between py-4">
+                <span
+                  className={`text-base font-medium ${
+                    darkMode ? "text-white" : "text-gray-800"
+                  }`}
+                >
+                  New Customer Alerts
+                </span>
+                <ToggleSwitch
+                  checked={notificationSettings.newCustomerAlerts}
+                  onClick={() => handleNotificationToggle("newCustomerAlerts")}
+                  darkMode={darkMode}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
