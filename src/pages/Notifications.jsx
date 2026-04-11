@@ -3,74 +3,13 @@ import { useOutletContext, useNavigate } from "react-router-dom";
 import { User, FileText, Shield, LogIn } from "lucide-react";
 
 export default function Notifications() {
-  const { darkMode } = useOutletContext();
+  const { darkMode, notifications, setNotifications } = useOutletContext();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      message: "Neha Verma has been added as a new customer.",
-      time: "3m ago",
-      isRead: false,
-      type: "customer",
-      image: "../assets/Profile5.jpg",
-    },
-    {
-      id: 2,
-      message: "Your password was changed successfully.",
-      time: "15m ago",
-      isRead: false,
-      type: "security",
-    },
-    {
-      id: 3,
-      message: "Weekly performance report is now available.",
-      time: "1h ago",
-      isRead: true,
-      type: "report",
-    },
-    {
-      id: 4,
-      message: "Amit Patil updated customer contact information.",
-      time: "2h ago",
-      isRead: false,
-      type: "customer",
-      image: "../assets/Profile2.jpg",
-    },
-    {
-      id: 5,
-      message: "New login detected from Chrome on Windows.",
-      time: "5h ago",
-      isRead: true,
-      type: "login",
-    },
-    {
-      id: 6,
-      message: "Project Alpha deadline has been updated.",
-      time: "1d ago",
-      isRead: false,
-      type: "report",
-    },
-    {
-      id: 7,
-      message: "Priya Singh submitted a new support request.",
-      time: "1d ago",
-      isRead: true,
-      type: "customer",
-      image: "../assets/Profile3.jpg",
-    },
-    {
-      id: 8,
-      message: "Security settings were updated successfully.",
-      time: "2d ago",
-      isRead: false,
-      type: "security",
-    },
-  ]);
-
+  // Pagination logic
   const itemsPerPage = 5;
 
   const unreadCount = notifications.filter((item) => !item.isRead).length;
@@ -103,6 +42,7 @@ export default function Notifications() {
     setActiveTab(tab);
     setCurrentPage(1);
   };
+
   const handleNotificationClick = (item) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n)),
@@ -112,6 +52,7 @@ export default function Notifications() {
       navigate(item.link);
     }
   };
+
   const renderIcon = (type) => {
     switch (type) {
       case "security":
