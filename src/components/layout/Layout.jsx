@@ -3,51 +3,9 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
-// import profile1 from "../../assets/Profile.jpg";
-// import profile2 from "../../assets/Profile2.jpg";
-// import profile3 from "../../assets/Profile3.jpg";
-
-
-// const [notifications, setNotifications] = useState([
-//   {
-//     id: 1,
-//     message: "Neha Verma has been added as a new customer.",
-//     time: "3m ago",
-//     isRead: false,
-//     type: "customer",
-//     image: profile1,
-//     link: "/customers",
-//   },
-//   {
-//     id: 2,
-//     message: "Your password was changed successfully.",
-//     time: "15m ago",
-//     isRead: false,
-//     type: "security",
-//     link: "/settings",
-//   },
-//   {
-//     id: 3,
-//     message: "Weekly performance report is now available.",
-//     time: "1h ago",
-//     isRead: true,
-//     type: "report",
-//     link: "/reports",
-//   },
-//   {
-//     id: 4,
-//     message: "Amit Patil updated customer info.",
-//     time: "2h ago",
-//     isRead: false,
-//     type: "customer",
-//     image: profile2,
-//     link: "/customers",
-//   },
-// ]);
 function Layout() {
   const [darkMode, setDarkMode] = useState(false);
 
-  //  GLOBAL notifications state
   const [notifications, setNotifications] = useState([
     {
       id: 1,
@@ -73,6 +31,31 @@ function Layout() {
       type: "report",
       link: "/reports",
     },
+    {
+      id: 4,
+      message: "New comment on Task #42: 'Design homepage wireframe'.",
+      time: "2h ago",
+      isRead: false,
+      type: "task",
+      link: "/tasks",
+    },
+    {
+      id: 5,
+      message: "Project 'ClientCrew Redesign' has been marked as completed.",
+      time: "5h ago",
+
+      isRead: true,
+      type: "project",
+      link: "/projects",
+
+
+    }, {
+      id: 6,
+      message: "New login from Chrome on Windows.",
+      time: "1d ago",
+      isRead: true,
+      type: "login",
+    }
   ]);
 
   return (
@@ -80,7 +63,6 @@ function Layout() {
       <Sidebar darkMode={darkMode} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/*  PASS notifications to Topbar */}
         <Topbar
           darkMode={darkMode}
           setDarkMode={setDarkMode}
@@ -93,8 +75,14 @@ function Layout() {
             darkMode ? "bg-gray-800 text-white" : "bg-gray-100 text-black"
           }`}
         >
-          {/*  PASS to all pages */}
-          <Outlet context={{ darkMode, notifications, setNotifications }} />
+          <Outlet
+            context={{
+              darkMode,
+              setDarkMode,
+              notifications,
+              setNotifications,
+            }}
+          />
         </div>
       </div>
     </div>

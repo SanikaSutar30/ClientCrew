@@ -8,8 +8,7 @@ import ViewCustomer from "./ViewCustomer";
 
 export default function Customers() {
   // Get dark mode from layout
-  const { darkMode } = useOutletContext();
-
+const { darkMode } = useOutletContext();
   // Store customer list
   const [customers, setCustomers] = useState([
     {
