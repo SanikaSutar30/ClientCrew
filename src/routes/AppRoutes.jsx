@@ -11,6 +11,7 @@ import Notifications from "../pages/Notifications";
 import Settings from "../pages/Settings";
 import Register from "../pages/Register";
 import MyProfile from "../pages/MyProfile";
+import HelpSupport from "../pages/HelpSupport";
 
 export default function AppRoutes() {
   return (
@@ -29,6 +30,7 @@ export default function AppRoutes() {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/my-profile" element={<MyProfile />} />
+          <Route path="/help-support" element={<HelpSupport />} />
         </Route>
 
         <Route path="/register" element={<Register />} />
