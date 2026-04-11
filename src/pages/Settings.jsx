@@ -11,6 +11,13 @@ export default function Settings() {
     profileImage: "../assets/Profile.jpg",
   });
 
+  // Separate state for password fields
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
   const cardClass = darkMode
     ? "bg-gray-700 border border-gray-600 shadow-sm rounded-2xl"
     : "bg-white border border-gray-200 shadow-sm rounded-2xl";
@@ -29,6 +36,15 @@ export default function Settings() {
       [name]: value,
     }));
   };
+
+
+    const handlePasswordChange = (e) => {
+      const { name, value } = e.target;
+      setPasswordData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    };
 
   return (
     <div className="space-y-6">
@@ -163,7 +179,65 @@ export default function Settings() {
                 Change Password
               </h2>
             </div>
-            <div className="p-6 min-h-[320px]"></div>
+            <div className="p-6 space-y-5">
+              <div>
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    darkMode ? "text-gray-200" : "text-gray-700"
+                  }`}
+                >
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  name="currentPassword"
+                  value={passwordData.currentPassword}
+                  onChange={handlePasswordChange}
+                  placeholder="********"
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    darkMode ? "text-gray-200" : "text-gray-700"
+                  }`}
+                >
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  name="newPassword"
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordChange}
+                  placeholder="********"
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    darkMode ? "text-gray-200" : "text-gray-700"
+                  }`}
+                >
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={passwordData.confirmPassword}
+                  onChange={handlePasswordChange}
+                  placeholder="********"
+                  className={inputClass}
+                />
+              </div>
+
+              <button className="w-full py-3 rounded-xl bg-[#0f766e] text-white text-base font-medium hover:opacity-90 transition cursor-pointer">
+                Update Password
+              </button>
+            </div>
           </div>
 
           {/* System Preferences */}
