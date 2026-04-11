@@ -24,6 +24,8 @@ export default function MyProfile() {
     image: "../assets/Profile.jpg",
   });
 
+  const [editData, setEditData] = useState(profileData);
+
   const [errors, setErrors] = useState({});
 
   const getStatusClasses = (status) => {
@@ -43,9 +45,15 @@ export default function MyProfile() {
     ? "w-full mt-1 px-4 py-2 rounded-xl border outline-none bg-gray-700 border-gray-600 text-white"
     : "w-full mt-1 px-4 py-2 rounded-xl border outline-none bg-white border-gray-300 text-black";
 
+  const handleEditStart = () => {
+    setEditData(profileData);
+    setErrors({});
+    setIsEditing(true);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setProfileData((prev) => ({
+    setEditData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -67,7 +75,7 @@ export default function MyProfile() {
 
       const imageUrl = URL.createObjectURL(file);
 
-      setProfileData((prev) => ({
+      setEditData((prev) => ({
         ...prev,
         image: imageUrl,
       }));
@@ -80,7 +88,7 @@ export default function MyProfile() {
   };
 
   const handleUpdateProfile = () => {
-    if (!profileData.name.trim()) {
+    if (!editData.name.trim()) {
       setErrors((prev) => ({
         ...prev,
         name: "Name is required",
@@ -88,7 +96,7 @@ export default function MyProfile() {
       return;
     }
 
-    if (!profileData.email.trim()) {
+    if (!editData.email.trim()) {
       setErrors((prev) => ({
         ...prev,
         email: "Email is required",
@@ -96,7 +104,7 @@ export default function MyProfile() {
       return;
     }
 
-    if (!profileData.email.includes("@")) {
+    if (!editData.email.includes("@")) {
       setErrors((prev) => ({
         ...prev,
         email: "Enter a valid email address",
@@ -104,13 +112,15 @@ export default function MyProfile() {
       return;
     }
 
+    setProfileData(editData);
     setErrors({});
     setIsEditing(false);
   };
 
   const handleCancelEdit = () => {
-    setIsEditing(false);
+    setEditData(profileData);
     setErrors({});
+    setIsEditing(false);
   };
 
   return (
@@ -147,8 +157,8 @@ export default function MyProfile() {
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
             <div className="w-28 h-28 rounded-full overflow-hidden bg-gray-300 shrink-0 border border-gray-400">
               <img
-                src={profileData.image}
-                alt={profileData.name}
+                src={isEditing ? editData.image : profileData.image}
+                alt={isEditing ? editData.name : profileData.name}
                 className="w-full h-full object-cover object-top"
               />
             </div>
@@ -161,7 +171,7 @@ export default function MyProfile() {
                     <input
                       type="text"
                       name="name"
-                      value={profileData.name}
+                      value={editData.name}
                       onChange={handleChange}
                       className={inputClass}
                     />
@@ -195,7 +205,7 @@ export default function MyProfile() {
                       <input
                         type="email"
                         name="email"
-                        value={profileData.email}
+                        value={editData.email}
                         onChange={handleChange}
                         className={inputClass}
                       />
@@ -224,7 +234,7 @@ export default function MyProfile() {
                     <input
                       type="text"
                       name="phone"
-                      value={profileData.phone}
+                      value={editData.phone}
                       onChange={handleChange}
                       className={inputClass}
                     />
@@ -247,7 +257,7 @@ export default function MyProfile() {
                     <input
                       type="text"
                       name="role"
-                      value={profileData.role}
+                      value={editData.role}
                       onChange={handleChange}
                       className={inputClass}
                     />
@@ -269,7 +279,7 @@ export default function MyProfile() {
                   {isEditing ? (
                     <select
                       name="status"
-                      value={profileData.status}
+                      value={editData.status}
                       onChange={handleChange}
                       className={inputClass}
                     >
@@ -302,7 +312,7 @@ export default function MyProfile() {
                     <input
                       type="date"
                       name="joinedDate"
-                      value={profileData.joinedDate}
+                      value={editData.joinedDate}
                       onChange={handleChange}
                       className={inputClass}
                     />
@@ -347,6 +357,7 @@ export default function MyProfile() {
                 {isEditing ? (
                   <>
                     <button
+                      type="button"
                       onClick={handleCancelEdit}
                       className={`px-4 py-2 rounded-xl border cursor-pointer ${
                         darkMode
@@ -358,6 +369,7 @@ export default function MyProfile() {
                     </button>
 
                     <button
+                      type="button"
                       onClick={handleUpdateProfile}
                       className="px-4 py-2 rounded-xl bg-[#0f766e] text-white cursor-pointer hover:opacity-90"
                     >
@@ -366,7 +378,8 @@ export default function MyProfile() {
                   </>
                 ) : (
                   <button
-                    onClick={() => setIsEditing(true)}
+                    type="button"
+                    onClick={handleEditStart}
                     className="px-4 py-2 rounded-xl bg-[#0f766e] text-white cursor-pointer hover:opacity-90"
                   >
                     Edit Profile
