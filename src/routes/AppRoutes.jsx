@@ -10,6 +10,7 @@ import Reports from "../pages/Reports";
 import Notifications from "../pages/Notifications";
 import Settings from "../pages/Settings";
 import Register from "../pages/Register";
+import MyProfile from "../pages/MyProfile";
 
 export default function AppRoutes() {
   return (
@@ -27,7 +28,9 @@ export default function AppRoutes() {
           <Route path="/reports" element={<Reports />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/my-profile" element={<MyProfile />} />
         </Route>
+
         <Route path="/register" element={<Register />} />
       </Routes>
     </BrowserRouter>
