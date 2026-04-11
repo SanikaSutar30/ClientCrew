@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Camera, Upload } from "lucide-react";
+import SettingsMessageModal from "./SettingsMessageModal.jsx";
 
-// ToggleSwitch component defined outside the main component
 const ToggleSwitch = ({ checked, onClick, darkMode }) => (
   <button
     type="button"
@@ -20,7 +20,8 @@ const ToggleSwitch = ({ checked, onClick, darkMode }) => (
 );
 
 export default function Settings() {
-  const { darkMode } = useOutletContext();
+  const { darkMode, setDarkMode } = useOutletContext();
+  const fileInputRef = useRef(null);
 
   const [profileData, setProfileData] = useState({
     name: "John Doe",
@@ -28,24 +29,34 @@ export default function Settings() {
     profileImage: "../assets/Profile.jpg",
   });
 
-  // Separate state for password fields
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
 
-  // State for toggling password visibility
   const [securitySettings, setSecuritySettings] = useState({
-    showCurrentPassword: true,
-    showNewPassword: true,
-    showConfirmPassword: true,
+    showCurrentPassword: false,
+    showNewPassword: false,
+    showConfirmPassword: false,
   });
 
-  // State for notification settings
   const [notificationSettings, setNotificationSettings] = useState({
     emailNotifications: true,
     newCustomerAlerts: true,
+  });
+
+  const [systemPreferences, setSystemPreferences] = useState({
+    theme: darkMode ? "dark" : "light",
+    language: "English",
+    timezone: "Asia/Kolkata",
+  });
+
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [modalData, setModalData] = useState({
+    title: "",
+    message: "",
+    type: "success",
   });
 
   const cardClass = darkMode
@@ -59,7 +70,15 @@ export default function Settings() {
     ? "w-full px-4 py-3 rounded-xl border bg-gray-600 border-gray-500 text-white outline-none"
     : "w-full px-4 py-3 rounded-xl border bg-gray-50 border-gray-200 text-gray-700 outline-none";
 
-  // Handlers for form changes
+  const selectClass = darkMode
+    ? "w-full px-4 py-3 rounded-xl border bg-gray-600 border-gray-500 text-white outline-none cursor-pointer"
+    : "w-full px-4 py-3 rounded-xl border bg-gray-50 border-gray-200 text-gray-700 outline-none cursor-pointer";
+
+  const showModal = (title, message, type = "success") => {
+    setModalData({ title, message, type });
+    setShowMessageModal(true);
+  };
+
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
     setProfileData((prev) => ({
@@ -68,7 +87,6 @@ export default function Settings() {
     }));
   };
 
-  // Handler for password field changes
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordData((prev) => ({
@@ -77,7 +95,6 @@ export default function Settings() {
     }));
   };
 
-  // Handlers for toggling password visibility and notification settings
   const handleSecurityToggle = (field) => {
     setSecuritySettings((prev) => ({
       ...prev,
@@ -85,7 +102,6 @@ export default function Settings() {
     }));
   };
 
-  // Handler for toggling notification settings
   const handleNotificationToggle = (field) => {
     setNotificationSettings((prev) => ({
       ...prev,
@@ -93,8 +109,121 @@ export default function Settings() {
     }));
   };
 
+  const handleSystemPreferenceChange = (e) => {
+    const { name, value } = e.target;
+    setSystemPreferences((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleProfileUpdate = () => {
+    if (!profileData.name.trim()) {
+      showModal("Profile Update Failed", "Name cannot be empty.", "error");
+      return;
+    }
+
+    if (!profileData.email.trim()) {
+      showModal("Profile Update Failed", "Email cannot be empty.", "error");
+      return;
+    }
+
+    if (!profileData.email.includes("@")) {
+      showModal(
+        "Profile Update Failed",
+        "Please enter a valid email.",
+        "error",
+      );
+      return;
+    }
+
+    showModal("Profile Updated", "Your profile has been updated successfully.");
+  };
+
+  const handlePasswordUpdate = () => {
+    const { currentPassword, newPassword, confirmPassword } = passwordData;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      showModal(
+        "Password Update Failed",
+        "Please fill all password fields.",
+        "error",
+      );
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      showModal(
+        "Password Update Failed",
+        "New password must be at least 6 characters long.",
+        "error",
+      );
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      showModal(
+        "Password Update Failed",
+        "New password and confirm password do not match.",
+        "error",
+      );
+      return;
+    }
+
+    setPasswordData({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+
+    showModal(
+      "Password Updated",
+      "Your password has been changed successfully.",
+    );
+  };
+
+  const handleSavePreferences = () => {
+    if (setDarkMode) {
+      setDarkMode(systemPreferences.theme === "dark");
+    }
+
+    showModal(
+      "Preferences Saved",
+      "Your system preferences have been saved successfully.",
+    );
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleProfileImageChange = (e) => {
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    const imageUrl = URL.createObjectURL(file);
+
+    setProfileData((prev) => ({
+      ...prev,
+      profileImage: imageUrl,
+    }));
+
+    showModal("Image Uploaded", "Profile image updated successfully.");
+  };
+
   return (
     <div className="space-y-6">
+      {showMessageModal && (
+        <SettingsMessageModal
+          darkMode={darkMode}
+          title={modalData.title}
+          message={modalData.message}
+          type={modalData.type}
+          onClose={() => setShowMessageModal(false)}
+        />
+      )}
+
       {/* Page header */}
       <div>
         <h1 className={`text-2xl font-bold ${headingClass}`}>Settings</h1>
@@ -117,7 +246,6 @@ export default function Settings() {
 
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] gap-8 items-start">
-                {/* Left image section */}
                 <div className="flex flex-col items-center md:items-start">
                   <div className="relative">
                     <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-300">
@@ -129,6 +257,8 @@ export default function Settings() {
                     </div>
 
                     <button
+                      type="button"
+                      onClick={handleUploadClick}
                       className={`absolute bottom-2 right-1 w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${
                         darkMode
                           ? "bg-gray-600 text-white"
@@ -139,7 +269,17 @@ export default function Settings() {
                     </button>
                   </div>
 
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    onChange={handleProfileImageChange}
+                    className="hidden"
+                  />
+
                   <button
+                    type="button"
+                    onClick={handleUploadClick}
                     className={`mt-4 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium shadow-sm ${
                       darkMode
                         ? "bg-gray-600 text-white hover:bg-gray-500"
@@ -151,9 +291,7 @@ export default function Settings() {
                   </button>
                 </div>
 
-                {/* Right form section */}
                 <div className="space-y-5">
-                  {/* // Form fields for name and email  */}
                   <div>
                     <label
                       className={`block text-sm font-medium mb-2 ${
@@ -188,7 +326,11 @@ export default function Settings() {
                     />
                   </div>
 
-                  <button className="w-full py-3 rounded-xl bg-[#0f766e] text-white text-base font-medium hover:opacity-90 transition cursor-pointer">
+                  <button
+                    type="button"
+                    onClick={handleProfileUpdate}
+                    className="w-full py-3 rounded-xl bg-[#0f766e] text-white text-base font-medium hover:opacity-90 transition cursor-pointer"
+                  >
                     Update Profile
                   </button>
                 </div>
@@ -309,6 +451,7 @@ export default function Settings() {
                 Change Password
               </h2>
             </div>
+
             <div className="p-6 space-y-5">
               <div>
                 <label
@@ -319,7 +462,9 @@ export default function Settings() {
                   Current Password
                 </label>
                 <input
-                  type="password"
+                  type={
+                    securitySettings.showCurrentPassword ? "text" : "password"
+                  }
                   name="currentPassword"
                   value={passwordData.currentPassword}
                   onChange={handlePasswordChange}
@@ -337,7 +482,7 @@ export default function Settings() {
                   New Password
                 </label>
                 <input
-                  type="password"
+                  type={securitySettings.showNewPassword ? "text" : "password"}
                   name="newPassword"
                   value={passwordData.newPassword}
                   onChange={handlePasswordChange}
@@ -355,7 +500,9 @@ export default function Settings() {
                   Confirm New Password
                 </label>
                 <input
-                  type="password"
+                  type={
+                    securitySettings.showConfirmPassword ? "text" : "password"
+                  }
                   name="confirmPassword"
                   value={passwordData.confirmPassword}
                   onChange={handlePasswordChange}
@@ -364,7 +511,11 @@ export default function Settings() {
                 />
               </div>
 
-              <button className="w-full py-3 rounded-xl bg-[#0f766e] text-white text-base font-medium hover:opacity-90 transition cursor-pointer">
+              <button
+                type="button"
+                onClick={handlePasswordUpdate}
+                className="w-full py-3 rounded-xl bg-[#0f766e] text-white text-base font-medium hover:opacity-90 transition cursor-pointer"
+              >
                 Update Password
               </button>
             </div>
@@ -377,7 +528,115 @@ export default function Settings() {
                 System Preferences
               </h2>
             </div>
-            <div className="p-6 min-h-[250px]"></div>
+
+            <div className="p-6 space-y-5">
+              <div>
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    darkMode ? "text-gray-200" : "text-gray-700"
+                  }`}
+                >
+                  Theme
+                </label>
+
+                <div
+                  className={`grid grid-cols-2 gap-3 p-1 rounded-xl ${
+                    darkMode ? "bg-gray-600" : "bg-gray-100"
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSystemPreferences((prev) => ({
+                        ...prev,
+                        theme: "light",
+                      }))
+                    }
+                    className={`py-2 rounded-lg text-sm font-medium transition cursor-pointer ${
+                      systemPreferences.theme === "light"
+                        ? darkMode
+                          ? "bg-gray-500 text-white"
+                          : "bg-white text-gray-800 shadow-sm"
+                        : darkMode
+                          ? "text-gray-300"
+                          : "text-gray-500"
+                    }`}
+                  >
+                    Light
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSystemPreferences((prev) => ({
+                        ...prev,
+                        theme: "dark",
+                      }))
+                    }
+                    className={`py-2 rounded-lg text-sm font-medium transition cursor-pointer ${
+                      systemPreferences.theme === "dark"
+                        ? darkMode
+                          ? "bg-gray-500 text-white"
+                          : "bg-white text-gray-800 shadow-sm"
+                        : darkMode
+                          ? "text-gray-300"
+                          : "text-gray-500"
+                    }`}
+                  >
+                    Dark
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    darkMode ? "text-gray-200" : "text-gray-700"
+                  }`}
+                >
+                  Language
+                </label>
+                <select
+                  name="language"
+                  value={systemPreferences.language}
+                  onChange={handleSystemPreferenceChange}
+                  className={selectClass}
+                >
+                  <option>English</option>
+                  <option>Hindi</option>
+                  <option>Marathi</option>
+                </select>
+              </div>
+
+              <div>
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    darkMode ? "text-gray-200" : "text-gray-700"
+                  }`}
+                >
+                  Timezone
+                </label>
+                <select
+                  name="timezone"
+                  value={systemPreferences.timezone}
+                  onChange={handleSystemPreferenceChange}
+                  className={selectClass}
+                >
+                  <option>Asia/Kolkata</option>
+                  <option>UTC</option>
+                  <option>America/New_York</option>
+                  <option>Europe/London</option>
+                </select>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSavePreferences}
+                className="w-full py-3 rounded-xl bg-[#0f766e] text-white text-base font-medium hover:opacity-90 transition cursor-pointer"
+              >
+                Save Preferences
+              </button>
+            </div>
           </div>
         </div>
       </div>
