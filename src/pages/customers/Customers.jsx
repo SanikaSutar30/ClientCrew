@@ -577,6 +577,7 @@ const { darkMode } = useOutletContext();
           </div>
         </div>
       </div>
+      
     </div>
   );
 }

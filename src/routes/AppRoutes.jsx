@@ -3,8 +3,7 @@ import Layout from "../components/layout/Layout";
 import Dashboard from "../pages/Dashboard";
 import Customers from "../pages/customers/Customers";
 import AddCustomer from "../pages/customers/AddCustomer";
-import Projects from "../pages/Projects";
-import Tasks from "../pages/Tasks";
+import Projects from "../pages/projects/Projects";import Tasks from "../pages/Tasks";
 import Employees from "../pages/Employees";
 import Reports from "../pages/Reports";
 import Notifications from "../pages/Notifications";
@@ -12,6 +11,12 @@ import Settings from "../pages/Settings";
 import Register from "../pages/Register";
 import MyProfile from "../pages/MyProfile";
 import HelpSupport from "../pages/HelpSupport";
+
+import AddProject from "../pages/projects/AddProject";
+import EditProject from "../pages/projects/EditProject";
+import ViewProject from "../pages/projects/ViewProject";
+import DeleteProject from "../pages/projects/DeleteProject";
+import ProjectBoard from "../pages/projects/ProjectBoard";
 
 export default function AppRoutes() {
   return (
@@ -32,6 +37,12 @@ export default function AppRoutes() {
           <Route path="/my-profile" element={<MyProfile />} />
           <Route path="/help-support" element={<HelpSupport />} />
         </Route>
+
+        <Route path="/projects/add" element={<AddProject />} />
+        <Route path="/projects/edit/:id" element={<EditProject />} />
+        <Route path="/projects/view/:id" element={<ViewProject />} />
+        <Route path="/projects/delete/:id" element={<DeleteProject />} />
+        <Route path="/project-board" element={<ProjectBoard />} />
 
         <Route path="/register" element={<Register />} />
       </Routes>

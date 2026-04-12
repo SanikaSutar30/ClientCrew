@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import LogoutConfirmModal from "../../pages/LogoutConfirmModal";
 
 function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
   const navigate = useNavigate();
@@ -19,6 +20,8 @@ function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  // Logout modal state
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Refs for outside click
   const messageRef = useRef(null);
@@ -98,6 +101,10 @@ function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
     navigate(path);
   };
 
+const handleConfirmLogout = () => {
+  setShowLogoutModal(false);
+  navigate("/register");
+};
   return (
     <div
       className={`h-16 flex items-center justify-between px-6 ${
@@ -319,7 +326,10 @@ function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
               {/* Footer */}
               <div className="border-t border-gray-200 p-2">
                 <button
-                  onClick={() => handleProfileOptionClick("/logout")}
+                  onClick={() => {
+                    setShowProfileMenu(false);
+                    setShowLogoutModal(true);
+                  }}
                   className="w-full flex items-center gap-3 px-3 py-3 text-left text-red-500 hover:bg-red-50 rounded-xl cursor-pointer"
                 >
                   <LogOut size={20} />
@@ -330,6 +340,13 @@ function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
           )}
         </div>
       </div>
+      {showLogoutModal && (
+        <LogoutConfirmModal
+          darkMode={darkMode}
+          setShowLogoutModal={setShowLogoutModal}
+          onConfirmLogout={handleConfirmLogout}
+        />
+      )}
     </div>
   );
 }

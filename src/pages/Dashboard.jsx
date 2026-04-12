@@ -357,7 +357,7 @@ const handleAddCustomer = (newCustomer) => {
           darkMode ? "border-gray-600" : "border-gray-200"
         }`}
       >
-        {/*  */}
+        {/*  customer growth*/}
         <div
           className={`lg:col-span-2 p-6 rounded-2xl shadow-sm ${
             darkMode
