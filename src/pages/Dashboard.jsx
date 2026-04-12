@@ -1,13 +1,7 @@
 import { useState } from "react";
-import { useOutletContext, useNavigate } from "react-router-dom";
-import {
-  Calendar,
-  ChevronDown,
-  Users,
-  UserCheck,
-  Folder,
-  Activity,
-} from "lucide-react";
+import { useOutletContext } from "react-router-dom";
+import { Calendar, ChevronDown } from "lucide-react";
+import { Users, UserCheck, Folder, Activity } from "lucide-react";
 import AddCustomer from "./customers/AddCustomer";
 import {
   LineChart,
@@ -17,10 +11,9 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
+import { PieChart, Pie, Cell } from "recharts";
+import { useNavigate } from "react-router-dom";
 
 const dashboardData = {
   Today: {
@@ -61,96 +54,98 @@ const customerGrowthData = [
 export default function Dashboard() {
   const { darkMode } = useOutletContext();
 
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState("This Month");
-  const [open, setOpen] = useState(false);
-  const [chartFilter, setChartFilter] = useState("Monthly");
+    // Modal visibility state
+    const [showAddModal, setShowAddModal] = useState(false);
 
-  const [customers, setCustomers] = useState([
+const [selectedFilter, setSelectedFilter] = useState("This Month");
+const [open, setOpen] = useState(false);
+
+const [customers, setCustomers] = useState([
+  {
+    id: 1,
+    name: "Rahul Sharma",
+    email: "rahul@gmail.com",
+    phone: "+91 9876543210",
+    status: "Active",
+    joinedDate: "2024-01-12",
+    image: "../assets/Profile.jpg",
+  },
+  {
+    id: 2,
+    name: "Amit Patil",
+    email: "amit@gmail.com",
+    phone: "+91 9123456789",
+    status: "Active",
+    joinedDate: "2024-02-03",
+    image: "../assets/Profile2.jpg",
+
+  },
+  {
+    id: 3,
+    name: "Priya Singh",
+    email: "priya@gmail.com",
+    phone: "+91 9988776655",
+    status: "Pending",
+    joinedDate: "2024-03-18",
+    image: "../assets/Profile3.jpg",
+  },
+  {
+    id: 4,
+    name: "John Doe",
+    email: "john@gmail.com",
+    phone: "+91 8877655443",
+    status: "Inactive",
+    joinedDate: "2024-04-02",
+    image: "../assets/Profile4.jpg",
+  },
+  {
+    id: 5,
+    name: "Neha Verma",
+    email: "neha@gmail.com",
+    phone: "+91 9284711223",
+    status: "Active",
+    joinedDate: "2024-04-10",
+    image: "../assets/Profile5.jpg",
+  },
+  {
+    id: 6,
+    name: "Suresh Reddy",
+    email: "suresh@gmail.com",
+    phone: "+91 9032144556",
+    status: "Active",
+    joinedDate: "2024-05-22",
+    image: "../assets/Profile6.jpg",
+  },
+]);
+
+const options = ["Today", "This Week", "This Month", "This Year"];
+const currentData = dashboardData[selectedFilter];
+
+// initialize navigate for view all button
+const navigate = useNavigate();
+// state for chart filter (monthly/weekly)
+const [chartFilter, setChartFilter] = useState("Monthly");
+
+// dummy data for source distribution and top customers, replace with real data when API is ready
+const sourceData = [
+  { name: "Direct", value: 45, color: "#0f766e" },
+  { name: "Referral", value: 25, color: "#3b82f6" },
+  { name: "Organic", value: 20, color: "#f59e0b" },
+  { name: "Others", value: 10, color: "#6366f1" },
+];
+
+const handleAddCustomer = (newCustomer) => {
+  setCustomers((prev) => [
     {
-      id: 1,
-      name: "Rahul Sharma",
-      email: "rahul@gmail.com",
-      phone: "+91 9876543210",
-      status: "Active",
-      joinedDate: "2024-01-12",
-      image: "../assets/Profile.jpg",
+      id: prev.length + 1,
+      ...newCustomer,
     },
-    {
-      id: 2,
-      name: "Amit Patil",
-      email: "amit@gmail.com",
-      phone: "+91 9123456789",
-      status: "Active",
-      joinedDate: "2024-02-03",
-      image: "../assets/Profile2.jpg",
-    },
-    {
-      id: 3,
-      name: "Priya Singh",
-      email: "priya@gmail.com",
-      phone: "+91 9988776655",
-      status: "Pending",
-      joinedDate: "2024-03-18",
-      image: "../assets/Profile3.jpg",
-    },
-    {
-      id: 4,
-      name: "John Doe",
-      email: "john@gmail.com",
-      phone: "+91 8877655443",
-      status: "Inactive",
-      joinedDate: "2024-04-02",
-      image: "../assets/Profile4.jpg",
-    },
-    {
-      id: 5,
-      name: "Neha Verma",
-      email: "neha@gmail.com",
-      phone: "+91 9284711223",
-      status: "Active",
-      joinedDate: "2024-04-10",
-      image: "../assets/Profile5.jpg",
-    },
-    {
-      id: 6,
-      name: "Suresh Reddy",
-      email: "suresh@gmail.com",
-      phone: "+91 9032144556",
-      status: "Active",
-      joinedDate: "2024-05-22",
-      image: "../assets/Profile6.jpg",
-    },
+    ...prev,
   ]);
+ setShowAddModal(false);
+};
+  
 
-  const options = ["Today", "This Week", "This Month", "This Year"];
-  const currentData = dashboardData[selectedFilter];
-  const navigate = useNavigate();
-
-  const sourceData = [
-    { name: "Direct", value: 45, color: "#0f766e" },
-    { name: "Referral", value: 25, color: "#3b82f6" },
-    { name: "Organic", value: 20, color: "#f59e0b" },
-    { name: "Others", value: 10, color: "#6366f1" },
-  ];
-
-  const handleAddCustomer = (newCustomer) => {
-    setCustomers((prev) => [
-      {
-        id: prev.length + 1,
-        ...newCustomer,
-      },
-      ...prev,
-    ]);
-    setShowAddModal(false);
-  };
-
-  const getStatusStyles = (status) => {
-    if (status === "New") return "bg-green-100 text-green-600";
-    if (status === "Active") return "bg-blue-100 text-blue-600";
-    if (status === "Pending") return "bg-orange-100 text-orange-600";
-    return "bg-gray-100 text-gray-500";
-  };
 
   return (
     <div className="space-y-6">
@@ -161,7 +156,6 @@ export default function Dashboard() {
           onAddCustomer={handleAddCustomer}
         />
       )}
-
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
@@ -169,7 +163,6 @@ export default function Dashboard() {
             Monitor your business metrics and performance
           </p>
         </div>
-
         <div className="relative">
           <div
             onClick={() => setOpen(!open)}
@@ -221,8 +214,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Cards */}
+      {/* cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Customers */}
         <div
           className={`p-5 rounded-2xl shadow-sm hover:shadow-md transition ${
             darkMode
@@ -232,12 +226,11 @@ export default function Dashboard() {
         >
           <div className="flex items-center justify-between">
             <p
-              className={`text-sm font-medium ${
-                darkMode ? "text-gray-300" : "text-gray-500"
-              }`}
+              className={`text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-500"}`}
             >
               Total Customers
             </p>
+
             <div className="p-2 bg-[#0f766e]/10 rounded-lg">
               <Users size={18} className="text-[#0f766e]" />
             </div>
@@ -245,18 +238,18 @@ export default function Dashboard() {
 
           <div className="flex items-end justify-between mt-4">
             <h2
-              className={`text-2xl font-bold ${
-                darkMode ? "text-white" : "text-black"
-              }`}
+              className={`text-2xl font-bold ${darkMode ? "text-white" : "text-black"}`}
             >
               {currentData.customers}
             </h2>
+
             <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-md">
               +12%
             </span>
           </div>
         </div>
 
+        {/* Employees */}
         <div
           className={`p-5 rounded-2xl shadow-sm hover:shadow-md transition ${
             darkMode
@@ -266,12 +259,11 @@ export default function Dashboard() {
         >
           <div className="flex items-center justify-between">
             <p
-              className={`text-sm font-medium ${
-                darkMode ? "text-gray-300" : "text-gray-500"
-              }`}
+              className={`text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-500"}`}
             >
               Total Employees
             </p>
+
             <div className="p-2 bg-blue-100 rounded-lg">
               <UserCheck size={18} className="text-blue-600" />
             </div>
@@ -279,18 +271,18 @@ export default function Dashboard() {
 
           <div className="flex items-end justify-between mt-4">
             <h2
-              className={`text-2xl font-bold ${
-                darkMode ? "text-white" : "text-black"
-              }`}
+              className={`text-2xl font-bold ${darkMode ? "text-white" : "text-black"}`}
             >
               {currentData.employees}
             </h2>
+
             <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-md">
               +8%
             </span>
           </div>
         </div>
 
+        {/* Projects */}
         <div
           className={`p-5 rounded-2xl shadow-sm hover:shadow-md transition ${
             darkMode
@@ -300,12 +292,11 @@ export default function Dashboard() {
         >
           <div className="flex items-center justify-between">
             <p
-              className={`text-sm font-medium ${
-                darkMode ? "text-gray-300" : "text-gray-500"
-              }`}
+              className={`text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-500"}`}
             >
               Total Projects
             </p>
+
             <div className="p-2 bg-purple-100 rounded-lg">
               <Folder size={18} className="text-purple-600" />
             </div>
@@ -313,18 +304,18 @@ export default function Dashboard() {
 
           <div className="flex items-end justify-between mt-4">
             <h2
-              className={`text-2xl font-bold ${
-                darkMode ? "text-white" : "text-black"
-              }`}
+              className={`text-2xl font-bold ${darkMode ? "text-white" : "text-black"}`}
             >
               {currentData.projects}
             </h2>
+
             <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-md">
               +5%
             </span>
           </div>
         </div>
 
+        {/* Interactions */}
         <div
           className={`p-5 rounded-2xl shadow-sm hover:shadow-md transition ${
             darkMode
@@ -334,12 +325,11 @@ export default function Dashboard() {
         >
           <div className="flex items-center justify-between">
             <p
-              className={`text-sm font-medium ${
-                darkMode ? "text-gray-300" : "text-gray-500"
-              }`}
+              className={`text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-500"}`}
             >
               Interactions
             </p>
+
             <div className="p-2 bg-orange-100 rounded-lg">
               <Activity size={18} className="text-orange-600" />
             </div>
@@ -347,12 +337,11 @@ export default function Dashboard() {
 
           <div className="flex items-end justify-between mt-4">
             <h2
-              className={`text-2xl font-bold ${
-                darkMode ? "text-white" : "text-black"
-              }`}
+              className={`text-2xl font-bold ${darkMode ? "text-white" : "text-black"}`}
             >
               {currentData.interactions}
             </h2>
+
             <span className="text-xs font-semibold text-red-600 bg-red-100 px-2 py-1 rounded-md">
               -2%
             </span>
@@ -360,14 +349,15 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Chart + Recent Customers */}
+      {/* Chart */}
       <div
-        className={`grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 rounded-2xl border ${
-          darkMode
-            ? "bg-gray-800 border-gray-600"
-            : "bg-gray-100 border-gray-200"
+        className={`grid grid-cols-1 lg:grid-cols-3 gap-6 bg-gray-100 ${
+          darkMode ? "bg-gray-800" : "bg-gray-100"
+        } p-6 rounded-2xl border ${
+          darkMode ? "border-gray-600" : "border-gray-200"
         }`}
       >
+        {/*  */}
         <div
           className={`lg:col-span-2 p-6 rounded-2xl shadow-sm ${
             darkMode
@@ -389,6 +379,7 @@ export default function Dashboard() {
                 darkMode ? "bg-gray-600" : "bg-gray-100"
               }`}
             >
+              {/* Monthly */}
               <button
                 onClick={() => setChartFilter("Monthly")}
                 className={`px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition ${
@@ -404,6 +395,7 @@ export default function Dashboard() {
                 Monthly
               </button>
 
+              {/* Weekly */}
               <button
                 onClick={() => setChartFilter("Weekly")}
                 className={`px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition ${
@@ -422,6 +414,7 @@ export default function Dashboard() {
           </div>
 
           <div className="w-full h-[320px]">
+            {/* ResponsiveContainer  is used for */}
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={customerGrowthData}>
                 <CartesianGrid
@@ -466,7 +459,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Recent Customers */}
+        {/* recent customers */}
         <div
           className={`p-6 rounded-2xl shadow-sm ${
             darkMode
@@ -483,6 +476,7 @@ export default function Dashboard() {
               Recent Customers
             </h2>
             <button
+              //   Navigate to customers page on click
               onClick={() => navigate("/customers")}
               className="text-sm cursor-pointer font-medium text-[#0f766e] hover:underline hover:text-[#115e59] transition"
             >
@@ -523,9 +517,15 @@ export default function Dashboard() {
                 </div>
 
                 <span
-                  className={`text-xs font-semibold px-3 py-1 rounded-full ${getStatusStyles(
-                    customer.status,
-                  )}`}
+                  className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                    customer.status === "New"
+                      ? "bg-green-100 text-green-600"
+                      : customer.status === "Active"
+                        ? "bg-blue-100 text-blue-600"
+                        : customer.status === "Pending"
+                          ? "bg-orange-100 text-orange-600"
+                          : "bg-gray-100 text-gray-500"
+                  }`}
                 >
                   {customer.status}
                 </span>
@@ -545,9 +545,7 @@ export default function Dashboard() {
           }`}
         >
           <h2
-            className={`text-xl font-semibold mb-4 ${
-              darkMode ? "text-white" : "text-black"
-            }`}
+            className={`text-xl font-semibold mb-4 ${darkMode ? "text-white" : "text-black"}`}
           >
             Customer Source
           </h2>
@@ -580,19 +578,11 @@ export default function Dashboard() {
                   ></span>
                   <div>
                     <p
-                      className={`text-sm ${
-                        darkMode ? "text-gray-300" : "text-gray-600"
-                      }`}
+                      className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"}`}
                     >
                       {item.name}
                     </p>
-                    <p
-                      className={`font-semibold ${
-                        darkMode ? "text-white" : "text-black"
-                      }`}
-                    >
-                      {item.value}%
-                    </p>
+                    <p className="font-semibold">{item.value}%</p>
                   </div>
                 </div>
               ))}
@@ -601,6 +591,7 @@ export default function Dashboard() {
         </div>
 
         {/* Top Customers */}
+
         <div
           className={`lg:col-span-5 p-3 rounded-2xl shadow-sm ${
             darkMode
@@ -609,13 +600,12 @@ export default function Dashboard() {
           }`}
         >
           <h2
-            className={`text-xl font-semibold mb-4 ${
-              darkMode ? "text-white" : "text-black"
-            }`}
+            className={`text-xl font-semibold mb-4 ${darkMode ? "text-white" : "text-black"}`}
           >
             Top Customers
           </h2>
 
+          {/* Header */}
           <div
             className={`grid grid-cols-[2fr_2fr_auto] px-3 py-2 rounded-xl text-sm font-semibold ${
               darkMode ? "bg-gray-600 text-white" : "bg-gray-100 text-gray-700"
@@ -626,7 +616,8 @@ export default function Dashboard() {
             <span className="text-right">Status</span>
           </div>
 
-          <div className="space-y-3 mt-3">
+          {/* Rows */}
+          <div className="space-y-3">
             {customers.slice(0, 4).map((customer) => (
               <div
                 key={customer.id}
@@ -634,24 +625,21 @@ export default function Dashboard() {
                   darkMode ? "hover:bg-gray-600" : "hover:bg-gray-100"
                 }`}
               >
-                {/* Fixed image section */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300 shrink-0">
-                    <img
-                      src={customer.image}
-                      alt={customer.name}
-                      className="w-full h-full object-cover object-top"
-                    />
+                {/* Name */}
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-gray-300 rounded-full">
+                    <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-300 shrink-0">
+                      <img
+                        src={customer.image}
+                        alt={customer.name}
+                        className="w-full h-full object-cover object-top"
+                      />
+                    </div>
                   </div>
-                  <span
-                    className={`font-medium truncate ${
-                      darkMode ? "text-white" : "text-black"
-                    }`}
-                  >
-                    {customer.name}
-                  </span>
+                  <span className="font-medium">{customer.name}</span>
                 </div>
 
+                {/* Email */}
                 <span
                   className={`truncate ${
                     darkMode ? "text-gray-300" : "text-gray-500"
@@ -660,10 +648,17 @@ export default function Dashboard() {
                   {customer.email}
                 </span>
 
+                {/* Status */}
                 <span
-                  className={`text-xs font-semibold px-3 py-1 rounded-full w-fit ml-auto ${getStatusStyles(
-                    customer.status,
-                  )}`}
+                  className={`text-xs font-semibold px-3 py-1 rounded-full w-fit ml-auto ${
+                    customer.status === "New"
+                      ? "bg-green-100 text-green-600"
+                      : customer.status === "Active"
+                        ? "bg-blue-100 text-blue-600"
+                        : customer.status === "Pending"
+                          ? "bg-orange-100 text-orange-600"
+                          : "bg-gray-100 text-gray-500"
+                  }`}
                 >
                   {customer.status}
                 </span>
@@ -681,9 +676,7 @@ export default function Dashboard() {
           }`}
         >
           <h2
-            className={`text-xl font-semibold mb-4 ${
-              darkMode ? "text-white" : "text-black"
-            }`}
+            className={`text-xl font-semibold mb-4 ${darkMode ? "text-white" : "text-black"}`}
           >
             Quick Actions
           </h2>
@@ -701,9 +694,7 @@ export default function Dashboard() {
                 👤
               </div>
               <p
-                className={`font-medium ${
-                  darkMode ? "text-white" : "text-black"
-                }`}
+                className={`font-medium ${darkMode ? "text-white" : "text-black"}`}
               >
                 Add Customer
               </p>
@@ -721,9 +712,7 @@ export default function Dashboard() {
                 📄
               </div>
               <p
-                className={`font-medium ${
-                  darkMode ? "text-white" : "text-black"
-                }`}
+                className={`font-medium ${darkMode ? "text-white" : "text-black"}`}
               >
                 View Reports
               </p>
@@ -741,9 +730,7 @@ export default function Dashboard() {
                 👥
               </div>
               <p
-                className={`font-medium ${
-                  darkMode ? "text-white" : "text-black"
-                }`}
+                className={`font-medium ${darkMode ? "text-white" : "text-black"}`}
               >
                 Manage Users
               </p>
@@ -761,9 +748,7 @@ export default function Dashboard() {
                 ⚙️
               </div>
               <p
-                className={`font-medium ${
-                  darkMode ? "text-white" : "text-black"
-                }`}
+                className={`font-medium ${darkMode ? "text-white" : "text-black"}`}
               >
                 Settings
               </p>
