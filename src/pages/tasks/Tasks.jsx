@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import AddTask from "./AddTask";
-import ViewTask from "./ViewTask";
-import EditTask from "./EditTask";
-import DeleteTask from "./DeleteTask";
+import ViewTask from "./tasks/ViewTask";
+import AddTask from "./tasks/AddTask";
+import EditTask from "./tasks/EditTask";
+import DeleteTask from "./tasks/DeleteTask";
 // Icons
 import {
   Plus,
