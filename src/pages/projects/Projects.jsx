@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import AddTask from "../tasks/AddTask";
 
 import {
+  Users,
   Plus,
   Search,
   Eye,
@@ -26,6 +28,7 @@ import ViewProject from "./ViewProject";
 import DeleteProject from "./DeleteProject";
 
 export default function Projects() {
+
   // State
   const { darkMode } = useOutletContext();
   // Modal state
@@ -34,6 +37,7 @@ export default function Projects() {
   const [showDelete, setShowDelete] = useState(false);
   const [showView, setShowView] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false);
 
   // Sample projects data
   const [projects, setProjects] = useState([
@@ -314,6 +318,13 @@ const handleDeleteClick = (project) => {
           darkMode={darkMode}
           project={selectedProject}
           setShowView={setShowView}
+        />
+      )}
+      {showAddTaskModal && (
+        <AddTask
+          darkMode={darkMode}
+          onClose={() => setShowAddTaskModal(false)}
+          onAddTask={(newTask) => console.log("New Task:", newTask)}
         />
       )}
 
@@ -921,6 +932,7 @@ const handleDeleteClick = (project) => {
             ))}
           </div>
         </div>
+
         {/* Quick Actions */}
         <div
           className={`p-6 rounded-2xl shadow-sm ${
@@ -947,40 +959,36 @@ const handleDeleteClick = (project) => {
                   : "bg-white border-gray-200 hover:bg-gray-50"
               }`}
             >
-              <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-[#0f766e] text-white flex items-center justify-center">
+              <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-teal-700 text-white flex items-center justify-center">
                 <Plus size={20} />
               </div>
               <p
-                className={`font-medium text-sm ${
-                  darkMode ? "text-white" : "text-black"
-                }`}
+                className={`font-medium text-sm ${darkMode ? "text-white" : "text-black"}`}
               >
                 Add Project
               </p>
             </button>
 
-            {/* Project Board */}
+            {/* Add Task */}
             <button
-              onClick={() => navigate("/project-board")}
+              onClick={() => setShowAddTaskModal(true)}
               className={`p-4 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
                 darkMode
                   ? "bg-gray-600 border-gray-500 hover:bg-gray-500"
                   : "bg-white border-gray-200 hover:bg-gray-50"
               }`}
             >
-              <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-blue-500 text-white flex items-center justify-center">
-                <LayoutGrid size={20} />
+              <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-indigo-500 text-white flex items-center justify-center">
+                <CheckSquare size={20} />
               </div>
               <p
-                className={`font-medium text-sm ${
-                  darkMode ? "text-white" : "text-black"
-                }`}
+                className={`font-medium text-sm ${darkMode ? "text-white" : "text-black"}`}
               >
-                Project Board
+                Add Task
               </p>
             </button>
 
-            {/* Go to Tasks */}
+            {/* Manage Tasks */}
             <button
               onClick={() => navigate("/tasks")}
               className={`p-4 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
@@ -990,12 +998,10 @@ const handleDeleteClick = (project) => {
               }`}
             >
               <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-yellow-500 text-white flex items-center justify-center">
-                <CheckSquare size={20} />
+                <LayoutGrid size={20} />
               </div>
               <p
-                className={`font-medium text-sm ${
-                  darkMode ? "text-white" : "text-black"
-                }`}
+                className={`font-medium text-sm ${darkMode ? "text-white" : "text-black"}`}
               >
                 Manage Tasks
               </p>
@@ -1003,7 +1009,7 @@ const handleDeleteClick = (project) => {
 
             {/* Settings */}
             <button
-              onClick={() => navigate("/project-settings")}
+              onClick={() => navigate("/projects/settings")}
               className={`p-4 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
                 darkMode
                   ? "bg-gray-600 border-gray-500 hover:bg-gray-500"
@@ -1014,9 +1020,7 @@ const handleDeleteClick = (project) => {
                 <Settings size={20} />
               </div>
               <p
-                className={`font-medium text-sm ${
-                  darkMode ? "text-white" : "text-black"
-                }`}
+                className={`font-medium text-sm ${darkMode ? "text-white" : "text-black"}`}
               >
                 Settings
               </p>

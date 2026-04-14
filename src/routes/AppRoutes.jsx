@@ -3,7 +3,8 @@ import Layout from "../components/layout/Layout";
 import Dashboard from "../pages/Dashboard";
 import Customers from "../pages/customers/Customers";
 import AddCustomer from "../pages/customers/AddCustomer";
-import Projects from "../pages/projects/Projects";import Tasks from "../pages/Tasks";
+import Projects from "../pages/projects/Projects";
+import Tasks from "../pages/tasks/Tasks";
 import Employees from "../pages/Employees";
 import Reports from "../pages/Reports";
 import Notifications from "../pages/Notifications";
@@ -16,7 +17,7 @@ import AddProject from "../pages/projects/AddProject";
 import EditProject from "../pages/projects/EditProject";
 import ViewProject from "../pages/projects/ViewProject";
 import DeleteProject from "../pages/projects/DeleteProject";
-import ProjectBoard from "../pages/projects/ProjectBoard";
+import ProjectSettings from "../pages/projects/ProjectSettings";
 
 export default function AppRoutes() {
   return (
@@ -28,7 +29,14 @@ export default function AppRoutes() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/customers/add" element={<AddCustomer />} />
+
           <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/settings" element={<ProjectSettings />} />
+          <Route path="/projects/add" element={<AddProject />} />
+          <Route path="/projects/edit/:id" element={<EditProject />} />
+          <Route path="/projects/view/:id" element={<ViewProject />} />
+          <Route path="/projects/delete/:id" element={<DeleteProject />} />
+
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/employees" element={<Employees />} />
           <Route path="/reports" element={<Reports />} />
@@ -38,14 +46,9 @@ export default function AppRoutes() {
           <Route path="/help-support" element={<HelpSupport />} />
         </Route>
 
-        <Route path="/projects/add" element={<AddProject />} />
-        <Route path="/projects/edit/:id" element={<EditProject />} />
-        <Route path="/projects/view/:id" element={<ViewProject />} />
-        <Route path="/projects/delete/:id" element={<DeleteProject />} />
-        <Route path="/project-board" element={<ProjectBoard />} />
-
         <Route path="/register" element={<Register />} />
       </Routes>
     </BrowserRouter>
   );
 }
+

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
@@ -41,13 +41,10 @@ const menu = [
 ];
 
 function Sidebar({ darkMode }) {
-  // Store logout modal state
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
-  // Enable page navigation
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Handle logout and redirect to register page
   const handleLogout = () => {
     setShowLogoutModal(false);
     localStorage.removeItem("token");
@@ -63,7 +60,6 @@ function Sidebar({ darkMode }) {
       }`}
     >
       <div>
-        {/* Logout modal */}
         {showLogoutModal && (
           <LogoutConfirmModal
             darkMode={darkMode}
@@ -72,7 +68,6 @@ function Sidebar({ darkMode }) {
           />
         )}
 
-        {/* Logo */}
         <div className="flex items-center gap-3 px-6 py-5">
           <div className="bg-[#0f766e] w-10 h-10 rounded-lg flex items-center justify-center font-bold hover:bg-[#115e59]">
             C
@@ -80,7 +75,6 @@ function Sidebar({ darkMode }) {
           <h1 className="text-lg font-semibold">ClientCrew</h1>
         </div>
 
-        {/* Sidebar menu */}
         <div className="px-4 space-y-6">
           {menu.map((section, idx) => (
             <div key={idx}>
@@ -91,19 +85,27 @@ function Sidebar({ darkMode }) {
               <div className="space-y-1">
                 {section.items.map((item, i) => {
                   const Icon = item.icon;
+
                   return (
                     <NavLink
                       key={i}
                       to={item.path}
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${
+                      className={() => {
+                        const isProjectsRoute =
+                          item.path === "/projects" &&
+                          location.pathname.startsWith("/projects");
+
+                        const isActive =
+                          location.pathname === item.path || isProjectsRoute;
+
+                        return `flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${
                           isActive
                             ? "bg-[#0f766e] text-white"
                             : darkMode
                               ? "text-gray-700 hover:bg-gray-200 hover:text-black"
                               : "text-gray-300 hover:bg-white/10 hover:text-white"
-                        }`
-                      }
+                        }`;
+                      }}
                     >
                       <Icon size={18} />
                       {item.name}
@@ -116,7 +118,6 @@ function Sidebar({ darkMode }) {
         </div>
       </div>
 
-      {/* Logout button */}
       <div className="p-4">
         <button
           onClick={() => setShowLogoutModal(true)}

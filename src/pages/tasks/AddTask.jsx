@@ -3,7 +3,8 @@ import { X, CalendarDays, ChevronDown, Check } from "lucide-react";
 
 export default function AddTask({
   darkMode,
-  setShowAddTask,
+  onClose,
+  // setShowAddTask,
   onAddTask,
   defaultStatus = "To Do",
 }) {
@@ -140,8 +141,7 @@ export default function AddTask({
     };
 
     onAddTask(newTask);
-    setShowAddTask(false);
-  };
+onClose();  };
 
   const inputClass = `w-full px-4 py-3 rounded-xl border outline-none ${
     darkMode
@@ -168,7 +168,7 @@ export default function AddTask({
 
           <button
             type="button"
-            onClick={() => setShowAddTask(false)}
+            onClick={onClose}
             className={`w-11 h-11 rounded-2xl flex items-center justify-center cursor-pointer ${
               darkMode
                 ? "bg-gray-700 text-gray-300 hover:text-white"
@@ -380,7 +380,7 @@ export default function AddTask({
 
             <button
               type="button"
-              onClick={() => setShowAddTask(false)}
+              onClick={onClose}
               className={`px-6 py-3 rounded-xl font-medium cursor-pointer ${
                 darkMode
                   ? "bg-gray-700 text-white hover:bg-gray-600"
