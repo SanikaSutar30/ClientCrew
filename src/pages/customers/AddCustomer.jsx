@@ -79,7 +79,6 @@ export default function AddCustomer({
     }
 
     onAddCustomer(formData);
-    setShowAddModal(false);
   };
 
   return (

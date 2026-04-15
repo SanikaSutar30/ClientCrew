@@ -3,8 +3,8 @@ import { Search, Plus, Download, Eye, Pencil, Trash2 } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
 import AddCustomer from "./AddCustomer";
 import EditCustomer from "./EditCustomer";
-import DeleteCustomer from "./DeleteCustomer";
 import ViewCustomer from "./ViewCustomer";
+import ConfirmationModal from "../../components/layout/ConfirmationModal";
 
 export default function Customers() {
   // Get dark mode from layout
@@ -70,7 +70,9 @@ const { darkMode } = useOutletContext();
   // Control modal visibility
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTitle, setDeleteTitle] = useState("");
+  const [deleteMessage, setDeleteMessage] = useState("");
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
 
@@ -80,22 +82,33 @@ const { darkMode } = useOutletContext();
   const [sortOrder, setSortOrder] = useState("Newest");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successTitle, setSuccessTitle] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const [showViewConfirm, setShowViewConfirm] = useState(false);
+  const [pendingCustomer, setPendingCustomer] = useState(null);
+
   // Set items per page
   const itemsPerPage = 5;
 
   // Add a new customer
-  const handleAddCustomer = (newCustomer) => {
-    setCustomers((prev) => [
-      {
-        id: prev.length + 1,
-        ...newCustomer,
-      },
-      ...prev,
-    ]);
-    setCurrentPage(1);
-    setShowAddModal(false);
-  };
+const handleAddCustomer = (newCustomer) => {
+  setCustomers((prev) => [
+    {
+      id: prev.length + 1,
+      ...newCustomer,
+    },
+    ...prev,
+  ]);
 
+  setCurrentPage(1);
+  setShowAddModal(false);
+
+  setSuccessTitle("Customer Created!");
+  setSuccessMessage("Customer has been added successfully.");
+  setShowSuccessModal(true);
+};
   // Open edit modal
   const handleEditClick = (customer) => {
     setSelectedCustomer(customer);
@@ -103,36 +116,48 @@ const { darkMode } = useOutletContext();
   };
 
   // Open delete modal
-  const handleDeleteClick = (customer) => {
-    setSelectedCustomer(customer);
-    setShowDeleteModal(true);
-  };
+const handleDeleteClick = (customer) => {
+  setSelectedCustomer(customer);
+  setDeleteTitle("Delete Customer");
+  setDeleteMessage(
+    `Are you sure you want to delete ${customer.name || "this customer"}?`,
+  );
+  setShowDeleteConfirm(true);
+};
 
   // Open view modal
-  const handleViewClick = (customer) => {
-    setSelectedCustomer(customer);
-    setShowViewModal(true);
-  };
+const handleViewClick = (customer) => {
+  setPendingCustomer(customer);
+  setShowViewConfirm(true);
+};
 
   // Update selected customer
-  const handleUpdateCustomer = (updatedCustomer) => {
-    setCustomers((prev) =>
-      prev.map((customer) =>
-        customer.id === updatedCustomer.id ? updatedCustomer : customer,
-      ),
-    );
-    setShowEditModal(false);
-    setSelectedCustomer(null);
-  };
+const handleUpdateCustomer = (updatedCustomer) => {
+  setCustomers((prev) =>
+    prev.map((customer) =>
+      customer.id === updatedCustomer.id ? updatedCustomer : customer,
+    ),
+  );
+
+  setShowEditModal(false);
+  setSelectedCustomer(null);
+
+  setSuccessTitle("Customer Updated!");
+  setSuccessMessage("Customer details updated successfully.");
+  setShowSuccessModal(true);
+};
 
   // Delete selected customer
-  const handleDeleteCustomer = (customerId) => {
-    setCustomers((prev) =>
-      prev.filter((customer) => customer.id !== customerId),
-    );
-    setShowDeleteModal(false);
-    setSelectedCustomer(null);
-  };
+const handleDeleteCustomer = (customerId) => {
+  setCustomers((prev) => prev.filter((customer) => customer.id !== customerId));
+
+  setShowDeleteConfirm(false);
+  setSelectedCustomer(null); // ✅ already good
+
+  setSuccessTitle("Customer Deleted!");
+  setSuccessMessage("Customer has been removed successfully.");
+  setShowSuccessModal(true);
+};
 
   // Filter and sort customers
   const filteredCustomers = customers
@@ -203,16 +228,6 @@ const { darkMode } = useOutletContext();
         />
       )}
 
-      {/* Delete customer modal */}
-      {showDeleteModal && selectedCustomer && (
-        <DeleteCustomer
-          darkMode={darkMode}
-          customer={selectedCustomer}
-          setShowDeleteModal={setShowDeleteModal}
-          onDeleteCustomer={handleDeleteCustomer}
-        />
-      )}
-
       {/* View customer modal */}
       {showViewModal && selectedCustomer && (
         <ViewCustomer
@@ -221,7 +236,57 @@ const { darkMode } = useOutletContext();
           setShowViewModal={setShowViewModal}
         />
       )}
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showSuccessModal}
+        type="success"
+        title={successTitle}
+        message={successMessage}
+        confirmText="OK"
+        onConfirm={() => setShowSuccessModal(false)}
+      />
 
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showDeleteConfirm}
+        type="error"
+        title={deleteTitle}
+        message={deleteMessage}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={() =>
+          selectedCustomer && handleDeleteCustomer(selectedCustomer.id)
+        }
+        onCancel={() => {
+          setShowDeleteConfirm(false);
+          setSelectedCustomer(null);
+        }}
+      />
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showViewConfirm}
+        type="success"
+        title="Open Customer"
+        message="Do you want to view this customer?"
+        confirmText="Yes, Open"
+        cancelText="Cancel"
+        onConfirm={() => {
+          setShowViewConfirm(false);
+
+          if (pendingCustomer) {
+            setSelectedCustomer(null); //reset first
+            setTimeout(() => {
+              setSelectedCustomer(pendingCustomer);
+              setShowViewModal(true);
+              setPendingCustomer(null);
+            }, 0);
+          }
+        }}
+        onCancel={() => {
+          setShowViewConfirm(false);
+          setPendingCustomer(null);
+        }}
+      />
       {/* Page header */}
       <div className="flex items-center justify-between">
         {/* Title section */}
@@ -577,7 +642,6 @@ const { darkMode } = useOutletContext();
           </div>
         </div>
       </div>
-      
     </div>
   );
 }
