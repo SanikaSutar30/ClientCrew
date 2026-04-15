@@ -25,7 +25,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 // TaskCard Component
-function TaskCard({ task, darkMode, getTagClasses,onDoubleClick }) {
+function TaskCard({ task, darkMode, getTagClasses, onDoubleClick }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: task.id,
@@ -312,7 +312,7 @@ export default function Tasks() {
     {
       id: "2",
       title: "Research competitors",
-      assignee: "Rahu Sharma",
+      assignee: "Rahul Sharma",
       avatar: "../assets/Profile2.jpg",
       dueDate: "Apr 26",
       status: "To Do",
@@ -488,7 +488,7 @@ export default function Tasks() {
       {showAddTask && (
         <AddTask
           darkMode={darkMode}
-          setShowAddTask={setShowAddTask}
+          onClose={() => setShowAddTask(false)}
           onAddTask={handleAddTask}
           defaultStatus={defaultStatus}
         />
@@ -565,7 +565,10 @@ export default function Tasks() {
 
           {/* // New Task Button */}
           <button
-            onClick={() => setShowAddTask(true)}
+            onClick={() => {
+              setDefaultStatus("To Do");
+              setShowAddTask(true);
+            }}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0f766e] text-white font-medium cursor-pointer hover:opacity-90"
           >
             <Plus size={16} />
