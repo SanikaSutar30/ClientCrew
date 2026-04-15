@@ -26,7 +26,6 @@ import ViewCustomer from "../pages/customers/ViewCustomer";
 import AddProject from "../pages/projects/AddProject";
 import EditProject from "../pages/projects/EditProject";
 import ViewProject from "../pages/projects/ViewProject";
-import DeleteProject from "../pages/projects/DeleteProject";
 import ProjectSettings from "../pages/projects/ProjectSettings";
 
 export default function AppRoutes() {
@@ -53,7 +52,7 @@ export default function AppRoutes() {
           <Route path="/projects/add" element={<AddProject />} />
           <Route path="/projects/edit/:id" element={<EditProject />} />
           <Route path="/projects/view/:id" element={<ViewProject />} />
-          <Route path="/projects/delete/:id" element={<DeleteProject />} />
+        
 
           {/* Tasks */}
           <Route path="/tasks" element={<Tasks />} />
