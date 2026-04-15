@@ -70,7 +70,6 @@ const { darkMode } = useOutletContext();
   // Control modal visibility
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  // const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTitle, setDeleteTitle] = useState("");
   const [deleteMessage, setDeleteMessage] = useState("");
@@ -149,13 +148,16 @@ const handleUpdateCustomer = (updatedCustomer) => {
 };
 
   // Delete selected customer
-  const handleDeleteCustomer = (customerId) => {
-    setCustomers((prev) =>
-      prev.filter((customer) => customer.id !== customerId),
-    );
-setShowDeleteConfirm(false);
-    setSelectedCustomer(null);
-  };
+const handleDeleteCustomer = (customerId) => {
+  setCustomers((prev) => prev.filter((customer) => customer.id !== customerId));
+
+  setShowDeleteConfirm(false);
+  setSelectedCustomer(null); // ✅ already good
+
+  setSuccessTitle("Customer Deleted!");
+  setSuccessMessage("Customer has been removed successfully.");
+  setShowSuccessModal(true);
+};
 
   // Filter and sort customers
   const filteredCustomers = customers
@@ -272,9 +274,12 @@ setShowDeleteConfirm(false);
           setShowViewConfirm(false);
 
           if (pendingCustomer) {
-            setSelectedCustomer(pendingCustomer);
-            setShowViewModal(true);
-            setPendingCustomer(null);
+            setSelectedCustomer(null); //reset first
+            setTimeout(() => {
+              setSelectedCustomer(pendingCustomer);
+              setShowViewModal(true);
+              setPendingCustomer(null);
+            }, 0);
           }
         }}
         onCancel={() => {
