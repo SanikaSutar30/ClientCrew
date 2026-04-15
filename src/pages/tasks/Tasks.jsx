@@ -23,7 +23,7 @@ import {
 } from "@dnd-kit/core";
 // Utilities
 import { CSS } from "@dnd-kit/utilities";
-
+// TODO: Improve task filtering
 // TaskCard Component
 function TaskCard({ task, darkMode, getTagClasses, onDoubleClick }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
