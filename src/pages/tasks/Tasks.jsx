@@ -291,14 +291,18 @@ export default function Tasks() {
     setShowViewTask(false);
     setShowDeleteTask(true);
   };
+const handleUpdateTask = (updatedTask) => {
+  setTasks((prev) =>
+    prev.map((task) => (task.id === updatedTask.id ? updatedTask : task)),
+  );
 
-  const handleUpdateTask = (updatedTask) => {
-    setTasks((prev) =>
-      prev.map((task) => (task.id === updatedTask.id ? updatedTask : task)),
-    );
-    setShowEditTask(false);
-    setSelectedTask(null);
-  };
+  setShowEditTask(false);
+  setSelectedTask(null);
+
+  setSuccessTitle("Task Updated!");
+  setSuccessMessage("Your task has been updated successfully.");
+  setShowSuccessModal(true);
+};
 
   const handleDeleteTask = (taskId) => {
     setTasks((prev) => prev.filter((task) => task.id !== taskId));
