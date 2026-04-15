@@ -49,6 +49,15 @@ export default function Projects() {
 
   const [showViewConfirm, setShowViewConfirm] = useState(false);
   const [pendingProject, setPendingProject] = useState(null);
+
+  const handleQuickAddTask = (newTask) => {
+  console.log("New Task:", newTask);
+
+  setShowAddTaskModal(false);
+  setSuccessTitle("Task Created!");
+  setSuccessMessage("Your task has been created successfully.");
+  setShowSuccessModal(true);
+};
   // Sample projects data
   const [projects, setProjects] = useState([
     {
@@ -334,7 +343,7 @@ const handleDeleteProject = (projectId) => {
         <AddTask
           darkMode={darkMode}
           onClose={() => setShowAddTaskModal(false)}
-          onAddTask={(newTask) => console.log("New Task:", newTask)}
+          onAddTask={handleQuickAddTask}
         />
       )}
 
@@ -370,7 +379,7 @@ const handleDeleteProject = (projectId) => {
         isOpen={showViewConfirm}
         type="success"
         title="Open Project"
-        message="Do you want to view this project?"
+        message={`Do you want to view ${pendingProject?.projectName || "this project"}?`}
         confirmText="Yes, Open"
         cancelText="Cancel"
         onConfirm={() => {
