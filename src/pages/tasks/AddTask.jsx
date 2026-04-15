@@ -118,30 +118,31 @@ export default function AddTask({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+const handleSubmit = (e) => {
+  e.preventDefault();
 
-    if (!validateForm()) return;
+  if (!validateForm()) return;
 
-    const newTask = {
-      id: Date.now().toString(),
-      title: formData.title,
-      assignee: formData.assignee,
-      avatar: formData.avatar,
-      dueDate: new Date(formData.dueDate).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      }),
-      status: formData.status,
-      project: formData.project,
-      tag: getTagByPriority(formData.priority),
-      priority: formData.priority,
-      description: formData.description,
-      borderColor: getBorderColorByStatus(formData.status),
-    };
+  const newTask = {
+    id: Date.now().toString(),
+    title: formData.title,
+    assignee: formData.assignee,
+    avatar: formData.avatar,
+    dueDate: new Date(formData.dueDate).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    }),
+    status: formData.status,
+    project: formData.project,
+    tag: getTagByPriority(formData.priority),
+    priority: formData.priority,
+    description: formData.description,
+    borderColor: getBorderColorByStatus(formData.status),
+  };
 
-    onAddTask(newTask);
-onClose();  };
+  onAddTask?.(newTask);
+  onClose?.();
+};
 
   const inputClass = `w-full px-4 py-3 rounded-xl border outline-none ${
     darkMode
@@ -168,7 +169,7 @@ onClose();  };
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => onClose?.()}
             className={`w-11 h-11 rounded-2xl flex items-center justify-center cursor-pointer ${
               darkMode
                 ? "bg-gray-700 text-gray-300 hover:text-white"
@@ -380,7 +381,7 @@ onClose();  };
 
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => onClose?.()}
               className={`px-6 py-3 rounded-xl font-medium cursor-pointer ${
                 darkMode
                   ? "bg-gray-700 text-white hover:bg-gray-600"
