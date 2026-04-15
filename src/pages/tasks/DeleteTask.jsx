@@ -75,26 +75,29 @@
 //     </div>
 //   );
 // }
-
 import ConfirmationModal from "../../components/layout/ConfirmationModal";
 
 export default function DeleteTask({
   darkMode,
   task,
+  showDeleteTask, // ✅ add this prop
   setShowDeleteTask,
   onDeleteTask,
 }) {
   return (
     <ConfirmationModal
       darkMode={darkMode}
-      isOpen={true}
+      isOpen={showDeleteTask} // ✅ dynamic control
       type="error"
       title="Delete Task"
       message={`Are you sure you want to delete ${task?.title || "this task"}?`}
       confirmText="Delete"
       cancelText="Cancel"
-      onConfirm={() => onDeleteTask(task.id)}
-      onCancel={() => setShowDeleteTask(false)}
+      onConfirm={() => {
+        onDeleteTask(task.id); // delete
+        setShowDeleteTask(false); // close modal
+      }}
+      onCancel={() => setShowDeleteTask(false)} // close modal
     />
   );
 }
