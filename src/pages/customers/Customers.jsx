@@ -3,7 +3,6 @@ import { Search, Plus, Download, Eye, Pencil, Trash2 } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
 import AddCustomer from "./AddCustomer";
 import EditCustomer from "./EditCustomer";
-import DeleteCustomer from "./DeleteCustomer";
 import ViewCustomer from "./ViewCustomer";
 import ConfirmationModal from "../../components/layout/ConfirmationModal";
 
@@ -71,7 +70,10 @@ const { darkMode } = useOutletContext();
   // Control modal visibility
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  // const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTitle, setDeleteTitle] = useState("");
+  const [deleteMessage, setDeleteMessage] = useState("");
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
 
@@ -112,10 +114,14 @@ const handleAddCustomer = (newCustomer) => {
   };
 
   // Open delete modal
-  const handleDeleteClick = (customer) => {
-    setSelectedCustomer(customer);
-    setShowDeleteModal(true);
-  };
+const handleDeleteClick = (customer) => {
+  setSelectedCustomer(customer);
+  setDeleteTitle("Delete Customer");
+  setDeleteMessage(
+    `Are you sure you want to delete ${customer.name || "this customer"}?`,
+  );
+  setShowDeleteConfirm(true);
+};
 
   // Open view modal
   const handleViewClick = (customer) => {
@@ -139,7 +145,7 @@ const handleAddCustomer = (newCustomer) => {
     setCustomers((prev) =>
       prev.filter((customer) => customer.id !== customerId),
     );
-    setShowDeleteModal(false);
+setShowDeleteConfirm(false);
     setSelectedCustomer(null);
   };
 
@@ -212,15 +218,7 @@ const handleAddCustomer = (newCustomer) => {
         />
       )}
 
-      {/* Delete customer modal */}
-      {showDeleteModal && selectedCustomer && (
-        <DeleteCustomer
-          darkMode={darkMode}
-          customer={selectedCustomer}
-          setShowDeleteModal={setShowDeleteModal}
-          onDeleteCustomer={handleDeleteCustomer}
-        />
-      )}
+   
 
       {/* View customer modal */}
       {showViewModal && selectedCustomer && (
@@ -238,6 +236,23 @@ const handleAddCustomer = (newCustomer) => {
         message={successMessage}
         confirmText="OK"
         onConfirm={() => setShowSuccessModal(false)}
+      />
+
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showDeleteConfirm}
+        type="error"
+        title={deleteTitle}
+        message={deleteMessage}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={() =>
+          selectedCustomer && handleDeleteCustomer(selectedCustomer.id)
+        }
+        onCancel={() => {
+          setShowDeleteConfirm(false);
+          setSelectedCustomer(null);
+        }}
       />
       {/* Page header */}
       <div className="flex items-center justify-between">
