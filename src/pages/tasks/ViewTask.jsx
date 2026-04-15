@@ -25,7 +25,7 @@ export default function ViewTask({
 
           <button
             onClick={() => setShowViewTask(false)}
-            className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+            className={`w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer ${
               darkMode
                 ? "bg-gray-700 text-gray-300 hover:text-white"
                 : "bg-gray-100 text-gray-500 hover:text-black"
