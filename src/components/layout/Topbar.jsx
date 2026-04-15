@@ -141,7 +141,64 @@ const handleConfirmLogout = () => {
               <p className="text-sm font-semibold mb-2 text-gray-800">
                 Messages
               </p>
-              <p className="text-sm text-gray-600">No new messages</p>
+              <div className="space-y-3">
+                {[
+                  {
+                    name: "Biplab Roy",
+                    message: "Sounds good! Let's schedule...",
+                    time: "2h ago",
+                    unread: 2,
+                  },
+                  {
+                    name: "John Doe",
+                    message: "Please send latest report",
+                    time: "4h ago",
+                    unread: 1,
+                  },
+                ].map((msg, index) => (
+                  <div
+                    key={index}
+                    onClick={() => {
+                      setShowMessages(false);
+                      navigate("/messages");
+                    }}
+                    className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-gray-300"></div>
+
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">
+                          {msg.name}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate w-32">
+                          {msg.message}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-xs text-gray-400">{msg.time}</p>
+
+                      {msg.unread > 0 && (
+                        <span className="bg-[#0f766e] text-white text-xs px-2 py-0.5 rounded-full">
+                          {msg.unread}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                <button
+                  onClick={() => {
+                    setShowMessages(false);
+                    navigate("/messages");
+                  }}
+                  className="w-full text-sm text-[#0f766e] font-medium hover:underline mt-2"
+                >
+                  See all messages
+                </button>
+              </div>
             </div>
           )}
         </div>
