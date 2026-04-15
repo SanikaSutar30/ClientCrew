@@ -46,6 +46,9 @@ export default function Projects() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTitle, setDeleteTitle] = useState("");
   const [deleteMessage, setDeleteMessage] = useState("");
+
+  const [showViewConfirm, setShowViewConfirm] = useState(false);
+  const [pendingProject, setPendingProject] = useState(null);
   // Sample projects data
   const [projects, setProjects] = useState([
     {
@@ -200,10 +203,9 @@ const handleDeleteProject = (projectId) => {
 
   // Open view modal
   const handleViewClick = (project) => {
-    setSelectedProject(project);
-    setShowView(true);
+    setPendingProject(project);
+    setShowViewConfirm(true);
   };
-
   const getStatusClasses = (status) => {
     switch (status) {
       case "In Progress":
@@ -320,8 +322,6 @@ const handleDeleteProject = (projectId) => {
         />
       )}
 
- 
-
       {/* View Project modal */}
       {showView && selectedProject && (
         <ViewProject
@@ -362,6 +362,29 @@ const handleDeleteProject = (projectId) => {
         onCancel={() => {
           setShowDeleteConfirm(false);
           setSelectedProject(null);
+        }}
+      />
+
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showViewConfirm}
+        type="success"
+        title="Open Project"
+        message="Do you want to view this project?"
+        confirmText="Yes, Open"
+        cancelText="Cancel"
+        onConfirm={() => {
+          setShowViewConfirm(false);
+
+          if (pendingProject) {
+            setSelectedProject(pendingProject);
+            setShowView(true);
+            setPendingProject(null);
+          }
+        }}
+        onCancel={() => {
+          setShowViewConfirm(false);
+          setPendingProject(null);
         }}
       />
       {/* Header */}
