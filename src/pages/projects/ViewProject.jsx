@@ -10,6 +10,8 @@ import {
 import { createPortal } from "react-dom";
 
 export default function ViewProject({ darkMode, project, setShowView }) {
+  if (!project) return null;
+
   const getStatusClasses = (status) => {
     switch (status) {
       case "In Progress":
@@ -41,7 +43,12 @@ export default function ViewProject({ darkMode, project, setShowView }) {
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm flex items-center justify-center px-4">
+    <div
+      className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm flex items-center justify-center px-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) setShowView(false);
+      }}
+    >
       <div
         className={`w-full max-w-4xl max-h-[85vh] overflow-y-auto rounded-2xl shadow-xl p-4 ${
           darkMode ? "bg-gray-800 text-white" : "bg-white text-black"
@@ -96,7 +103,6 @@ export default function ViewProject({ darkMode, project, setShowView }) {
             {/* Right side */}
             <div className="flex-1 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Project name */}
                 <div
                   className={`p-4 rounded-xl ${
                     darkMode ? "bg-gray-800" : "bg-white"
@@ -109,7 +115,6 @@ export default function ViewProject({ darkMode, project, setShowView }) {
                   <p className="text-sm">{project.projectName}</p>
                 </div>
 
-                {/* Client */}
                 <div
                   className={`p-4 rounded-xl ${
                     darkMode ? "bg-gray-800" : "bg-white"
@@ -122,7 +127,6 @@ export default function ViewProject({ darkMode, project, setShowView }) {
                   <p className="text-sm">{project.clientName}</p>
                 </div>
 
-                {/* Start date */}
                 <div
                   className={`p-4 rounded-xl ${
                     darkMode ? "bg-gray-800" : "bg-white"
@@ -137,7 +141,6 @@ export default function ViewProject({ darkMode, project, setShowView }) {
                   </p>
                 </div>
 
-                {/* Due date */}
                 <div
                   className={`p-4 rounded-xl ${
                     darkMode ? "bg-gray-800" : "bg-white"
@@ -152,7 +155,6 @@ export default function ViewProject({ darkMode, project, setShowView }) {
                   </p>
                 </div>
 
-                {/* Status */}
                 <div
                   className={`p-4 rounded-xl ${
                     darkMode ? "bg-gray-800" : "bg-white"
@@ -171,7 +173,6 @@ export default function ViewProject({ darkMode, project, setShowView }) {
                   </span>
                 </div>
 
-                {/* Extra members */}
                 <div
                   className={`p-4 rounded-xl ${
                     darkMode ? "bg-gray-800" : "bg-white"
@@ -187,7 +188,6 @@ export default function ViewProject({ darkMode, project, setShowView }) {
                 </div>
               </div>
 
-              {/* Progress */}
               <div
                 className={`p-4 rounded-xl ${
                   darkMode ? "bg-gray-800" : "bg-white"
@@ -213,7 +213,6 @@ export default function ViewProject({ darkMode, project, setShowView }) {
                 </div>
               </div>
 
-              {/* Team members preview */}
               <div
                 className={`p-4 rounded-xl ${
                   darkMode ? "bg-gray-800" : "bg-white"
@@ -254,7 +253,6 @@ export default function ViewProject({ darkMode, project, setShowView }) {
                 </div>
               </div>
 
-              {/* Close button */}
               <div className="flex justify-end">
                 <button
                   onClick={() => setShowView(false)}

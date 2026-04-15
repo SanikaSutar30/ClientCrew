@@ -42,19 +42,50 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject }) {
     }));
   };
 
+  // const handleTeamChange = (e) => {
+  //   const files = Array.from(e.target.files);
+
+  //   if (files.length > 0) {
+  //     const imageUrls = files.map((file) => URL.createObjectURL(file));
+
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       team: imageUrls,
+  //     }));
+  //   }
+  // };
+
+
   const handleTeamChange = (e) => {
     const files = Array.from(e.target.files);
 
-    if (files.length > 0) {
-      const imageUrls = files.map((file) => URL.createObjectURL(file));
+    // Validate file types
+    const validTypes = ["image/png", "image/jpg", "image/jpeg"];
 
-      setFormData((prev) => ({
+    const isValid = files.every((file) => validTypes.includes(file.type));
+
+    if (!isValid) {
+      setErrors((prev) => ({
         ...prev,
-        team: imageUrls,
+        team: "Only PNG, JPG, JPEG images are allowed",
       }));
+      return;
     }
-  };
 
+    // Clear error
+    setErrors((prev) => ({
+      ...prev,
+      team: "",
+    }));
+
+    // Convert to preview URLs (important for UI)
+    const imageUrls = files.map((file) => URL.createObjectURL(file));
+
+    setFormData((prev) => ({
+      ...prev,
+      team: imageUrls,
+    }));
+  };
   const validateForm = () => {
     const newErrors = {};
 
@@ -150,7 +181,7 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject }) {
 
           <button
             onClick={() => setShowAdd(false)}
-            className="text-gray-500 hover:text-red-500 text-xl"
+            className="text-gray-500 hover:text-red-500 text-xl cursor-pointer"
           >
             ✕
           </button>
@@ -201,7 +232,7 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject }) {
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleChange}
-                className={inputClass}
+                className={`${inputClass} cursor-pointer`}
               />
               {errors.startDate && (
                 <p className="text-red-500 text-xs">{errors.startDate}</p>
@@ -215,7 +246,7 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject }) {
                 name="dueDate"
                 value={formData.dueDate}
                 onChange={handleChange}
-                className={inputClass}
+                className={`${inputClass} cursor-pointer`}
               />
               {errors.dueDate && (
                 <p className="text-red-500 text-xs">{errors.dueDate}</p>
@@ -268,17 +299,43 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject }) {
               )}
             </div>
 
-            {/* Team */}
+            {/* Team Images */}
             <div>
-              <label className={labelClass}>Team Images</label>
+              <label className="block text-sm font-medium mb-2">
+                Team Images
+              </label>
+
               <input
                 type="file"
                 multiple
+                accept=".png, .jpg, .jpeg"
                 onChange={handleTeamChange}
-                className={inputClass}
+                className={`w-full px-4 py-3 rounded-xl border outline-none cursor-pointer 
+    file:mr-4 file:rounded-lg file:border-0 file:px-3 file:py-2 file:text-sm ${
+      darkMode
+        ? "bg-gray-700 border-gray-600 text-white file:bg-gray-600 file:text-white"
+        : "bg-gray-50 border-gray-200 text-black file:bg-gray-200 file:text-black"
+    }`}
               />
+
               {errors.team && (
-                <p className="text-red-500 text-xs">{errors.team}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.team}</p>
+              )}
+
+              {/* Preview Images */}
+              {formData.team?.length > 0 && (
+                <div className="flex mt-3">
+                  {formData.team.map((img, index) => (
+                    <img
+                      key={index}
+                      src={img}
+                      alt="team"
+                      className={`w-10 h-10 rounded-full object-cover border-2 ${
+                        index !== 0 ? "-ml-2" : ""
+                      }`}
+                    />
+                  ))}
+                </div>
               )}
             </div>
           </div>
@@ -288,14 +345,14 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject }) {
             <button
               type="button"
               onClick={() => setShowAdd(false)}
-              className="px-4 py-2 bg-gray-300 rounded-xl"
+              className="px-4 py-2 bg-gray-300 cursor-pointer rounded-xl"
             >
               Cancel
             </button>
 
             <button
               type="submit"
-              className="px-4 py-2 bg-[#0f766e] text-white rounded-xl"
+              className="px-4 py-2 bg-[#0f766e] cursor-pointer text-white rounded-xl"
             >
               Save Project
             </button>
