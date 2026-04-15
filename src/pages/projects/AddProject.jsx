@@ -86,40 +86,41 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject }) {
       team: imageUrls,
     }));
   };
-  const validateForm = () => {
-    const newErrors = {};
+const validateForm = () => {
+  const newErrors = {};
 
-    if (!formData.projectName.trim())
-      newErrors.projectName = "Project name is required";
+  if (!formData.projectName.trim())
+    newErrors.projectName = "Project name is required";
 
-    if (!formData.clientName.trim())
-      newErrors.clientName = "Client name is required";
+  if (!formData.clientName.trim())
+    newErrors.clientName = "Client name is required";
 
-    if (!formData.startDate) newErrors.startDate = "Start date is required";
+  if (!formData.startDate) newErrors.startDate = "Start date is required";
 
-    if (!formData.dueDate) newErrors.dueDate = "Due date is required";
+  if (!formData.dueDate) newErrors.dueDate = "Due date is required";
 
-    if (
-      formData.startDate &&
-      formData.dueDate &&
-      new Date(formData.dueDate) < new Date(formData.startDate)
-    ) {
-      newErrors.dueDate = "Due date cannot be before start date";
-    }
+  // ✅ Correct date validation (only once)
+  if (
+    formData.startDate &&
+    formData.dueDate &&
+    new Date(formData.dueDate) < new Date(formData.startDate)
+  ) {
+    newErrors.dueDate = "Due date cannot be before start date";
+  }
 
-    if (formData.progress === "") newErrors.progress = "Progress is required";
-    else if (formData.progress < 0 || formData.progress > 100)
-      newErrors.progress = "Progress must be between 0 and 100";
+  if (formData.progress === "") newErrors.progress = "Progress is required";
+  else if (formData.progress < 0 || formData.progress > 100)
+    newErrors.progress = "Progress must be between 0 and 100";
 
-    if (!formData.icon.trim()) newErrors.icon = "Project icon is required";
-    else if (formData.icon.length > 1) newErrors.icon = "Use only one letter";
+  if (!formData.icon.trim()) newErrors.icon = "Project icon is required";
+  else if (formData.icon.length > 1) newErrors.icon = "Use only one letter";
 
-    if (formData.team.length === 0)
-      newErrors.team = "At least one team image is required";
+  if (formData.team.length === 0)
+    newErrors.team = "At least one team image is required";
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
 
   const resetForm = () => {
     setFormData({
@@ -232,7 +233,7 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject }) {
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleChange}
-                className={`${inputClass} cursor-pointer`}
+                className={`${inputClass} cursor-pointer hover:ring-2 hover:ring-[#0f766e] focus:ring-2 focus:ring-[#0f766e] transition`}
               />
               {errors.startDate && (
                 <p className="text-red-500 text-xs">{errors.startDate}</p>
@@ -244,9 +245,10 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject }) {
               <input
                 type="date"
                 name="dueDate"
+                min={formData.startDate}
                 value={formData.dueDate}
                 onChange={handleChange}
-                className={`${inputClass} cursor-pointer`}
+                className={`${inputClass} cursor-pointer hover:ring-2 hover:ring-[#0f766e] focus:ring-2 focus:ring-[#0f766e] transition`}
               />
               {errors.dueDate && (
                 <p className="text-red-500 text-xs">{errors.dueDate}</p>
