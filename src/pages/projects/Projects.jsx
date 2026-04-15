@@ -176,15 +176,20 @@ const handleDeleteClick = (project) => {
 };
 
   // Update selected project
-  const handleUpdateProject = (updatedProject) => {
-    setProjects((prev) =>
-      prev.map((project) =>
-        project.id === updatedProject.id ? updatedProject : project,
-      ),
-    );
-    setShowEdit(false);
-    setSelectedProject(null);
-  };
+const handleUpdateProject = (updatedProject) => {
+  setProjects((prev) =>
+    prev.map((project) =>
+      project.id === updatedProject.id ? updatedProject : project,
+    ),
+  );
+
+  setShowEdit(false);
+  setSelectedProject(null);
+
+  setSuccessTitle("Project Updated!");
+  setSuccessMessage("Your project has been updated successfully.");
+  setShowSuccessModal(true);
+};
 
   // Delete selected project
 const handleDeleteProject = (projectId) => {

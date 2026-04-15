@@ -88,20 +88,18 @@ export default function EditProject({
   };
 
   // Submit update
-  const handleSubmit = (e) => {
-    e.preventDefault();
+const handleSubmit = (e) => {
+  e.preventDefault();
 
-    if (!validateForm()) return;
+  if (!validateForm()) return;
 
-    onUpdateProject({
-      ...formData,
-      progress: Number(formData.progress),
-      extraMembers: Number(formData.extraMembers),
-      icon: formData.icon.toUpperCase(),
-    });
-
-    setShowEdit(false);
-  };
+  onUpdateProject({
+    ...formData,
+    progress: Number(formData.progress),
+    extraMembers: Number(formData.extraMembers),
+    icon: formData.icon.toUpperCase(),
+  });
+};
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
