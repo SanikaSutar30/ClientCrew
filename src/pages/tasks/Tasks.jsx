@@ -4,6 +4,7 @@ import ViewTask from "./ViewTask";
 import AddTask from "./AddTask";
 import EditTask from "./EditTask";
 import DeleteTask from "./DeleteTask";
+import ConfirmationModal from "../../components/layout/ConfirmationModal";
 // Icons
 import {
   Plus,
@@ -24,6 +25,8 @@ import {
 // Utilities
 import { CSS } from "@dnd-kit/utilities";
 // TODO: Improve task filtering
+
+
 // TaskCard Component
 function TaskCard({ task, darkMode, getTagClasses, onDoubleClick }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
@@ -267,6 +270,11 @@ export default function Tasks() {
   const [showEditTask, setShowEditTask] = useState(false);
   const [showDeleteTask, setShowDeleteTask] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successTitle, setSuccessTitle] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
   const handleViewTask = (task) => {
     setSelectedTask(task);
     setShowViewTask(true);
@@ -451,15 +459,19 @@ export default function Tasks() {
     }
   };
 
-  const handleAddTask = (newTask) => {
-    setTasks((prev) => [
-      {
-        ...newTask,
-        borderColor: getBorderColorByStatus(newTask.status),
-      },
-      ...prev,
-    ]);
-  };
+ const handleAddTask = (newTask) => {
+   setTasks((prev) => [
+     {
+       ...newTask,
+       borderColor: getBorderColorByStatus(newTask.status),
+     },
+     ...prev,
+   ]);
+
+   setSuccessTitle("Task Created!");
+   setSuccessMessage("Your task has been created successfully.");
+   setShowSuccessModal(true);
+ };
 
   // Handle drag end event to update task status
   const handleDragEnd = (event) => {
@@ -520,6 +532,16 @@ export default function Tasks() {
           onDeleteTask={handleDeleteTask}
         />
       )}
+
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showSuccessModal}
+        type="success"
+        title={successTitle}
+        message={successMessage}
+        confirmText="OK"
+        onConfirm={() => setShowSuccessModal(false)}
+      />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
