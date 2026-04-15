@@ -26,7 +26,6 @@ import { PieChart, Pie,Cell, ResponsiveContainer } from "recharts";
 import AddProject from "./AddProject";
 import EditProject from "./EditProject";
 import ViewProject from "./ViewProject";
-// import DeleteProject from "./DeleteProject";
 
 export default function Projects() {
 
@@ -35,7 +34,7 @@ export default function Projects() {
   // Modal state
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
-  // const [showDelete, setShowDelete] = useState(false);
+  
   const [showView, setShowView] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
@@ -316,15 +315,7 @@ const handleDeleteProject = (projectId) => {
         />
       )}
 
-      {/* Delete Project modal */}
-      {/* {showDelete && selectedProject && (
-        <DeleteProject
-          darkMode={darkMode}
-          project={selectedProject}
-          setShowDelete={setShowDelete}
-          onDeleteProject={handleDeleteProject}
-        />
-      )} */}
+ 
 
       {/* View Project modal */}
       {showView && selectedProject && (
@@ -360,7 +351,9 @@ const handleDeleteProject = (projectId) => {
         message={deleteMessage}
         confirmText="Delete"
         cancelText="Cancel"
-        onConfirm={() => handleDeleteProject(selectedProject.id)}
+        onConfirm={() =>
+          selectedProject && handleDeleteProject(selectedProject.id)
+        }
         onCancel={() => {
           setShowDeleteConfirm(false);
           setSelectedProject(null);
