@@ -26,7 +26,7 @@ import { PieChart, Pie,Cell, ResponsiveContainer } from "recharts";
 import AddProject from "./AddProject";
 import EditProject from "./EditProject";
 import ViewProject from "./ViewProject";
-import DeleteProject from "./DeleteProject";
+// import DeleteProject from "./DeleteProject";
 
 export default function Projects() {
 
@@ -35,7 +35,7 @@ export default function Projects() {
   // Modal state
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
-  const [showDelete, setShowDelete] = useState(false);
+  // const [showDelete, setShowDelete] = useState(false);
   const [showView, setShowView] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
@@ -44,6 +44,9 @@ export default function Projects() {
   const [successTitle, setSuccessTitle] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTitle, setDeleteTitle] = useState("");
+  const [deleteMessage, setDeleteMessage] = useState("");
   // Sample projects data
   const [projects, setProjects] = useState([
     {
@@ -166,9 +169,12 @@ export default function Projects() {
   };
 const handleDeleteClick = (project) => {
   setSelectedProject(project);
-  setShowDelete(true);
+  setDeleteTitle("Delete Project");
+  setDeleteMessage(
+    `Are you sure you want to delete ${project.projectName || "this project"}?`,
+  );
+  setShowDeleteConfirm(true);
 };
-
 
   // Update selected project
   const handleUpdateProject = (updatedProject) => {
@@ -182,11 +188,11 @@ const handleDeleteClick = (project) => {
   };
 
   // Delete selected project
-  const handleDeleteProject = (projectId) => {
-    setProjects((prev) => prev.filter((project) => project.id !== projectId));
-    setShowDelete(false);
-    setSelectedProject(null);
-  };
+const handleDeleteProject = (projectId) => {
+  setProjects((prev) => prev.filter((project) => project.id !== projectId));
+  setShowDeleteConfirm(false);
+  setSelectedProject(null);
+};
 
   // Open view modal
   const handleViewClick = (project) => {
@@ -311,14 +317,14 @@ const handleDeleteClick = (project) => {
       )}
 
       {/* Delete Project modal */}
-      {showDelete && selectedProject && (
+      {/* {showDelete && selectedProject && (
         <DeleteProject
           darkMode={darkMode}
           project={selectedProject}
           setShowDelete={setShowDelete}
           onDeleteProject={handleDeleteProject}
         />
-      )}
+      )} */}
 
       {/* View Project modal */}
       {showView && selectedProject && (
@@ -346,6 +352,20 @@ const handleDeleteClick = (project) => {
         onConfirm={() => setShowSuccessModal(false)}
       />
 
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showDeleteConfirm}
+        type="error"
+        title={deleteTitle}
+        message={deleteMessage}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={() => handleDeleteProject(selectedProject.id)}
+        onCancel={() => {
+          setShowDeleteConfirm(false);
+          setSelectedProject(null);
+        }}
+      />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
