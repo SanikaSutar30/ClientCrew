@@ -13,7 +13,14 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import LogoutConfirmModal from "../../pages/LogoutConfirmModal";
 
-function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
+function Topbar({
+  darkMode,
+  setDarkMode,
+  notifications,
+  setNotifications,
+  messages,
+  setMessages,
+}) {
   const navigate = useNavigate();
 
   // Dropdown states
@@ -30,6 +37,7 @@ function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
 
   // Unread notification count
   const unreadCount = notifications.filter((item) => !item.isRead).length;
+  const unreadMessageCount = messages.filter((item) => item.unread).length;
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -70,6 +78,17 @@ function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
     }
   };
 
+
+  const handleMessageClick = (message) => {
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === message.id ? { ...msg, unread: false } : msg,
+      ),
+    );
+
+    setShowMessages(false);
+    navigate("/messages");
+  };
   // Mark all notifications as read
   const handleMarkAllAsRead = () => {
     setNotifications((prev) =>
@@ -101,14 +120,14 @@ function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
     navigate(path);
   };
 
-const handleConfirmLogout = () => {
-  setShowLogoutModal(false);
-  navigate("/register");
-};
+  const handleConfirmLogout = () => {
+    setShowLogoutModal(false);
+    navigate("/register");
+  };
   return (
     <div
       className={`h-16 flex items-center justify-between px-6 ${
-        darkMode ? "bg-gray-800 text-black" : "bg-gray-100 text-black"
+        darkMode ? "bg-gray-800 text-white" : "bg-gray-100 text-black"
       }`}
     >
       {/* Left: Search */}
@@ -131,72 +150,83 @@ const handleConfirmLogout = () => {
               setShowNotifications(false);
               setShowProfileMenu(false);
             }}
-            className="bg-white p-2 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50"
+            className="relative bg-white p-2 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50"
           >
             <MessageCircle size={18} />
+
+            {unreadMessageCount > 0 && (
+              <span className="absolute top-0.5 right-0.5 bg-red-500 text-white text-[10px] min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full">
+                {unreadMessageCount}
+              </span>
+            )}
           </div>
 
           {showMessages && (
-            <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg p-3 z-50">
-              <p className="text-sm font-semibold mb-2 text-gray-800">
-                Messages
-              </p>
-              <div className="space-y-3">
-                {[
-                  {
-                    name: "Biplab Roy",
-                    message: "Sounds good! Let's schedule...",
-                    time: "2h ago",
-                    unread: 2,
-                  },
-                  {
-                    name: "John Doe",
-                    message: "Please send latest report",
-                    time: "4h ago",
-                    unread: 1,
-                  },
-                ].map((msg, index) => (
-                  <div
-                    key={index}
-                    onClick={() => {
-                      setShowMessages(false);
-                      navigate("/messages");
-                    }}
-                    className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+            <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg z-50 overflow-hidden border border-gray-200">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+                <div className="flex items-center justify-between w-full">
+                  <p className="text-sm font-semibold text-gray-800">
+                    Messages
+                  </p>
+
+                  <button
+                    onClick={() =>
+                      setMessages((prev) =>
+                        prev.map((m) => ({ ...m, unread: false })),
+                      )
+                    }
+                    className="text-xs text-[#0f766e] hover:underline cursor-pointer"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-gray-300"></div>
-
-                      <div>
-                        <p className="text-sm font-medium text-gray-800">
-                          {msg.name}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate w-32">
-                          {msg.message}
-                        </p>
+                    Mark all
+                  </button>
+                </div>
+              </div>
+              <div className="max-h-80 overflow-y-auto">
+                {messages.length === 0 ? (
+                  <p className="text-sm text-gray-500 px-4 py-6 text-center">
+                    No messages
+                  </p>
+                ) : (
+                  messages.slice(0, 5).map((msg) => (
+                    <div
+                      key={msg.id}
+                      onClick={() => handleMessageClick(msg)}
+                      className="flex items-start gap-3 px-4 py-3 border-b hover:bg-gray-50 cursor-pointer"
+                    >
+                      <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden shrink-0">
+                        <img
+                          src={msg.avatar || "../assets/Profile.jpg"}
+                          alt={msg.name || "User"}
+                          className="w-full h-full object-cover object-top"
+                        />
                       </div>
-                    </div>
 
-                    <div className="text-right">
-                      <p className="text-xs text-gray-400">{msg.time}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">
+                          {msg.name || "User"}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {msg.text}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">{msg.time}</p>
+                      </div>
 
-                      {msg.unread > 0 && (
-                        <span className="bg-[#0f766e] text-white text-xs px-2 py-0.5 rounded-full">
-                          {msg.unread}
-                        </span>
+                      {msg.unread && (
+                        <span className="w-2.5 h-2.5 bg-blue-500 rounded-full mt-2"></span>
                       )}
                     </div>
-                  </div>
-                ))}
-
+                  ))
+                )}
+              </div>
+              <div className="px-4 py-3 text-center">
                 <button
                   onClick={() => {
                     setShowMessages(false);
                     navigate("/messages");
                   }}
-                  className="w-full text-sm text-[#0f766e] font-medium hover:underline mt-2"
+                  className="text-sm font-medium text-[#0f766e] hover:underline cursor-pointer"
                 >
-                  See all messages
+                  View All Messages
                 </button>
               </div>
             </div>

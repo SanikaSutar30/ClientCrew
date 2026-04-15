@@ -6,6 +6,32 @@ import Topbar from "./Topbar";
 function Layout() {
   const [darkMode, setDarkMode] = useState(false);
 
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      name: "Biplab Roy",
+      text: "Sounds good! Let's schedule...",
+      time: "2h ago",
+      unread: true,
+      avatar: "../assets/Profile.jpg",
+    },
+    {
+      id: 2,
+      name: "John Doe",
+      text: "Please send latest report",
+      time: "4h ago",
+      unread: true,
+      avatar: "../assets/Profile2.jpg",
+    },
+    {
+      id: 3,
+      name: "Priya Singh",
+      text: "Task board UI looks good",
+      time: "1d ago",
+      unread: false,
+      avatar: "../assets/Profile3.jpg",
+    },
+  ]);
   const [notifications, setNotifications] = useState([
     {
       id: 1,
@@ -68,6 +94,8 @@ function Layout() {
           setDarkMode={setDarkMode}
           notifications={notifications}
           setNotifications={setNotifications}
+          messages={messages}
+          setMessages={setMessages}
         />
 
         <div
