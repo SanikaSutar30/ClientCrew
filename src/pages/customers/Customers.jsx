@@ -87,6 +87,9 @@ const { darkMode } = useOutletContext();
   const [successTitle, setSuccessTitle] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  const [showViewConfirm, setShowViewConfirm] = useState(false);
+  const [pendingCustomer, setPendingCustomer] = useState(null);
+
   // Set items per page
   const itemsPerPage = 5;
 
@@ -124,21 +127,26 @@ const handleDeleteClick = (customer) => {
 };
 
   // Open view modal
-  const handleViewClick = (customer) => {
-    setSelectedCustomer(customer);
-    setShowViewModal(true);
-  };
+const handleViewClick = (customer) => {
+  setPendingCustomer(customer);
+  setShowViewConfirm(true);
+};
 
   // Update selected customer
-  const handleUpdateCustomer = (updatedCustomer) => {
-    setCustomers((prev) =>
-      prev.map((customer) =>
-        customer.id === updatedCustomer.id ? updatedCustomer : customer,
-      ),
-    );
-    setShowEditModal(false);
-    setSelectedCustomer(null);
-  };
+const handleUpdateCustomer = (updatedCustomer) => {
+  setCustomers((prev) =>
+    prev.map((customer) =>
+      customer.id === updatedCustomer.id ? updatedCustomer : customer,
+    ),
+  );
+
+  setShowEditModal(false);
+  setSelectedCustomer(null);
+
+  setSuccessTitle("Customer Updated!");
+  setSuccessMessage("Customer details updated successfully.");
+  setShowSuccessModal(true);
+};
 
   // Delete selected customer
   const handleDeleteCustomer = (customerId) => {
@@ -218,8 +226,6 @@ setShowDeleteConfirm(false);
         />
       )}
 
-   
-
       {/* View customer modal */}
       {showViewModal && selectedCustomer && (
         <ViewCustomer
@@ -252,6 +258,28 @@ setShowDeleteConfirm(false);
         onCancel={() => {
           setShowDeleteConfirm(false);
           setSelectedCustomer(null);
+        }}
+      />
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showViewConfirm}
+        type="success"
+        title="Open Customer"
+        message="Do you want to view this customer?"
+        confirmText="Yes, Open"
+        cancelText="Cancel"
+        onConfirm={() => {
+          setShowViewConfirm(false);
+
+          if (pendingCustomer) {
+            setSelectedCustomer(pendingCustomer);
+            setShowViewModal(true);
+            setPendingCustomer(null);
+          }
+        }}
+        onCancel={() => {
+          setShowViewConfirm(false);
+          setPendingCustomer(null);
         }}
       />
       {/* Page header */}
