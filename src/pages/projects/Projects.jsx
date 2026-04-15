@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import AddTask from "../tasks/AddTask";
+import ConfirmationModal from "../../components/layout/ConfirmationModal";
 
 import {
   Users,
@@ -38,6 +39,10 @@ export default function Projects() {
   const [showView, setShowView] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successTitle, setSuccessTitle] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Sample projects data
   const [projects, setProjects] = useState([
@@ -132,25 +137,28 @@ export default function Projects() {
   const itemsPerPage = 6;
 
   // Handlers
-  const handleAddProject = (newProject) => {
-    const projectToAdd = {
-      id: projects.length + 1,
-      icon: newProject.icon || "P",
-      iconColor: newProject.iconColor || "bg-teal-500",
-      projectName: newProject.projectName,
-      clientName: newProject.clientName,
-      startDate: newProject.startDate,
-      dueDate: newProject.dueDate,
-      status: newProject.status,
-      progress: Number(newProject.progress || 0),
-      team: newProject.team || ["../assets/Profile.jpg"],
-      extraMembers: Number(newProject.extraMembers || 0),
-    };
+ const handleAddProject = (newProject) => {
+   const projectToAdd = {
+     id: projects.length + 1,
+     icon: newProject.icon || "P",
+     iconColor: newProject.iconColor || "bg-teal-500",
+     projectName: newProject.projectName,
+     clientName: newProject.clientName,
+     startDate: newProject.startDate,
+     dueDate: newProject.dueDate,
+     status: newProject.status,
+     progress: Number(newProject.progress || 0),
+     team: newProject.team || ["../assets/Profile.jpg"],
+     extraMembers: Number(newProject.extraMembers || 0),
+   };
 
-    setProjects((prev) => [projectToAdd, ...prev]);
-    setShowAdd(false);
-  };
+   setProjects((prev) => [projectToAdd, ...prev]);
+   setShowAdd(false);
 
+   setSuccessTitle("Project Created!");
+   setSuccessMessage("Your project has been created successfully.");
+   setShowSuccessModal(true);
+ };
 //  Open edit modal
   const handleEditClick = (project) => {
     setSelectedProject(project);
@@ -327,6 +335,16 @@ const handleDeleteClick = (project) => {
           onAddTask={(newTask) => console.log("New Task:", newTask)}
         />
       )}
+
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showSuccessModal}
+        type="success"
+        title={successTitle}
+        message={successMessage}
+        confirmText="OK"
+        onConfirm={() => setShowSuccessModal(false)}
+      />
 
       {/* Header */}
       <div className="flex items-center justify-between">

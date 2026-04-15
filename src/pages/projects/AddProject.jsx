@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Folder,
   User,
@@ -26,6 +26,13 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject }) {
 
   const [errors, setErrors] = useState({});
 
+  // 🔥 Clean up image URLs (important)
+  useEffect(() => {
+    return () => {
+      formData.team.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [formData.team]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -51,21 +58,15 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject }) {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.projectName.trim()) {
+    if (!formData.projectName.trim())
       newErrors.projectName = "Project name is required";
-    }
 
-    if (!formData.clientName.trim()) {
+    if (!formData.clientName.trim())
       newErrors.clientName = "Client name is required";
-    }
 
-    if (!formData.startDate) {
-      newErrors.startDate = "Start date is required";
-    }
+    if (!formData.startDate) newErrors.startDate = "Start date is required";
 
-    if (!formData.dueDate) {
-      newErrors.dueDate = "Due date is required";
-    }
+    if (!formData.dueDate) newErrors.dueDate = "Due date is required";
 
     if (
       formData.startDate &&
@@ -75,43 +76,21 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject }) {
       newErrors.dueDate = "Due date cannot be before start date";
     }
 
-    if (formData.progress === "") {
-      newErrors.progress = "Progress is required";
-    } else if (
-      Number(formData.progress) < 0 ||
-      Number(formData.progress) > 100
-    ) {
+    if (formData.progress === "") newErrors.progress = "Progress is required";
+    else if (formData.progress < 0 || formData.progress > 100)
       newErrors.progress = "Progress must be between 0 and 100";
-    }
 
-    if (!formData.icon.trim()) {
-      newErrors.icon = "Project icon is required";
-    } else if (formData.icon.trim().length > 1) {
-      newErrors.icon = "Use only one letter";
-    }
+    if (!formData.icon.trim()) newErrors.icon = "Project icon is required";
+    else if (formData.icon.length > 1) newErrors.icon = "Use only one letter";
 
-    if (formData.team.length === 0) {
+    if (formData.team.length === 0)
       newErrors.team = "At least one team image is required";
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    onAddProject({
-      ...formData,
-      progress: Number(formData.progress),
-      extraMembers: Number(formData.extraMembers),
-      icon: formData.icon.toUpperCase(),
-    });
-
+  const resetForm = () => {
     setFormData({
       projectName: "",
       clientName: "",
@@ -124,9 +103,23 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject }) {
       icon: "",
       iconColor: "bg-teal-500",
     });
-
     setErrors({});
-    setShowAdd(false);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+
+    onAddProject({
+      ...formData,
+      progress: Number(formData.progress),
+      extraMembers: Number(formData.extraMembers),
+      icon: formData.icon.toUpperCase(),
+    });
+
+    resetForm();
+    // setShowAdd(false);
   };
 
   const inputClass = `w-full px-4 py-3 rounded-xl border outline-none ${
@@ -138,27 +131,26 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject }) {
   const labelClass = "block text-sm font-medium mb-2";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px] px-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur px-4">
       <div
-        className={`w-full max-w-5xl rounded-2xl p-8 shadow-xl max-h-[90vh] overflow-y-auto transition duration-300 ${
+        className={`w-full max-w-5xl rounded-2xl p-8 shadow-xl max-h-[90vh] overflow-y-auto ${
           darkMode
             ? "bg-gray-800 border border-gray-600 text-white"
             : "bg-white border border-gray-200 text-black"
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex justify-between mb-6">
           <div>
             <h2 className="text-2xl font-semibold">Add Project</h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500">
               Enter project details to create a new record
             </p>
           </div>
 
           <button
-            type="button"
             onClick={() => setShowAdd(false)}
-            className="text-gray-500 hover:text-red-500 text-xl cursor-pointer"
+            className="text-gray-500 hover:text-red-500 text-xl"
           >
             ✕
           </button>
@@ -166,80 +158,67 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject }) {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid md:grid-cols-2 gap-5">
             {/* Project Name */}
             <div>
               <label className={labelClass}>Project Name</label>
-              <div className="flex items-center gap-2">
-                <Folder size={18} className="text-gray-400 shrink-0" />
+              <div className="flex gap-2">
+                <Folder size={18} />
                 <input
-                  type="text"
                   name="projectName"
                   value={formData.projectName}
                   onChange={handleChange}
-                  placeholder="Enter project name"
                   className={inputClass}
                 />
               </div>
               {errors.projectName && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors.projectName}
-                </p>
+                <p className="text-red-500 text-xs">{errors.projectName}</p>
               )}
             </div>
 
-            {/* Client Name */}
+            {/* Client */}
             <div>
               <label className={labelClass}>Client Name</label>
-              <div className="flex items-center gap-2">
-                <User size={18} className="text-gray-400 shrink-0" />
+              <div className="flex gap-2">
+                <User size={18} />
                 <input
-                  type="text"
                   name="clientName"
                   value={formData.clientName}
                   onChange={handleChange}
-                  placeholder="Enter client name"
                   className={inputClass}
                 />
               </div>
               {errors.clientName && (
-                <p className="text-red-500 text-xs mt-1">{errors.clientName}</p>
+                <p className="text-red-500 text-xs">{errors.clientName}</p>
               )}
             </div>
 
-            {/* Start Date */}
+            {/* Dates */}
             <div>
               <label className={labelClass}>Start Date</label>
-              <div className="flex items-center gap-2">
-                <Calendar size={18} className="text-gray-400 shrink-0" />
-                <input
-                  type="date"
-                  name="startDate"
-                  value={formData.startDate}
-                  onChange={handleChange}
-                  className={inputClass}
-                />
-              </div>
+              <input
+                type="date"
+                name="startDate"
+                value={formData.startDate}
+                onChange={handleChange}
+                className={inputClass}
+              />
               {errors.startDate && (
-                <p className="text-red-500 text-xs mt-1">{errors.startDate}</p>
+                <p className="text-red-500 text-xs">{errors.startDate}</p>
               )}
             </div>
 
-            {/* Due Date */}
             <div>
               <label className={labelClass}>Due Date</label>
-              <div className="flex items-center gap-2">
-                <Calendar size={18} className="text-gray-400 shrink-0" />
-                <input
-                  type="date"
-                  name="dueDate"
-                  value={formData.dueDate}
-                  onChange={handleChange}
-                  className={inputClass}
-                />
-              </div>
+              <input
+                type="date"
+                name="dueDate"
+                value={formData.dueDate}
+                onChange={handleChange}
+                className={inputClass}
+              />
               {errors.dueDate && (
-                <p className="text-red-500 text-xs mt-1">{errors.dueDate}</p>
+                <p className="text-red-500 text-xs">{errors.dueDate}</p>
               )}
             </div>
 
@@ -250,177 +229,73 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject }) {
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className={`${inputClass} cursor-pointer`}
+                className={inputClass}
               >
-                <option value="Planning">Planning</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Completed">Completed</option>
-                <option value="On Hold">On Hold</option>
+                <option>Planning</option>
+                <option>In Progress</option>
+                <option>Completed</option>
+                <option>On Hold</option>
               </select>
             </div>
 
             {/* Progress */}
             <div>
-              <label className={labelClass}>Progress (%)</label>
-              <div className="flex items-center gap-2">
-                <Percent size={18} className="text-gray-400 shrink-0" />
-                <input
-                  type="number"
-                  name="progress"
-                  value={formData.progress}
-                  onChange={handleChange}
-                  placeholder="Enter progress"
-                  min="0"
-                  max="100"
-                  className={inputClass}
-                />
-              </div>
+              <label className={labelClass}>Progress</label>
+              <input
+                type="number"
+                name="progress"
+                value={formData.progress}
+                onChange={handleChange}
+                className={inputClass}
+              />
               {errors.progress && (
-                <p className="text-red-500 text-xs mt-1">{errors.progress}</p>
+                <p className="text-red-500 text-xs">{errors.progress}</p>
               )}
             </div>
 
-            {/* Icon Letter */}
+            {/* Icon */}
             <div>
-              <label className={labelClass}>Project Icon Letter</label>
-              <div className="flex items-center gap-2">
-                <Type size={18} className="text-gray-400 shrink-0" />
-                <input
-                  type="text"
-                  name="icon"
-                  value={formData.icon}
-                  onChange={handleChange}
-                  placeholder="Example: E"
-                  maxLength={1}
-                  className={inputClass}
-                />
-              </div>
+              <label className={labelClass}>Icon</label>
+              <input
+                name="icon"
+                maxLength={1}
+                value={formData.icon}
+                onChange={handleChange}
+                className={inputClass}
+              />
               {errors.icon && (
-                <p className="text-red-500 text-xs mt-1">{errors.icon}</p>
+                <p className="text-red-500 text-xs">{errors.icon}</p>
               )}
             </div>
 
-            {/* Icon Color */}
-            <div>
-              <label className={labelClass}>Icon Color</label>
-              <div className="flex items-center gap-2">
-                <Palette size={18} className="text-gray-400 shrink-0" />
-                <select
-                  name="iconColor"
-                  value={formData.iconColor}
-                  onChange={handleChange}
-                  className={`${inputClass} cursor-pointer`}
-                >
-                  <option value="bg-teal-500">Teal</option>
-                  <option value="bg-cyan-500">Cyan</option>
-                  <option value="bg-blue-500">Blue</option>
-                  <option value="bg-orange-500">Orange</option>
-                  <option value="bg-amber-500">Amber</option>
-                  <option value="bg-emerald-500">Emerald</option>
-                  <option value="bg-violet-500">Violet</option>
-                  <option value="bg-rose-500">Rose</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Extra Members */}
-            <div>
-              <label className={labelClass}>Extra Team Members</label>
-              <div className="flex items-center gap-2">
-                <Users size={18} className="text-gray-400 shrink-0" />
-                <input
-                  type="number"
-                  name="extraMembers"
-                  value={formData.extraMembers}
-                  onChange={handleChange}
-                  placeholder="Enter extra members count"
-                  min="0"
-                  className={inputClass}
-                />
-              </div>
-            </div>
-
-            {/* Team Images */}
+            {/* Team */}
             <div>
               <label className={labelClass}>Team Images</label>
-              <div className="flex items-center gap-2">
-                <ImagePlus size={18} className="text-gray-400 shrink-0" />
-                <input
-                  type="file"
-                  accept=".png, .jpg, .jpeg"
-                  multiple
-                  onChange={handleTeamChange}
-                  className={`w-full px-4 py-3 rounded-xl border outline-none cursor-pointer file:mr-4 file:rounded-lg file:border-0 file:px-3 file:py-2 file:text-sm ${
-                    darkMode
-                      ? "bg-gray-700 border-gray-600 text-white file:bg-gray-600 file:text-white"
-                      : "bg-gray-50 border-gray-200 text-black file:bg-gray-200 file:text-black"
-                  }`}
-                />
-              </div>
+              <input
+                type="file"
+                multiple
+                onChange={handleTeamChange}
+                className={inputClass}
+              />
               {errors.team && (
-                <p className="text-red-500 text-xs mt-1">{errors.team}</p>
+                <p className="text-red-500 text-xs">{errors.team}</p>
               )}
-            </div>
-          </div>
-
-          {/* Preview */}
-          <div
-            className={`rounded-2xl p-5 border ${
-              darkMode
-                ? "bg-gray-700 border-gray-600"
-                : "bg-gray-50 border-gray-200"
-            }`}
-          >
-            <p className="text-sm font-medium mb-4">Preview</p>
-
-            <div className="flex items-center gap-4">
-              <div
-                className={`w-14 h-14 rounded-xl ${formData.iconColor} text-white flex items-center justify-center font-bold text-xl`}
-              >
-                {formData.icon ? formData.icon.toUpperCase() : "P"}
-              </div>
-
-              <div className="min-w-0">
-                <h3 className="font-semibold text-lg truncate">
-                  {formData.projectName || "Project Name"}
-                </h3>
-
-                <p className="text-sm text-gray-500 truncate">
-                  {formData.clientName || "Client Name"}
-                </p>
-
-                <div className="mt-2 flex items-center gap-2">
-                  <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-[#0f766e]"
-                      style={{ width: `${formData.progress || 0}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-xs text-gray-500">
-                    {formData.progress || 0}%
-                  </span>
-                </div>
-              </div>
             </div>
           </div>
 
           {/* Buttons */}
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex justify-end gap-3">
             <button
               type="button"
               onClick={() => setShowAdd(false)}
-              className={`px-5 py-2.5 rounded-xl cursor-pointer ${
-                darkMode
-                  ? "bg-gray-600 text-white hover:bg-gray-500"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+              className="px-4 py-2 bg-gray-300 rounded-xl"
             >
               Cancel
             </button>
 
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-xl text-white bg-[#0f766e] hover:opacity-90 cursor-pointer"
+              className="px-4 py-2 bg-[#0f766e] text-white rounded-xl"
             >
               Save Project
             </button>
