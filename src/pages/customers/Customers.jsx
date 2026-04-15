@@ -5,6 +5,7 @@ import AddCustomer from "./AddCustomer";
 import EditCustomer from "./EditCustomer";
 import DeleteCustomer from "./DeleteCustomer";
 import ViewCustomer from "./ViewCustomer";
+import ConfirmationModal from "../../components/layout/ConfirmationModal";
 
 export default function Customers() {
   // Get dark mode from layout
@@ -80,22 +81,30 @@ const { darkMode } = useOutletContext();
   const [sortOrder, setSortOrder] = useState("Newest");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successTitle, setSuccessTitle] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
   // Set items per page
   const itemsPerPage = 5;
 
   // Add a new customer
-  const handleAddCustomer = (newCustomer) => {
-    setCustomers((prev) => [
-      {
-        id: prev.length + 1,
-        ...newCustomer,
-      },
-      ...prev,
-    ]);
-    setCurrentPage(1);
-    setShowAddModal(false);
-  };
+const handleAddCustomer = (newCustomer) => {
+  setCustomers((prev) => [
+    {
+      id: prev.length + 1,
+      ...newCustomer,
+    },
+    ...prev,
+  ]);
 
+  setCurrentPage(1);
+  setShowAddModal(false);
+
+  setSuccessTitle("Customer Created!");
+  setSuccessMessage("Customer has been added successfully.");
+  setShowSuccessModal(true);
+};
   // Open edit modal
   const handleEditClick = (customer) => {
     setSelectedCustomer(customer);
@@ -221,7 +230,15 @@ const { darkMode } = useOutletContext();
           setShowViewModal={setShowViewModal}
         />
       )}
-
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showSuccessModal}
+        type="success"
+        title={successTitle}
+        message={successMessage}
+        confirmText="OK"
+        onConfirm={() => setShowSuccessModal(false)}
+      />
       {/* Page header */}
       <div className="flex items-center justify-between">
         {/* Title section */}
@@ -577,7 +594,6 @@ const { darkMode } = useOutletContext();
           </div>
         </div>
       </div>
-      
     </div>
   );
 }
