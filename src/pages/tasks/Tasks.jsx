@@ -274,11 +274,13 @@ export default function Tasks() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successTitle, setSuccessTitle] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [showViewConfirm, setShowViewConfirm] = useState(false);
+  const [pendingTask, setPendingTask] = useState(null);
 
-  const handleViewTask = (task) => {
-    setSelectedTask(task);
-    setShowViewTask(true);
-  };
+ const handleViewTask = (task) => {
+   setPendingTask(task);
+   setShowViewConfirm(true);
+ };
 
   const handleEditTask = (task) => {
     setSelectedTask(task);
@@ -288,7 +290,6 @@ export default function Tasks() {
 
   const handleDeleteClick = (task) => {
     setSelectedTask(task);
-    setShowViewTask(false);
     setShowDeleteTask(true);
   };
 const handleUpdateTask = (updatedTask) => {
@@ -532,8 +533,10 @@ const handleUpdateTask = (updatedTask) => {
         <DeleteTask
           darkMode={darkMode}
           task={selectedTask}
+          showDeleteTask={showDeleteTask}
           setShowDeleteTask={setShowDeleteTask}
           onDeleteTask={handleDeleteTask}
+          setShowViewTask={setShowViewTask}
         />
       )}
 
@@ -545,6 +548,24 @@ const handleUpdateTask = (updatedTask) => {
         message={successMessage}
         confirmText="OK"
         onConfirm={() => setShowSuccessModal(false)}
+      />
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showViewConfirm}
+        type="success"
+        title="Open Task"
+        message="Do you want to view this task?"
+        confirmText="Yes, Open"
+        cancelText="Cancel"
+        onConfirm={() => {
+          setShowViewConfirm(false);
+
+          if (pendingTask) {
+            setSelectedTask(pendingTask);
+            setShowViewTask(true);
+          }
+        }}
+        onCancel={() => setShowViewConfirm(false)}
       />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
