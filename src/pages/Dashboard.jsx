@@ -159,7 +159,11 @@ const handleAddCustomer = (newCustomer) => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-sm text-gray-500">
+          <p
+            className={`text-sm ${
+              darkMode ? "text-gray-300" : "text-gray-500"
+            }`}
+          >
             Monitor your business metrics and performance
           </p>
         </div>

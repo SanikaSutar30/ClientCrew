@@ -126,17 +126,25 @@ function Topbar({
   };
   return (
     <div
-      className={`h-16 flex items-center justify-between px-6 ${
-        darkMode ? "bg-gray-800 text-white" : "bg-gray-100 text-black"
+      className={`h-16 flex items-center justify-between px-6 border-b ${
+        darkMode
+          ? "bg-gray-800 border-gray-700 text-white"
+          : "bg-gray-100 border-gray-200 text-black"
       }`}
     >
       {/* Left: Search */}
-      <div className="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm w-72">
+      <div
+        className={`flex items-center px-4 py-2 rounded-lg shadow-sm w-72 ${
+          darkMode ? "bg-gray-700 text-white" : "bg-white text-gray-700"
+        }`}
+      >
         <Search size={16} className="text-gray-500" />
         <input
           type="text"
           placeholder="Search customers, projects, rep..."
-          className="bg-transparent outline-none ml-2 w-full text-sm text-gray-700 placeholder:text-gray-400"
+          className={`bg-transparent outline-none ml-2 w-full text-sm ${
+            darkMode ? "text-white placeholder:text-gray-400" : "text-gray-700"
+          }`}
         />
       </div>
 
@@ -150,7 +158,11 @@ function Topbar({
               setShowNotifications(false);
               setShowProfileMenu(false);
             }}
-            className="relative bg-white p-2 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50"
+            className={` relative p-2 rounded-lg shadow-sm cursor-pointer ${
+              darkMode
+                ? "bg-gray-700 hover:bg-gray-600"
+                : "bg-white hover:bg-gray-50"
+            }`}
           >
             <MessageCircle size={18} />
 
@@ -241,7 +253,11 @@ function Topbar({
               setShowMessages(false);
               setShowProfileMenu(false);
             }}
-            className="relative bg-white p-2 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50"
+            className={` relative p-2 rounded-lg shadow-sm cursor-pointer ${
+              darkMode
+                ? "bg-gray-700 hover:bg-gray-600"
+                : "bg-white hover:bg-gray-50"
+            }`}
           >
             <Bell size={18} />
 
@@ -320,7 +336,11 @@ function Topbar({
         {/* Dark mode */}
         <div
           onClick={() => setDarkMode(!darkMode)}
-          className="bg-white p-2 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50"
+          className={`p-2 rounded-lg shadow-sm cursor-pointer ${
+            darkMode
+              ? "bg-gray-700 hover:bg-gray-600"
+              : "bg-white hover:bg-gray-50"
+          }`}
         >
           <Moon size={18} />
         </div>
@@ -333,35 +353,76 @@ function Topbar({
               setShowNotifications(false);
               setShowMessages(false);
             }}
-            className="flex items-center gap-3 bg-white px-4 py-2 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50 min-w-[220px]"
+            className={`flex items-center gap-3 px-4 py-2 rounded-lg shadow-sm cursor-pointer min-w-[220px] ${
+              darkMode
+                ? "bg-gray-700 hover:bg-gray-600"
+                : "bg-white hover:bg-gray-50"
+            }`}
           >
-            <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+            <div className="w-10 h-10 bg-gray-300 rounded-full">
+              <img
+                src="E:\JavaFullStackProject\ClientCrew\ClientCrewFrontend\frontend\public\assets\Profile.jpg"
+                alt=""
+              />
+            </div>
 
             <div className="flex flex-col leading-tight flex-1">
-              <span className="text-sm font-semibold text-gray-800">Admin</span>
-              <span className="text-xs text-gray-500">Administrator</span>
+              <span
+                className={`text-sm font-semibold ${
+                  darkMode ? "text-white" : "text-gray-800"
+                }`}
+              >
+                Admin
+              </span>
+              <span
+                className={`text-xs ${
+                  darkMode ? "text-gray-300" : "text-gray-500"
+                }`}
+              >
+                Administrator
+              </span>
             </div>
 
             <ChevronDown
               size={18}
-              className={`text-green-600 transition-transform ${
+              className={`transition-transform ${
                 showProfileMenu ? "rotate-180" : ""
-              }`}
+              } ${darkMode ? "text-green-400" : "text-green-600"}`}
             />
           </div>
 
           {showProfileMenu && (
-            <div className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-xl z-50 border border-gray-200 overflow-hidden">
+            <div
+              className={`absolute right-0 mt-3 w-80 rounded-2xl shadow-xl z-50 overflow-hidden ${
+                darkMode
+                  ? "bg-gray-800 border border-gray-700"
+                  : "bg-white border border-gray-200"
+              }`}
+            >
               {/* Header */}
-              <div className="px-5 py-4 border-b border-gray-200">
+              <div
+                className={`px-5 py-4 border-b ${
+                  darkMode ? "border-gray-700" : "border-gray-200"
+                }`}
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-14 h-14 bg-gray-300 rounded-full"></div>
 
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800">
+                    <h3
+                      className={`text-lg font-semibold ${
+                        darkMode ? "text-white" : "text-gray-800"
+                      }`}
+                    >
                       Admin
                     </h3>
-                    <p className="text-sm text-gray-500">admin@company.com</p>
+                    <p
+                      className={`text-sm ${
+                        darkMode ? "text-gray-300" : "text-gray-500"
+                      }`}
+                    >
+                      admin@company.com
+                    </p>
                     <p className="text-sm text-green-600 mt-1">● Online</p>
                   </div>
                 </div>
@@ -371,7 +432,11 @@ function Topbar({
               <div className="py-2">
                 <button
                   onClick={() => handleProfileOptionClick("/my-profile")}
-                  className="w-full flex items-center gap-3 px-5 py-3 text-left hover:bg-gray-50 text-gray-700 cursor-pointer"
+                  className={`w-full flex items-center gap-3 px-5 py-3 text-left cursor-pointer ${
+                    darkMode
+                      ? "hover:bg-gray-700 text-gray-200"
+                      : "hover:bg-gray-50 text-gray-700"
+                  }`}
                 >
                   <User size={20} />
                   <span className="text-sm font-medium">My Profile</span>
@@ -379,7 +444,11 @@ function Topbar({
 
                 <button
                   onClick={() => handleProfileOptionClick("/settings")}
-                  className="w-full flex items-center gap-3 px-5 py-3 text-left hover:bg-gray-50 text-gray-700 cursor-pointer"
+                  className={`w-full flex items-center gap-3 px-5 py-3 text-left cursor-pointer ${
+                    darkMode
+                      ? "hover:bg-gray-700 text-gray-200"
+                      : "hover:bg-gray-50 text-gray-700"
+                  }`}
                 >
                   <Settings size={20} />
                   <span className="text-sm font-medium">Account Settings</span>
@@ -387,7 +456,11 @@ function Topbar({
 
                 <button
                   onClick={() => handleProfileOptionClick("/notifications")}
-                  className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-gray-50 text-gray-700 cursor-pointer"
+                  className={`w-full flex items-center justify-between px-5 py-3 text-left cursor-pointer ${
+                    darkMode
+                      ? "hover:bg-gray-700 text-gray-200"
+                      : "hover:bg-gray-50 text-gray-700"
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     <Bell size={20} />
@@ -403,7 +476,11 @@ function Topbar({
 
                 <button
                   onClick={() => handleProfileOptionClick("/help-support")}
-                  className="w-full flex items-center gap-3 px-5 py-3 text-left hover:bg-gray-50 text-gray-700 cursor-pointer"
+                  className={`w-full flex items-center gap-3 px-5 py-3 text-left cursor-pointer ${
+                    darkMode
+                      ? "hover:bg-gray-700 text-gray-200"
+                      : "hover:bg-gray-50 text-gray-700"
+                  }`}
                 >
                   <HelpCircle size={20} />
                   <span className="text-sm font-medium">Help & Support</span>
@@ -411,7 +488,11 @@ function Topbar({
               </div>
 
               {/* Footer */}
-              <div className="border-t border-gray-200 p-2">
+              <div
+                className={`border-t p-2 ${
+                  darkMode ? "border-gray-700" : "border-gray-200"
+                }`}
+              >
                 <button
                   onClick={() => {
                     setShowProfileMenu(false);
@@ -427,6 +508,7 @@ function Topbar({
           )}
         </div>
       </div>
+
       {showLogoutModal && (
         <LogoutConfirmModal
           darkMode={darkMode}
