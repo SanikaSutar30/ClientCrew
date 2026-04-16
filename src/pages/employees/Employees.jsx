@@ -15,10 +15,8 @@ import {
   Plus,
 } from "lucide-react";
 import AddEmployee from "./AddEmployee";
+import ViewEmployee from "./ViewEmployee";
 import ConfirmationModal from "../../components/layout/ConfirmationModal";
-
-
-
 
 export default function Employees() {
   const { darkMode } = useOutletContext();
@@ -27,95 +25,99 @@ export default function Employees() {
   const [selectedRole, setSelectedRole] = useState("All Roles");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
 
-const [showAddModal, setShowAddModal] = useState(false);
-const [showAddConfirmModal, setShowAddConfirmModal] = useState(false);
-const [pendingEmployee, setPendingEmployee] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddConfirmModal, setShowAddConfirmModal] = useState(false);
+  const [pendingEmployee, setPendingEmployee] = useState(null);
 
-const [employees, setEmployees] = useState([
-  {
-    id: 1,
-    name: "Aarav Patil",
-    role: "Admin",
-    department: "Management",
-    email: "aarav@clientcrew.com",
-    phone: "+91 9876543210",
-    location: "Nashik",
-    status: "Active",
-    projects: 8,
-    joinedDate: "2024-01-12",
-    image: "../assets/Profile.jpg",
-  },
-  {
-    id: 2,
-    name: "Priya Sharma",
-    role: "Manager",
-    department: "Project Management",
-    email: "priya@clientcrew.com",
-    phone: "+91 9823456712",
-    location: "Pune",
-    status: "Active",
-    projects: 6,
-    joinedDate: "2024-02-08",
-    image: "../assets/Profile2.jpg",
-  },
-  {
-    id: 3,
-    name: "Rohan Deshmukh",
-    role: "Employee",
-    department: "Development",
-    email: "rohan@clientcrew.com",
-    phone: "+91 9988776655",
-    location: "Mumbai",
-    status: "On Leave",
-    projects: 4,
-    joinedDate: "2024-03-15",
-    image: "../assets/Profile3.jpg",
-  },
-  {
-    id: 4,
-    name: "Sneha Kulkarni",
-    role: "Employee",
-    department: "UI/UX Design",
-    email: "sneha@clientcrew.com",
-    phone: "+91 9765432189",
-    location: "Nashik",
-    status: "Active",
-    projects: 5,
-    joinedDate: "2024-04-22",
-    image: "../assets/Profile4.jpg",
-  },
-  {
-    id: 5,
-    name: "Aditya Joshi",
-    role: "Manager",
-    department: "Sales",
-    email: "aditya@clientcrew.com",
-    phone: "+91 9898989898",
-    location: "Aurangabad",
-    status: "Inactive",
-    projects: 2,
-    joinedDate: "2024-05-10",
-    image: "../assets/Profile5.jpg",
-  },
-  {
-    id: 6,
-    name: "Neha Jadhav",
-    role: "Employee",
-    department: "Testing",
-    email: "neha@clientcrew.com",
-    phone: "+91 9012345678",
-    location: "Nagpur",
-    status: "Active",
-    projects: 3,
-    joinedDate: "2024-06-05",
-    image: "../assets/Profile6.jpg",
-  },
-]);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
- const handleAddEmployee = (newEmployee) => {
-   setPendingEmployee(newEmployee);
-   setShowAddConfirmModal(true);
+  const [employees, setEmployees] = useState([
+    {
+      id: 1,
+      name: "Aarav Patil",
+      role: "Admin",
+      department: "Management",
+      email: "aarav@clientcrew.com",
+      phone: "+91 9876543210",
+      location: "Nashik",
+      status: "Active",
+      projects: 8,
+      joinedDate: "2024-01-12",
+      image: "../assets/Profile.jpg",
+    },
+    {
+      id: 2,
+      name: "Priya Sharma",
+      role: "Manager",
+      department: "Project Management",
+      email: "priya@clientcrew.com",
+      phone: "+91 9823456712",
+      location: "Pune",
+      status: "Active",
+      projects: 6,
+      joinedDate: "2024-02-08",
+      image: "../assets/Profile2.jpg",
+    },
+    {
+      id: 3,
+      name: "Rohan Deshmukh",
+      role: "Employee",
+      department: "Development",
+      email: "rohan@clientcrew.com",
+      phone: "+91 9988776655",
+      location: "Mumbai",
+      status: "On Leave",
+      projects: 4,
+      joinedDate: "2024-03-15",
+      image: "../assets/Profile3.jpg",
+    },
+    {
+      id: 4,
+      name: "Sneha Kulkarni",
+      role: "Employee",
+      department: "UI/UX Design",
+      email: "sneha@clientcrew.com",
+      phone: "+91 9765432189",
+      location: "Nashik",
+      status: "Active",
+      projects: 5,
+      joinedDate: "2024-04-22",
+      image: "../assets/Profile4.jpg",
+    },
+    {
+      id: 5,
+      name: "Aditya Joshi",
+      role: "Manager",
+      department: "Sales",
+      email: "aditya@clientcrew.com",
+      phone: "+91 9898989898",
+      location: "Aurangabad",
+      status: "Inactive",
+      projects: 2,
+      joinedDate: "2024-05-10",
+      image: "../assets/Profile5.jpg",
+    },
+    {
+      id: 6,
+      name: "Neha Jadhav",
+      role: "Employee",
+      department: "Testing",
+      email: "neha@clientcrew.com",
+      phone: "+91 9012345678",
+      location: "Nagpur",
+      status: "Active",
+      projects: 3,
+      joinedDate: "2024-06-05",
+      image: "../assets/Profile6.jpg",
+    },
+  ]);
+
+  const handleAddEmployee = (newEmployee) => {
+    setPendingEmployee(newEmployee);
+    setShowAddConfirmModal(true);
   };
+
   const confirmAddEmployee = () => {
     if (!pendingEmployee) return;
 
@@ -124,11 +126,17 @@ const [employees, setEmployees] = useState([
     setShowAddModal(false);
     setPendingEmployee(null);
   };
+
   const cancelAddEmployee = () => {
     setShowAddConfirmModal(false);
     setPendingEmployee(null);
   };
 
+  const handleViewClick = (employee) => {
+    console.log("View clicked:", employee);
+    setSelectedEmployee(employee);
+    setShowViewModal(true);
+  };
   const filteredEmployees = useMemo(() => {
     return employees.filter((employee) => {
       const matchesSearch =
@@ -190,7 +198,13 @@ const [employees, setEmployees] = useState([
           onAddEmployee={handleAddEmployee}
         />
       )}
-
+      {showViewModal && selectedEmployee && (
+        <ViewEmployee
+          darkMode={darkMode}
+          employee={selectedEmployee}
+          setShowViewModal={setShowViewModal}
+        />
+      )}
       <ConfirmationModal
         darkMode={darkMode}
         isOpen={showAddConfirmModal}
@@ -400,7 +414,8 @@ const [employees, setEmployees] = useState([
 
             <div className="mt-5 flex items-center gap-2">
               <button
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition ${
+                onClick={() => handleViewClick(employee)}
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition cursor-pointer ${
                   darkMode
                     ? "bg-gray-700 hover:bg-gray-600 text-white"
                     : "bg-gray-100 hover:bg-gray-200 text-gray-700"
@@ -411,7 +426,7 @@ const [employees, setEmployees] = useState([
               </button>
 
               <button
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition ${
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition cursor-pointer  ${
                   darkMode
                     ? "bg-blue-900/40 hover:bg-blue-900/60 text-blue-400"
                     : "bg-blue-100 hover:bg-blue-200 text-blue-700"
@@ -422,7 +437,7 @@ const [employees, setEmployees] = useState([
               </button>
 
               <button
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition ${
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition cursor-pointer  ${
                   darkMode
                     ? "bg-red-900/40 hover:bg-red-900/60 text-red-400"
                     : "bg-red-100 hover:bg-red-200 text-red-700"
