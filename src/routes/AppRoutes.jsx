@@ -69,6 +69,8 @@ export default function AppRoutes() {
           <Route path="/help-support" element={<HelpSupport />} />
         </Route>
 
+        
+
         {/* Auth */}
         <Route path="/register" element={<Register />} />
       </Routes>
