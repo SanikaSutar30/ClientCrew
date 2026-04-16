@@ -15,6 +15,7 @@ import {
   Plus,
 } from "lucide-react";
 import AddEmployee from "./AddEmployee";
+import ConfirmationModal from "../../components/layout/ConfirmationModal";
 
 
 
@@ -26,7 +27,9 @@ export default function Employees() {
   const [selectedRole, setSelectedRole] = useState("All Roles");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
 
-  const [showAddModal, setShowAddModal] = useState(false);
+const [showAddModal, setShowAddModal] = useState(false);
+const [showAddConfirmModal, setShowAddConfirmModal] = useState(false);
+const [pendingEmployee, setPendingEmployee] = useState(null);
 
 const [employees, setEmployees] = useState([
   {
@@ -109,8 +112,21 @@ const [employees, setEmployees] = useState([
   },
 ]);
 
-  const handleAddEmployee = (newEmployee) => {
-    setEmployees((prev) => [newEmployee, ...prev]);
+ const handleAddEmployee = (newEmployee) => {
+   setPendingEmployee(newEmployee);
+   setShowAddConfirmModal(true);
+  };
+  const confirmAddEmployee = () => {
+    if (!pendingEmployee) return;
+
+    setEmployees((prev) => [pendingEmployee, ...prev]);
+    setShowAddConfirmModal(false);
+    setShowAddModal(false);
+    setPendingEmployee(null);
+  };
+  const cancelAddEmployee = () => {
+    setShowAddConfirmModal(false);
+    setPendingEmployee(null);
   };
 
   const filteredEmployees = useMemo(() => {
@@ -174,6 +190,18 @@ const [employees, setEmployees] = useState([
           onAddEmployee={handleAddEmployee}
         />
       )}
+
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showAddConfirmModal}
+        type="success"
+        title="Add Employee"
+        message={`Are you sure you want to add ${pendingEmployee?.name || "this employee"}?`}
+        confirmText="Add"
+        cancelText="Cancel"
+        onConfirm={confirmAddEmployee}
+        onCancel={cancelAddEmployee}
+      />
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">

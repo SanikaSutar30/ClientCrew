@@ -87,21 +87,19 @@ export default function AddEmployee({
   };
 
   // Submit employee form
-  const handleSubmit = (e) => {
-    e.preventDefault();
+const handleSubmit = (e) => {
+  e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
+  if (!validateForm()) {
+    return;
+  }
 
-    onAddEmployee({
-      ...formData,
-      id: Date.now(),
-      projects: Number(formData.projects),
-    });
-
-    setShowAddModal(false);
-  };
+  onAddEmployee({
+    ...formData,
+    id: Date.now(),
+    projects: Number(formData.projects),
+  });
+};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px] px-4">
