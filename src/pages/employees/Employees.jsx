@@ -14,6 +14,10 @@ import {
   MapPin,
   Plus,
 } from "lucide-react";
+import AddEmployee from "./AddEmployee";
+
+
+
 
 export default function Employees() {
   const { darkMode } = useOutletContext();
@@ -22,86 +26,92 @@ export default function Employees() {
   const [selectedRole, setSelectedRole] = useState("All Roles");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
 
-  const [employees] = useState([
-    {
-      id: 1,
-      name: "Aarav Patil",
-      role: "Admin",
-      department: "Management",
-      email: "aarav@clientcrew.com",
-      phone: "+91 9876543210",
-      location: "Nashik",
-      status: "Active",
-      projects: 8,
-      joinedDate: "2024-01-12",
-      image: "../assets/Profile.jpg",
-    },
-    {
-      id: 2,
-      name: "Priya Sharma",
-      role: "Manager",
-      department: "Project Management",
-      email: "priya@clientcrew.com",
-      phone: "+91 9823456712",
-      location: "Pune",
-      status: "Active",
-      projects: 6,
-      joinedDate: "2024-02-08",
-      image: "../assets/Profile2.jpg",
-    },
-    {
-      id: 3,
-      name: "Rohan Deshmukh",
-      role: "Employee",
-      department: "Development",
-      email: "rohan@clientcrew.com",
-      phone: "+91 9988776655",
-      location: "Mumbai",
-      status: "On Leave",
-      projects: 4,
-      joinedDate: "2024-03-15",
-      image: "../assets/Profile3.jpg",
-    },
-    {
-      id: 4,
-      name: "Sneha Kulkarni",
-      role: "Employee",
-      department: "UI/UX Design",
-      email: "sneha@clientcrew.com",
-      phone: "+91 9765432189",
-      location: "Nashik",
-      status: "Active",
-      projects: 5,
-      joinedDate: "2024-04-22",
-      image: "../assets/Profile4.jpg",
-    },
-    {
-      id: 5,
-      name: "Aditya Joshi",
-      role: "Manager",
-      department: "Sales",
-      email: "aditya@clientcrew.com",
-      phone: "+91 9898989898",
-      location: "Aurangabad",
-      status: "Inactive",
-      projects: 2,
-      joinedDate: "2024-05-10",
-      image: "../assets/Profile5.jpg",
-    },
-    {
-      id: 6,
-      name: "Neha Jadhav",
-      role: "Employee",
-      department: "Testing",
-      email: "neha@clientcrew.com",
-      phone: "+91 9012345678",
-      location: "Nagpur",
-      status: "Active",
-      projects: 3,
-      joinedDate: "2024-06-05",
-      image: "../assets/Profile6.jpg",
-    },
-  ]);
+  const [showAddModal, setShowAddModal] = useState(false);
+
+const [employees, setEmployees] = useState([
+  {
+    id: 1,
+    name: "Aarav Patil",
+    role: "Admin",
+    department: "Management",
+    email: "aarav@clientcrew.com",
+    phone: "+91 9876543210",
+    location: "Nashik",
+    status: "Active",
+    projects: 8,
+    joinedDate: "2024-01-12",
+    image: "../assets/Profile.jpg",
+  },
+  {
+    id: 2,
+    name: "Priya Sharma",
+    role: "Manager",
+    department: "Project Management",
+    email: "priya@clientcrew.com",
+    phone: "+91 9823456712",
+    location: "Pune",
+    status: "Active",
+    projects: 6,
+    joinedDate: "2024-02-08",
+    image: "../assets/Profile2.jpg",
+  },
+  {
+    id: 3,
+    name: "Rohan Deshmukh",
+    role: "Employee",
+    department: "Development",
+    email: "rohan@clientcrew.com",
+    phone: "+91 9988776655",
+    location: "Mumbai",
+    status: "On Leave",
+    projects: 4,
+    joinedDate: "2024-03-15",
+    image: "../assets/Profile3.jpg",
+  },
+  {
+    id: 4,
+    name: "Sneha Kulkarni",
+    role: "Employee",
+    department: "UI/UX Design",
+    email: "sneha@clientcrew.com",
+    phone: "+91 9765432189",
+    location: "Nashik",
+    status: "Active",
+    projects: 5,
+    joinedDate: "2024-04-22",
+    image: "../assets/Profile4.jpg",
+  },
+  {
+    id: 5,
+    name: "Aditya Joshi",
+    role: "Manager",
+    department: "Sales",
+    email: "aditya@clientcrew.com",
+    phone: "+91 9898989898",
+    location: "Aurangabad",
+    status: "Inactive",
+    projects: 2,
+    joinedDate: "2024-05-10",
+    image: "../assets/Profile5.jpg",
+  },
+  {
+    id: 6,
+    name: "Neha Jadhav",
+    role: "Employee",
+    department: "Testing",
+    email: "neha@clientcrew.com",
+    phone: "+91 9012345678",
+    location: "Nagpur",
+    status: "Active",
+    projects: 3,
+    joinedDate: "2024-06-05",
+    image: "../assets/Profile6.jpg",
+  },
+]);
+
+  const handleAddEmployee = (newEmployee) => {
+    setEmployees((prev) => [newEmployee, ...prev]);
+  };
 
   const filteredEmployees = useMemo(() => {
     return employees.filter((employee) => {
@@ -157,6 +167,14 @@ export default function Employees() {
     <div
       className={`min-h-screen  ${darkMode ? "bg-gray-900" : "bg-gray-100"}`}
     >
+      {showAddModal && (
+        <AddEmployee
+          darkMode={darkMode}
+          setShowAddModal={setShowAddModal}
+          onAddEmployee={handleAddEmployee}
+        />
+      )}
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
@@ -170,7 +188,10 @@ export default function Employees() {
           </p>
         </div>
 
-        <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-[#0f766e] text-white hover:opacity-90 cursor-pointer">
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-[#0f766e] text-white hover:opacity-90 cursor-pointer"
+        >
           <Plus size={18} />
           Add Employee
         </button>

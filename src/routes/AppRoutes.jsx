@@ -7,7 +7,8 @@ import Dashboard from "../pages/Dashboard";
 import Customers from "../pages/customers/Customers";
 import Projects from "../pages/projects/Projects";
 import Tasks from "../pages/tasks/Tasks";
-import Employees from "../pages/Employees";
+import Employees from "../pages/employees/Employees";
+
 import Reports from "../pages/Reports";
 import Notifications from "../pages/Notifications";
 import Settings from "../pages/Settings";
