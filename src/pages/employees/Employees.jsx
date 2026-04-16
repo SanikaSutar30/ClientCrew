@@ -25,6 +25,7 @@ export default function Employees() {
   const [selectedRole, setSelectedRole] = useState("All Roles");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
 
+  
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddConfirmModal, setShowAddConfirmModal] = useState(false);
   const [pendingEmployee, setPendingEmployee] = useState(null);
@@ -32,6 +33,10 @@ export default function Employees() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
+
+const [showViewConfirm, setShowViewConfirm] = useState(false);
+  const [pendingViewEmployee, setPendingViewEmployee] = useState(null);
+  
   const [employees, setEmployees] = useState([
     {
       id: 1,
@@ -132,10 +137,23 @@ export default function Employees() {
     setPendingEmployee(null);
   };
 
-  const handleViewClick = (employee) => {
-    console.log("View clicked:", employee);
-    setSelectedEmployee(employee);
+const handleViewClick = (employee) => {
+  setPendingViewEmployee(employee);
+  setShowViewConfirm(true);
+  };
+  
+  const confirmViewEmployee = () => {
+    if (!pendingViewEmployee) return;
+
+    setSelectedEmployee(pendingViewEmployee);
     setShowViewModal(true);
+    setShowViewConfirm(false);
+    setPendingViewEmployee(null);
+  };
+
+  const cancelViewEmployee = () => {
+    setShowViewConfirm(false);
+    setPendingViewEmployee(null);
   };
   const filteredEmployees = useMemo(() => {
     return employees.filter((employee) => {
@@ -217,6 +235,17 @@ export default function Employees() {
         onCancel={cancelAddEmployee}
       />
 
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showViewConfirm}
+        type="success"
+        title="Open Employee"
+        message={`Do you want to view ${pendingViewEmployee?.name || "this employee"}?`}
+        confirmText="Yes, Open"
+        cancelText="Cancel"
+        onConfirm={confirmViewEmployee}
+        onCancel={cancelViewEmployee}
+      />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
@@ -390,39 +419,42 @@ export default function Employees() {
               </div>
             </div>
 
-            <div className="mt-6 flex items-center gap-2">
+            <div className="mt-5 flex items-center justify-end gap-2">
+              {/* View */}
               <button
                 onClick={() => handleViewClick(employee)}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition cursor-pointer ${
+                title="View Employee"
+                className={`p-2 rounded-lg transition cursor-pointer ${
                   darkMode
                     ? "bg-gray-700 hover:bg-gray-600 text-white"
                     : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                 }`}
               >
                 <Eye size={16} />
-                View
               </button>
 
+              {/* Edit */}
               <button
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition cursor-pointer  ${
+                title="Edit Employee"
+                className={`p-2 rounded-lg transition cursor-pointer ${
                   darkMode
                     ? "bg-blue-900/40 hover:bg-blue-900/60 text-blue-400"
                     : "bg-blue-100 hover:bg-blue-200 text-blue-700"
                 }`}
               >
                 <Pencil size={16} />
-                Edit
               </button>
 
+              {/* Delete */}
               <button
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition cursor-pointer  ${
+                title="Delete Employee"
+                className={`p-2 rounded-lg transition cursor-pointer ${
                   darkMode
                     ? "bg-red-900/40 hover:bg-red-900/60 text-red-400"
                     : "bg-red-100 hover:bg-red-200 text-red-700"
                 }`}
               >
                 <Trash2 size={16} />
-                Delete
               </button>
             </div>
           </div>
