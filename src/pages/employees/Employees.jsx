@@ -390,29 +390,7 @@ export default function Employees() {
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-4">
-              <div
-                className={`rounded-xl p-3 ${
-                  darkMode ? "bg-gray-700" : "bg-gray-50"
-                }`}
-              >
-                <p className={`text-xs ${subTextClass}`}>Projects</p>
-                <h4 className="text-lg font-bold mt-1">{employee.projects}</h4>
-              </div>
-
-              <div
-                className={`rounded-xl p-3 ${
-                  darkMode ? "bg-gray-700" : "bg-gray-50"
-                }`}
-              >
-                <p className={`text-xs ${subTextClass}`}>Joined</p>
-                <h4 className="text-sm font-semibold mt-1">
-                  {employee.joinedDate}
-                </h4>
-              </div>
-            </div>
-
-            <div className="mt-5 flex items-center gap-2">
+            <div className="mt-6 flex items-center gap-2">
               <button
                 onClick={() => handleViewClick(employee)}
                 className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition cursor-pointer ${

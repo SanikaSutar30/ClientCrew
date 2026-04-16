@@ -166,7 +166,7 @@ export default function ViewEmployee({ darkMode, employee, setShowViewModal }) {
               >
                 <div className="flex items-center gap-2 mb-2">
                   <FolderKanban size={16} className="text-indigo-500" />
-                  <span className="text-sm font-medium">Assigned Projects</span>
+                  <span className="text-sm font-medium">Projects</span>
                 </div>
                 <p className="text-sm font-semibold">{employee.projects}</p>
               </div>
