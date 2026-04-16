@@ -721,22 +721,28 @@ const handleDeleteProject = (projectId) => {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2">
+                  {/* View */}
                   <button
                     onClick={() => handleViewClick(project)}
-                    className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 cursor-pointer"
+                    title="View Project"
+                    className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer"
                   >
                     <Eye size={16} />
                   </button>
 
+                  {/* Edit */}
                   <button
                     onClick={() => handleEditClick(project)}
-                    className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer"
+                    title="Edit Project"
+                    className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 cursor-pointer"
                   >
                     <Pencil size={16} />
                   </button>
 
+                  {/* Delete */}
                   <button
                     onClick={() => handleDeleteClick(project)}
+                    title="Delete Project"
                     className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
                   >
                     <Trash2 size={16} />

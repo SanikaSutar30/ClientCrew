@@ -150,6 +150,7 @@ export default function ViewTask({
 
         {/* Footer */}
         <div className="flex justify-end gap-3">
+          {/* Delete */}
           <button
             onClick={() => onDeleteTask(task)}
             className="flex cursor-pointer items-center gap-2 px-4 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100"
@@ -158,9 +159,10 @@ export default function ViewTask({
             Delete
           </button>
 
+          {/* Edit */}
           <button
             onClick={() => onEditTask(task)}
-            className="flex items-center gap-2 px-4 py-2 cursor-pointer rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100"
+            className="flex items-center gap-2 px-4 py-2 cursor-pointer rounded-xl bg-green-50 text-green-600 hover:bg-green-100"
           >
             <Pencil size={16} />
             Edit

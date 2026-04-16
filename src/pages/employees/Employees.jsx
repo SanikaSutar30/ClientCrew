@@ -426,8 +426,8 @@ const handleViewClick = (employee) => {
                 title="View Employee"
                 className={`p-2 rounded-lg transition cursor-pointer ${
                   darkMode
-                    ? "bg-gray-700 hover:bg-gray-600 text-white"
-                    : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                    ? "bg-blue-900/40 hover:bg-blue-900/60 text-blue-400"
+                    : "bg-blue-50 hover:bg-blue-100 text-blue-600"
                 }`}
               >
                 <Eye size={16} />
@@ -438,8 +438,8 @@ const handleViewClick = (employee) => {
                 title="Edit Employee"
                 className={`p-2 rounded-lg transition cursor-pointer ${
                   darkMode
-                    ? "bg-blue-900/40 hover:bg-blue-900/60 text-blue-400"
-                    : "bg-blue-100 hover:bg-blue-200 text-blue-700"
+                    ? "bg-green-900/40 hover:bg-green-900/60 text-green-400"
+                    : "bg-green-50 hover:bg-green-100 text-green-600"
                 }`}
               >
                 <Pencil size={16} />
@@ -451,7 +451,7 @@ const handleViewClick = (employee) => {
                 className={`p-2 rounded-lg transition cursor-pointer ${
                   darkMode
                     ? "bg-red-900/40 hover:bg-red-900/60 text-red-400"
-                    : "bg-red-100 hover:bg-red-200 text-red-700"
+                    : "bg-red-50 hover:bg-red-100 text-red-600"
                 }`}
               >
                 <Trash2 size={16} />
