@@ -121,7 +121,7 @@ function Sidebar({ darkMode }) {
       <div className="p-4">
         <button
           onClick={() => setShowLogoutModal(true)}
-          className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg transition ${
+          className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg transition cursor-pointer ${
             darkMode
               ? "hover:bg-gray-200 text-black"
               : "hover:bg-white/10 text-white"

@@ -387,7 +387,7 @@ const handleConfirmLogout = () => {
                     setShowProfileMenu(false);
                     setShowLogoutModal(true);
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-3 text-left text-red-500 hover:bg-red-50 rounded-xl cursor-pointer"
+                  className="w-full flex items-center gap-3 px-3 py-3 text-left text-red-500 hover:bg-red-50 rounded-xl "
                 >
                   <LogOut size={20} />
                   <span className="text-sm font-semibold">Logout</span>
