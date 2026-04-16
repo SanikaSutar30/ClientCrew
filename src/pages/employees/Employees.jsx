@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import AddEmployee from "./AddEmployee";
 import ViewEmployee from "./ViewEmployee";
+import EditEmployee from "./EditEmployee";
 import ConfirmationModal from "../../components/layout/ConfirmationModal";
 
 export default function Employees() {
@@ -32,10 +33,18 @@ export default function Employees() {
 
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-
-
+  
 const [showViewConfirm, setShowViewConfirm] = useState(false);
-  const [pendingViewEmployee, setPendingViewEmployee] = useState(null);
+const [pendingViewEmployee, setPendingViewEmployee] = useState(null);
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showEditConfirm, setShowEditConfirm] = useState(false);
+  const [pendingEditEmployee, setPendingEditEmployee] = useState(null);
+
+  
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTitle, setDeleteTitle] = useState("");
+  const [deleteMessage, setDeleteMessage] = useState("");
   
   const [employees, setEmployees] = useState([
     {
@@ -155,6 +164,54 @@ const handleViewClick = (employee) => {
     setShowViewConfirm(false);
     setPendingViewEmployee(null);
   };
+
+
+  const handleEditClick = (employee) => {
+    setSelectedEmployee(employee);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateEmployee = (updatedEmployee) => {
+    setPendingEditEmployee(updatedEmployee);
+    setShowEditConfirm(true);
+  };
+
+  const confirmUpdateEmployee = () => {
+    if (!pendingEditEmployee) return;
+
+    setEmployees((prev) =>
+      prev.map((employee) =>
+        employee.id === pendingEditEmployee.id ? pendingEditEmployee : employee,
+      ),
+    );
+
+    setShowEditConfirm(false);
+    setShowEditModal(false);
+    setSelectedEmployee(null);
+    setPendingEditEmployee(null);
+  };
+
+  const cancelUpdateEmployee = () => {
+    setShowEditConfirm(false);
+    setPendingEditEmployee(null);
+  };
+
+  const handleDeleteClick = (employee) => {
+    setSelectedEmployee(employee);
+    setDeleteTitle("Delete Employee");
+    setDeleteMessage(
+      `Are you sure you want to delete ${employee.name || "this employee"}?`,
+    );
+    setShowDeleteConfirm(true);
+  };
+
+ const handleDeleteEmployee = (employeeId) => {
+   setEmployees((prev) =>
+     prev.filter((employee) => employee.id !== employeeId),
+   );
+   setShowDeleteConfirm(false);
+   setSelectedEmployee(null);
+ };
   const filteredEmployees = useMemo(() => {
     return employees.filter((employee) => {
       const matchesSearch =
@@ -223,6 +280,14 @@ const handleViewClick = (employee) => {
           setShowViewModal={setShowViewModal}
         />
       )}
+      {showEditModal && selectedEmployee && (
+        <EditEmployee
+          darkMode={darkMode}
+          employee={selectedEmployee}
+          setShowEditModal={setShowEditModal}
+          onUpdateEmployee={handleUpdateEmployee}
+        />
+      )}
       <ConfirmationModal
         darkMode={darkMode}
         isOpen={showAddConfirmModal}
@@ -245,6 +310,35 @@ const handleViewClick = (employee) => {
         cancelText="Cancel"
         onConfirm={confirmViewEmployee}
         onCancel={cancelViewEmployee}
+      />
+
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showEditConfirm}
+        type="success"
+        title="Update Employee"
+        message={`Are you sure you want to update ${pendingEditEmployee?.name || "this employee"}?`}
+        confirmText="Update"
+        cancelText="Cancel"
+        onConfirm={confirmUpdateEmployee}
+        onCancel={cancelUpdateEmployee}
+      />
+
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showDeleteConfirm}
+        type="error"
+        title={deleteTitle}
+        message={deleteMessage}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={() =>
+          selectedEmployee && handleDeleteEmployee(selectedEmployee.id)
+        }
+        onCancel={() => {
+          setShowDeleteConfirm(false);
+          setSelectedEmployee(null);
+        }}
       />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -433,8 +527,10 @@ const handleViewClick = (employee) => {
                 <Eye size={16} />
               </button>
 
+              
               {/* Edit */}
               <button
+                onClick={() => handleEditClick(employee)}
                 title="Edit Employee"
                 className={`p-2 rounded-lg transition cursor-pointer ${
                   darkMode
@@ -447,6 +543,7 @@ const handleViewClick = (employee) => {
 
               {/* Delete */}
               <button
+                onClick={()=> handleDeleteClick(employee)}
                 title="Delete Employee"
                 className={`p-2 rounded-lg transition cursor-pointer ${
                   darkMode
