@@ -211,7 +211,8 @@ const handleViewClick = (employee) => {
    );
    setShowDeleteConfirm(false);
    setSelectedEmployee(null);
- };
+  };
+  
   const filteredEmployees = useMemo(() => {
     return employees.filter((employee) => {
       const matchesSearch =
@@ -228,6 +229,7 @@ const handleViewClick = (employee) => {
       return matchesSearch && matchesRole && matchesStatus;
     });
   }, [employees, searchTerm, selectedRole, selectedStatus]);
+  
 
   const totalEmployees = employees.length;
   const activeEmployees = employees.filter(
@@ -258,9 +260,7 @@ const handleViewClick = (employee) => {
 
   const subTextClass = darkMode ? "text-gray-400" : "text-gray-500";
 
-  const inputClass = darkMode
-    ? "bg-gray-800 border border-gray-700 text-white placeholder-gray-400"
-    : "bg-white border border-gray-300 text-gray-900 placeholder-gray-400";
+
 
   return (
     <div
@@ -364,7 +364,7 @@ const handleViewClick = (employee) => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
-        <div className={`rounded-2xl p-5 shadow-sm ${cardClass}`}>
+        <div className={`rounded-2xl p-4 shadow-sm ${cardClass}`}>
           <div className="flex items-center justify-between">
             <div>
               <p className={`text-sm ${subTextClass}`}>Total Employees</p>
@@ -413,31 +413,43 @@ const handleViewClick = (employee) => {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className={`rounded-2xl p-4 mb-6 shadow-sm ${cardClass}`}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl ${inputClass}`}
-          >
-            <Search
-              size={18}
-              className={darkMode ? "text-gray-400" : "text-gray-500"}
-            />
-            <input
-              type="text"
-              placeholder="Search employee, email, department..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full outline-none bg-transparent text-sm ${
-                darkMode ? "text-white" : "text-gray-900"
-              }`}
-            />
-          </div>
+      {/* Search and filters */}
+      <div
+        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 "
+      >
+        {/* Search input */}
+        <div
+          className={`flex items-center px-3 py-2 rounded-lg w-full md:w-80 border ${
+            darkMode
+              ? "bg-gray-600 border-gray-500"
+              : "bg-gray-50 border-gray-200"
+          }`}
+        >
+          <Search size={16} className="text-gray-500" />
+          <input
+            type="text"
+            placeholder="Search employee, email, department..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={`bg-transparent outline-none ml-2 w-full text-sm ${
+              darkMode
+                ? "text-white placeholder:text-gray-300"
+                : "text-gray-700 placeholder:text-gray-400"
+            }`}
+          />
+        </div>
 
+        {/* Filter dropdowns */}
+        <div className="flex gap-3">
+          {/* Role filter */}
           <select
             value={selectedRole}
             onChange={(e) => setSelectedRole(e.target.value)}
-            className={`px-4 py-3 rounded-xl outline-none ${inputClass}`}
+            className={`px-3 py-2 rounded-lg text-sm border cursor-pointer ${
+              darkMode
+                ? "bg-gray-600 border-gray-500 text-white"
+                : "bg-gray-50 border-gray-200 text-gray-700"
+            }`}
           >
             <option>All Roles</option>
             <option>Admin</option>
@@ -446,10 +458,15 @@ const handleViewClick = (employee) => {
             <option>Customer</option>
           </select>
 
+          {/* Status filter */}
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className={`px-4 py-3 rounded-xl outline-none ${inputClass}`}
+            className={`px-3 py-2 rounded-lg text-sm border cursor-pointer ${
+              darkMode
+                ? "bg-gray-600 border-gray-500 text-white"
+                : "bg-gray-50 border-gray-200 text-gray-700"
+            }`}
           >
             <option>All Status</option>
             <option>Active</option>
@@ -527,7 +544,6 @@ const handleViewClick = (employee) => {
                 <Eye size={16} />
               </button>
 
-              
               {/* Edit */}
               <button
                 onClick={() => handleEditClick(employee)}
@@ -543,7 +559,7 @@ const handleViewClick = (employee) => {
 
               {/* Delete */}
               <button
-                onClick={()=> handleDeleteClick(employee)}
+                onClick={() => handleDeleteClick(employee)}
                 title="Delete Employee"
                 className={`p-2 rounded-lg transition cursor-pointer ${
                   darkMode
