@@ -79,6 +79,10 @@ function Topbar({ darkMode, setDarkMode, notifications, setNotifications }) {
       })),
     );
   };
+  const handleMessageClick = (msg) => {
+    setShowMessages(false);
+    navigate("/messages", { state: { selectedChat: msg } });
+  };
 
   // Icon by notification type
   const renderTypeIcon = (type) => {
@@ -158,10 +162,7 @@ const handleConfirmLogout = () => {
                 ].map((msg, index) => (
                   <div
                     key={index}
-                    onClick={() => {
-                      setShowMessages(false);
-                      navigate("/messages");
-                    }}
+                    onClick={() => handleMessageClick(msg)}
                     className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
@@ -194,7 +195,7 @@ const handleConfirmLogout = () => {
                     setShowMessages(false);
                     navigate("/messages");
                   }}
-                  className="w-full text-sm text-[#0f766e] font-medium hover:underline mt-2"
+                  className="w-full text-sm text-[#0f766e] font-medium  cursor-pointer hover:underline mt-2"
                 >
                   See all messages
                 </button>
