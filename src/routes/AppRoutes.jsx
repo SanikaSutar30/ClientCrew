@@ -1,6 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Layout from "../components/layout/Layout";
+import Landing from "../pages/Landing";
 
 // Main Pages
 import Dashboard from "../pages/Dashboard";
@@ -8,11 +9,11 @@ import Customers from "../pages/customers/Customers";
 import Projects from "../pages/projects/Projects";
 import Tasks from "../pages/tasks/Tasks";
 import Employees from "../pages/employees/Employees";
-
-import Reports from "../pages/Reports";
+import Reports from "../pages/reports/Reports";
 import Notifications from "../pages/Notifications";
 import Settings from "../pages/Settings";
 import Register from "../pages/Register";
+import Login from "../pages/Login";
 import MyProfile from "../pages/MyProfile";
 import HelpSupport from "../pages/HelpSupport";
 import Messages from "../pages/messages/Messages";
@@ -33,8 +34,13 @@ export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Default redirect */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        {/* Landing Page */}
+        <Route path="/" element={<Landing />} />
+        <Route path="/landing" element={<Landing />} />
+
+        {/* Auth */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         {/* Main Layout */}
         <Route element={<Layout />}>
@@ -53,12 +59,11 @@ export default function AppRoutes() {
           <Route path="/projects/add" element={<AddProject />} />
           <Route path="/projects/edit/:id" element={<EditProject />} />
           <Route path="/projects/view/:id" element={<ViewProject />} />
-        
 
           {/* Tasks */}
           <Route path="/tasks" element={<Tasks />} />
 
-          {/* Messages (FIXED POSITION) */}
+          {/* Messages */}
           <Route path="/messages" element={<Messages />} />
 
           {/* Others */}
@@ -69,11 +74,6 @@ export default function AppRoutes() {
           <Route path="/my-profile" element={<MyProfile />} />
           <Route path="/help-support" element={<HelpSupport />} />
         </Route>
-
-        
-
-        {/* Auth */}
-        <Route path="/register" element={<Register />} />
       </Routes>
     </BrowserRouter>
   );
