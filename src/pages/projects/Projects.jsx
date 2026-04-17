@@ -414,6 +414,7 @@ const handleDeleteProject = (projectId) => {
           <Plus size={16} />
           Add Project
         </button>
+
       </div>
 
       {/* Stats cards */}
@@ -459,6 +460,7 @@ const handleDeleteProject = (projectId) => {
                   : "bg-white border border-gray-200"
               }`}
             >
+              
               {/* Left content */}
               <div>
                 <p
