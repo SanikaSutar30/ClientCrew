@@ -156,6 +156,7 @@ const handleAddCustomer = (newCustomer) => {
           onAddCustomer={handleAddCustomer}
         />
       )}
+    
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
@@ -163,6 +164,7 @@ const handleAddCustomer = (newCustomer) => {
             Monitor your business metrics and performance
           </p>
         </div>
+
         <div className="relative">
           <div
             onClick={() => setOpen(!open)}
