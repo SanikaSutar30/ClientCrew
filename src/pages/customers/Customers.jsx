@@ -5,6 +5,12 @@ import AddCustomer from "./AddCustomer";
 import EditCustomer from "./EditCustomer";
 import ViewCustomer from "./ViewCustomer";
 import ConfirmationModal from "../../components/layout/ConfirmationModal";
+import {
+  getAllCustomers,
+  addCustomer,
+  updateCustomer,
+  deleteCustomer,
+} from "../../services/customerService";
 
 export default function Customers() {
   const { darkMode, userRole } = useOutletContext();
@@ -15,63 +21,7 @@ export default function Customers() {
   // Temporary logged-in employee id for frontend role testing
   const loggedInEmployeeId = "emp1";
 
-  const [customers, setCustomers] = useState([
-    {
-      id: 1,
-      name: "Rahul Sharma",
-      email: "rahul@gmail.com",
-      phone: "+91 9876543210",
-      status: "Active",
-      joinedDate: "2024-01-12",
-      image: "../assets/Profile.jpg",
-    },
-    {
-      id: 2,
-      name: "Amit Patil",
-      email: "amit@gmail.com",
-      phone: "+91 9123456789",
-      status: "Active",
-      joinedDate: "2024-02-03",
-      image: "../assets/Profile2.jpg",
-    },
-    {
-      id: 3,
-      name: "Priya Singh",
-      email: "priya@gmail.com",
-      phone: "+91 9988776655",
-      status: "Pending",
-      joinedDate: "2024-03-18",
-      image: "../assets/Profile3.jpg",
-    },
-    {
-      id: 4,
-      name: "John Doe",
-      email: "john@gmail.com",
-      phone: "+91 8877655443",
-      status: "Inactive",
-      joinedDate: "2024-04-02",
-      image: "../assets/Profile4.jpg",
-    },
-    {
-      id: 5,
-      name: "Neha Verma",
-      email: "neha@gmail.com",
-      phone: "+91 9284711223",
-      status: "Active",
-      joinedDate: "2024-04-10",
-      image: "../assets/Profile5.jpg",
-    },
-    {
-      id: 6,
-      name: "Suresh Reddy",
-      email: "suresh@gmail.com",
-      phone: "+91 9032144556",
-      status: "Active",
-      joinedDate: "2024-05-22",
-      image: "../assets/Profile6.jpg",
-    },
-  ]);
-
+const [customers, setCustomers] = useState(getAllCustomers());
   // Temporary project data for role-based filtering
   const projects = [
     {
@@ -145,7 +95,8 @@ export default function Customers() {
   const confirmAddCustomer = () => {
     if (!pendingCustomer || !canManageCustomers) return;
 
-    setCustomers((prev) => [pendingCustomer, ...prev]);
+    addCustomer(pendingCustomer);
+    setCustomers(getAllCustomers());
     setCurrentPage(1);
     setShowAddConfirmModal(false);
     setShowAddModal(false);
@@ -203,18 +154,15 @@ export default function Customers() {
   };
 
   const confirmUpdateCustomer = () => {
-    if (!pendingEditCustomer || !canManageCustomers) return;
+   if (!pendingEditCustomer || !canManageCustomers) return;
 
-    setCustomers((prev) =>
-      prev.map((customer) =>
-        customer.id === pendingEditCustomer.id ? pendingEditCustomer : customer,
-      ),
-    );
+   updateCustomer(pendingEditCustomer);
+   setCustomers(getAllCustomers());
 
-    setShowEditConfirm(false);
-    setShowEditModal(false);
-    setSelectedCustomer(null);
-    setPendingEditCustomer(null);
+   setShowEditConfirm(false);
+   setShowEditModal(false);
+   setSelectedCustomer(null);
+   setPendingEditCustomer(null);
   };
 
   const cancelUpdateCustomer = () => {
@@ -225,9 +173,8 @@ export default function Customers() {
   const handleDeleteCustomer = (customerId) => {
     if (!canManageCustomers) return;
 
-    setCustomers((prev) =>
-      prev.filter((customer) => customer.id !== customerId),
-    );
+    deleteCustomer(customerId);
+    setCustomers(getAllCustomers());
     setShowDeleteConfirm(false);
     setSelectedCustomer(null);
   };

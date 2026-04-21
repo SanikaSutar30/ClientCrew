@@ -37,34 +37,37 @@ export default function EditEmployee({
   };
 
   // Handle image change
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
+const handleImageChange = (e) => {
+  const file = e.target.files[0];
 
-    if (file) {
-      const validTypes = ["image/png", "image/jpeg", "image/jpg"];
+  if (!file) return;
 
-      if (!validTypes.includes(file.type)) {
-        setErrors((prev) => ({
-          ...prev,
-          image: "Only PNG, JPG and JPEG images are allowed",
-        }));
-        return;
-      }
+  const validTypes = ["image/png", "image/jpeg", "image/jpg"];
 
-      const imageUrl = URL.createObjectURL(file);
+  if (!validTypes.includes(file.type)) {
+    setErrors((prev) => ({
+      ...prev,
+      image: "Only PNG, JPG and JPEG images are allowed",
+    }));
+    return;
+  }
 
-      setFormData((prev) => ({
-        ...prev,
-        image: imageUrl,
-      }));
+  const reader = new FileReader();
 
-      setErrors((prev) => ({
-        ...prev,
-        image: "",
-      }));
-    }
+  reader.onloadend = () => {
+    setFormData((prev) => ({
+      ...prev,
+      image: reader.result,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      image: "",
+    }));
   };
 
+  reader.readAsDataURL(file);
+};
   // Validate form
   const validateForm = () => {
     const newErrors = {};

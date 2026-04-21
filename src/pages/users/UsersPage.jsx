@@ -17,74 +17,80 @@ import AddUser from "./AddUser";
 import ViewUser from "./ViewUser";
 import EditUser from "./EditUser";
 import ConfirmationModal from "../../components/layout/ConfirmationModal";
+import {
+  getAllUsers,
+  addUser,
+  updateUser,
+  deleteUser,
+} from "../../services/userService";
 
 export default function UsersPage() {
   const context = useOutletContext() || {};
   const darkMode = context.darkMode ?? false;
 
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "Rahul Sharma",
-      email: "rahul@gmail.com",
-      phone: "+91 9876543210",
-      role: "Admin",
-      status: "Active",
-      joinedDate: "2026-01-12",
-      image: "../assets/Profile.jpg",
-    },
-    {
-      id: 2,
-      name: "Priya Singh",
-      email: "priya@gmail.com",
-      phone: "+91 9123456780",
-      role: "Manager",
-      status: "Active",
-      joinedDate: "2026-02-04",
-      image: "../assets/Profile2.jpg",
-    },
-    {
-      id: 3,
-      name: "Amit Patil",
-      email: "amit@gmail.com",
-      phone: "+91 9988776655",
-      role: "Employee",
-      status: "Active",
-      joinedDate: "2026-02-20",
-      image: "../assets/Profile3.jpg",
-    },
-    {
-      id: 4,
-      name: "Neha Verma",
-      email: "neha@gmail.com",
-      phone: "+91 9090909090",
-      role: "Customer",
-      status: "Inactive",
-      joinedDate: "2026-03-01",
-      image: "../assets/Profile4.jpg",
-    },
-    {
-      id: 5,
-      name: "John Doe",
-      email: "john@gmail.com",
-      phone: "+91 9876501234",
-      role: "Employee",
-      status: "Active",
-      joinedDate: "2026-03-12",
-      image: "../assets/Profile5.jpg",
-    },
-    {
-      id: 6,
-      name: "Sneha Kulkarni",
-      email: "sneha@gmail.com",
-      phone: "+91 9012345678",
-      role: "Manager",
-      status: "Pending",
-      joinedDate: "2026-03-18",
-      image: "../assets/Profile6.jpg",
-    },
-  ]);
-
+  // const [users, setUsers] = useState([
+  //   {
+  //     id: 1,
+  //     name: "Rahul Sharma",
+  //     email: "rahul@gmail.com",
+  //     phone: "+91 9876543210",
+  //     role: "Admin",
+  //     status: "Active",
+  //     joinedDate: "2026-01-12",
+  //     image: "../assets/Profile.jpg",
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "Priya Singh",
+  //     email: "priya@gmail.com",
+  //     phone: "+91 9123456780",
+  //     role: "Manager",
+  //     status: "Active",
+  //     joinedDate: "2026-02-04",
+  //     image: "../assets/Profile2.jpg",
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "Amit Patil",
+  //     email: "amit@gmail.com",
+  //     phone: "+91 9988776655",
+  //     role: "Employee",
+  //     status: "Active",
+  //     joinedDate: "2026-02-20",
+  //     image: "../assets/Profile3.jpg",
+  //   },
+  //   {
+  //     id: 4,
+  //     name: "Neha Verma",
+  //     email: "neha@gmail.com",
+  //     phone: "+91 9090909090",
+  //     role: "Customer",
+  //     status: "Inactive",
+  //     joinedDate: "2026-03-01",
+  //     image: "../assets/Profile4.jpg",
+  //   },
+  //   {
+  //     id: 5,
+  //     name: "John Doe",
+  //     email: "john@gmail.com",
+  //     phone: "+91 9876501234",
+  //     role: "Employee",
+  //     status: "Active",
+  //     joinedDate: "2026-03-12",
+  //     image: "../assets/Profile5.jpg",
+  //   },
+  //   {
+  //     id: 6,
+  //     name: "Sneha Kulkarni",
+  //     email: "sneha@gmail.com",
+  //     phone: "+91 9012345678",
+  //     role: "Manager",
+  //     status: "Pending",
+  //     joinedDate: "2026-03-18",
+  //     image: "../assets/Profile6.jpg",
+  //   },
+  // ]);
+const [users, setUsers] = useState(getAllUsers());
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -230,8 +236,8 @@ const [deleteTitle, setDeleteTitle] = useState("");
   const confirmAddUser = () => {
     if (!pendingUser) return;
 
-    setUsers((prev) => [pendingUser, ...prev]);
-    setCurrentPage(1);
+addUser(pendingUser);
+setUsers(getAllUsers());    setCurrentPage(1);
     setShowAddConfirmModal(false);
     setShowAddModal(false);
     setPendingUser(null);
@@ -274,11 +280,8 @@ const [deleteTitle, setDeleteTitle] = useState("");
   const confirmUpdateUser = () => {
     if (!pendingEditUser) return;
 
-    setUsers((prev) =>
-      prev.map((user) =>
-        user.id === pendingEditUser.id ? pendingEditUser : user,
-      ),
-    );
+updateUser(pendingEditUser);
+setUsers(getAllUsers());
 
     setShowEditConfirm(false);
     setShowEditModal(false);
@@ -300,11 +303,13 @@ const [deleteTitle, setDeleteTitle] = useState("");
     setShowDeleteConfirm(true);
   };
 
-  const handleDeleteUser = (userId) => {
-    setUsers((prev) => prev.filter((user) => user.id !== userId));
-    setShowDeleteConfirm(false);
-    setSelectedUser(null);
-  };
+const handleDeleteUser = (userId) => {
+  deleteUser(userId);
+  setUsers(getAllUsers());
+  setCurrentPage(1);
+  setShowDeleteConfirm(false);
+  setSelectedUser(null);
+};
 
   return (
     <div className="space-y-6">

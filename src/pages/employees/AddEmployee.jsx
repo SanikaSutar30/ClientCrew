@@ -36,18 +36,37 @@ export default function AddEmployee({
   };
 
   // Handle image file selection
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
+const handleImageChange = (e) => {
+  const file = e.target.files[0];
 
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setFormData((prev) => ({
-        ...prev,
-        image: imageUrl,
-      }));
-    }
+  if (!file) return;
+
+  const validTypes = ["image/png", "image/jpeg", "image/jpg"];
+
+  if (!validTypes.includes(file.type)) {
+    setErrors((prev) => ({
+      ...prev,
+      image: "Only PNG, JPG and JPEG images are allowed",
+    }));
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onloadend = () => {
+    setFormData((prev) => ({
+      ...prev,
+      image: reader.result,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      image: "",
+    }));
   };
 
+  reader.readAsDataURL(file);
+};
   // Validate form before submit
   const validateForm = () => {
     const newErrors = {};

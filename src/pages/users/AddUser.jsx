@@ -33,26 +33,27 @@ export default function AddUser({ darkMode, setShowAddModal, onAddUser }) {
     }));
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
+const handleImageChange = (e) => {
+  const file = e.target.files[0];
 
-    if (!file) return;
+  if (!file) return;
 
-    const validTypes = ["image/png", "image/jpeg", "image/jpg"];
+  const validTypes = ["image/png", "image/jpeg", "image/jpg"];
 
-    if (!validTypes.includes(file.type)) {
-      setErrors((prev) => ({
-        ...prev,
-        image: "Only PNG, JPG and JPEG images are allowed",
-      }));
-      return;
-    }
+  if (!validTypes.includes(file.type)) {
+    setErrors((prev) => ({
+      ...prev,
+      image: "Only PNG, JPG and JPEG images are allowed",
+    }));
+    return;
+  }
 
-    const imageUrl = URL.createObjectURL(file);
+  const reader = new FileReader();
 
+  reader.onloadend = () => {
     setFormData((prev) => ({
       ...prev,
-      image: imageUrl,
+      image: reader.result,
     }));
 
     setErrors((prev) => ({
@@ -60,6 +61,9 @@ export default function AddUser({ darkMode, setShowAddModal, onAddUser }) {
       image: "",
     }));
   };
+
+  reader.readAsDataURL(file);
+};
 
   const validateForm = () => {
     const newErrors = {};
