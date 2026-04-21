@@ -26,6 +26,12 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import AddProject from "./AddProject";
 import EditProject from "./EditProject";
 import ViewProject from "./ViewProject";
+import {
+  getAllProjects,
+  addProject,
+  updateProject,
+  deleteProject,
+} from "../../services/projectService";
 
 export default function Projects() {
   // State
@@ -71,153 +77,8 @@ export default function Projects() {
     setShowSuccessModal(true);
   };
 
-  const [projects, setProjects] = useState([
-    {
-      id: 1,
-      icon: "E",
-      iconColor: "bg-cyan-500",
-      projectName: "E-commerce Website",
-      clientName: "ABC Tech Solutions",
-      startDate: "2024-07-16",
-      dueDate: "2024-07-19",
-      status: "In Progress",
-      progress: 70,
-      assignedEmployees: [
-        {
-          id: "emp1",
-          name: "Priya Singh",
-          role: "Manager",
-          image: "../assets/Profile.jpg",
-        },
-        {
-          id: "emp2",
-          name: "Rahul Sharma",
-          role: "Employee",
-          image: "../assets/Profile2.jpg",
-        },
-      ],
-    },
-    {
-      id: 2,
-      icon: "M",
-      iconColor: "bg-blue-500",
-      projectName: "Mobile App Development",
-      clientName: "XYZ Innovations",
-      startDate: "2024-06-22",
-      dueDate: "2024-05-22",
-      status: "Completed",
-      progress: 100,
-      assignedEmployees: [
-        {
-          id: "emp2",
-          name: "Rahul Sharma",
-          role: "Employee",
-          image: "../assets/Profile2.jpg",
-        },
-        {
-          id: "emp3",
-          name: "John Doe",
-          role: "Employee",
-          image: "../assets/Profile3.jpg",
-        },
-      ],
-    },
-    {
-      id: 3,
-      icon: "C",
-      iconColor: "bg-orange-500",
-      projectName: "CRM Platform Enhancement",
-      clientName: "Acme Corp",
-      startDate: "2024-06-22",
-      dueDate: "2024-09-04",
-      status: "On Hold",
-      progress: 35,
-      assignedEmployees: [
-        {
-          id: "emp1",
-          name: "Priya Singh",
-          role: "Manager",
-          image: "../assets/Profile.jpg",
-        },
-        {
-          id: "emp4",
-          name: "Jennifer Brown",
-          role: "Employee",
-          image: "../assets/Profile4.jpg",
-        },
-      ],
-    },
-    {
-      id: 4,
-      icon: "D",
-      iconColor: "bg-amber-500",
-      projectName: "Digital Marketing Campaign",
-      clientName: "Global Ventures",
-      startDate: "2023-02-20",
-      dueDate: "2024-03-13",
-      status: "In Progress",
-      progress: 60,
-      assignedEmployees: [
-        {
-          id: "emp3",
-          name: "John Doe",
-          role: "Employee",
-          image: "../assets/Profile3.jpg",
-        },
-        {
-          id: "emp4",
-          name: "Jennifer Brown",
-          role: "Employee",
-          image: "../assets/Profile4.jpg",
-        },
-      ],
-    },
-    {
-      id: 5,
-      icon: "H",
-      iconColor: "bg-emerald-500",
-      projectName: "Healthcare Management System",
-      clientName: "MediCare Inc",
-      startDate: "2023-08-23",
-      dueDate: "2024-03-01",
-      status: "In Progress",
-      progress: 80,
-      assignedEmployees: [
-        {
-          id: "emp1",
-          name: "Priya Singh",
-          role: "Manager",
-          image: "../assets/Profile.jpg",
-        },
-        {
-          id: "emp5",
-          name: "Amit Patil",
-          role: "Employee",
-          image: "../assets/Profile5.jpg",
-        },
-      ],
-    },
-    {
-      id: 6,
-      icon: "E",
-      iconColor: "bg-violet-500",
-      projectName: "ERP Software Integration",
-      clientName: "Smith & Co",
-      startDate: "2024-05-23",
-      dueDate: "2024-10-20",
-      status: "Planning",
-      progress: 10,
-      assignedEmployees: [
-        {
-          id: "emp2",
-          name: "Rahul Sharma",
-          role: "Employee",
-          image: "../assets/Profile2.jpg",
-        },
-      ],
-    },
-  ]);
 
+const [projects, setProjects] = useState(getAllProjects());
   // Filters and pagination state
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -229,30 +90,29 @@ export default function Projects() {
   const itemsPerPage = 6;
 
   // Handlers
-  const handleAddProject = (newProject) => {
-    if (!canManageProjects) return;
+const handleAddProject = (newProject) => {
+  if (!canManageProjects) return;
 
-    const projectToAdd = {
-      id: projects.length + 1,
-      icon: newProject.icon || "P",
-      iconColor: newProject.iconColor || "bg-teal-500",
-      projectName: newProject.projectName,
-      clientName: newProject.clientName,
-      startDate: newProject.startDate,
-      dueDate: newProject.dueDate,
-      status: newProject.status,
-      progress: Number(newProject.progress || 0),
-      assignedEmployees: newProject.assignedEmployees || [],
-    };
-
-    setProjects((prev) => [projectToAdd, ...prev]);
-    setShowAdd(false);
-
-    setSuccessTitle("Project Created!");
-    setSuccessMessage("Your project has been created successfully.");
-    setShowSuccessModal(true);
+  const projectToAdd = {
+    icon: newProject.icon || "P",
+    iconColor: newProject.iconColor || "bg-teal-500",
+    projectName: newProject.projectName,
+    clientName: newProject.clientName,
+    startDate: newProject.startDate,
+    dueDate: newProject.dueDate,
+    status: newProject.status,
+    progress: Number(newProject.progress || 0),
+    assignedEmployees: newProject.assignedEmployees || [],
   };
 
+  addProject(projectToAdd);
+  setProjects(getAllProjects());
+  setShowAdd(false);
+
+  setSuccessTitle("Project Created!");
+  setSuccessMessage("Your project has been created successfully.");
+  setShowSuccessModal(true);
+};
   //  Open edit modal
   const handleEditClick = (project) => {
     if (!canManageProjects) return;
@@ -269,32 +129,31 @@ export default function Projects() {
     );
     setShowDeleteConfirm(true);
   };
+
   // Update selected project
-  const handleUpdateProject = (updatedProject) => {
-    if (!canManageProjects) return;
+const handleUpdateProject = (updatedProject) => {
+  if (!canManageProjects) return;
 
-    setProjects((prev) =>
-      prev.map((project) =>
-        project.id === updatedProject.id ? updatedProject : project,
-      ),
-    );
+  updateProject(updatedProject);
+  setProjects(getAllProjects());
 
-    setShowEdit(false);
-    setSelectedProject(null);
+  setShowEdit(false);
+  setSelectedProject(null);
 
-    setSuccessTitle("Project Updated!");
-    setSuccessMessage("Your project has been updated successfully.");
-    setShowSuccessModal(true);
-  };
+  setSuccessTitle("Project Updated!");
+  setSuccessMessage("Your project has been updated successfully.");
+  setShowSuccessModal(true);
+};
 
   // Delete selected project
-  const handleDeleteProject = (projectId) => {
-    if (!canManageProjects) return;
+const handleDeleteProject = (projectId) => {
+  if (!canManageProjects) return;
 
-    setProjects((prev) => prev.filter((project) => project.id !== projectId));
-    setShowDeleteConfirm(false);
-    setSelectedProject(null);
-  };
+  deleteProject(projectId);
+  setProjects(getAllProjects());
+  setShowDeleteConfirm(false);
+  setSelectedProject(null);
+};
 
   // Open view modal
   const handleViewClick = (project) => {
@@ -1281,7 +1140,7 @@ export default function Projects() {
                   </div>
                   <p
                     className={`font-medium ${
-                      darkMode ? "text-white" : "text-black"
+                      darkMode ? "text-white" : "text-black" 
                     }`}
                   >
                     View Team
