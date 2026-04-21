@@ -143,7 +143,6 @@ export default function EmployeeReports({ darkMode }) {
         </p>
       </div>
 
-      {/* Stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {employeeStats.map((item) => {
           const Icon = item.icon;
@@ -151,13 +150,13 @@ export default function EmployeeReports({ darkMode }) {
           return (
             <div
               key={item.title}
-              className={`p-5 rounded-xl shadow-sm flex items-center justify-between transition hover:scale-[1.02] ${
+              className={`p-5 rounded-xl shadow-sm flex items-center justify-between transition hover:scale-[1.02] min-w-0 ${
                 darkMode
                   ? "bg-gray-700 border border-gray-600"
                   : "bg-white border border-gray-200"
               }`}
             >
-              <div>
+              <div className="min-w-0">
                 <p
                   className={`text-sm font-medium ${
                     darkMode ? "text-gray-300" : "text-gray-500"
@@ -166,7 +165,7 @@ export default function EmployeeReports({ darkMode }) {
                   {item.title}
                 </p>
 
-                <div className="flex items-end gap-3 mt-4">
+                <div className="flex items-end gap-3 mt-4 min-w-0">
                   <h2
                     className={`text-2xl font-bold ${
                       darkMode ? "text-white" : "text-black"
@@ -191,9 +190,8 @@ export default function EmployeeReports({ darkMode }) {
         })}
       </div>
 
-      {/* Task performance */}
       <div
-        className={`p-5 rounded-xl shadow-sm ${
+        className={`p-5 rounded-xl shadow-sm min-w-0 ${
           darkMode
             ? "bg-gray-700 border border-gray-600"
             : "bg-white border border-gray-200"
@@ -245,7 +243,7 @@ export default function EmployeeReports({ darkMode }) {
           </div>
         </div>
 
-        <div className="w-full h-[300px]">
+        <div className="w-full h-[300px] min-w-0">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={performanceData}>
               <CartesianGrid
@@ -289,11 +287,9 @@ export default function EmployeeReports({ darkMode }) {
         </div>
       </div>
 
-      {/* Bottom row */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Task status */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-w-0">
         <div
-          className={`lg:col-span-4 p-5 rounded-xl shadow-sm ${
+          className={`lg:col-span-4 p-5 rounded-xl shadow-sm min-w-0 ${
             darkMode
               ? "bg-gray-700 border border-gray-600"
               : "bg-white border border-gray-200"
@@ -307,8 +303,8 @@ export default function EmployeeReports({ darkMode }) {
             Task Status
           </h2>
 
-          <div className="flex items-center justify-between gap-4">
-            <div className="w-[170px] h-[170px]">
+          <div className="flex items-center justify-between gap-4 min-w-0">
+            <div className="w-[170px] h-[170px] min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -326,7 +322,7 @@ export default function EmployeeReports({ darkMode }) {
               </ResponsiveContainer>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 min-w-0">
               {taskStatusData.map((item, index) => (
                 <div key={index} className="flex items-center gap-3">
                   <span
@@ -355,9 +351,8 @@ export default function EmployeeReports({ darkMode }) {
           </div>
         </div>
 
-        {/* Contribution */}
         <div
-          className={`lg:col-span-4 p-5 rounded-xl shadow-sm ${
+          className={`lg:col-span-4 p-5 rounded-xl shadow-sm min-w-0 ${
             darkMode
               ? "bg-gray-700 border border-gray-600"
               : "bg-white border border-gray-200"
@@ -371,7 +366,7 @@ export default function EmployeeReports({ darkMode }) {
             Project Contribution
           </h2>
 
-          <div className="w-full h-[250px]">
+          <div className="w-full h-[250px] min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={contributionData}>
                 <CartesianGrid
@@ -404,9 +399,8 @@ export default function EmployeeReports({ darkMode }) {
           </div>
         </div>
 
-        {/* Upcoming deadlines */}
         <div
-          className={`lg:col-span-4 p-5 rounded-xl shadow-sm ${
+          className={`lg:col-span-4 p-5 rounded-xl shadow-sm min-w-0 ${
             darkMode
               ? "bg-gray-700 border border-gray-600"
               : "bg-white border border-gray-200"

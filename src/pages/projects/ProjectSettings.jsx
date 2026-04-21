@@ -3,13 +3,14 @@ import { useNavigate, useOutletContext } from "react-router-dom";
 import { ChevronRight, FolderKanban } from "lucide-react";
 import SettingsMessageModal from "../SettingsMessageModal.jsx";
 
-const ToggleSwitch = ({ checked, onClick, darkMode }) => (
+const ToggleSwitch = ({ checked, onClick, darkMode, disabled = false }) => (
   <button
     type="button"
-    onClick={onClick}
-    className={`w-14 h-8 flex items-center rounded-full p-1 transition cursor-pointer ${
-      checked ? "bg-[#0f766e]" : darkMode ? "bg-gray-500" : "bg-gray-300"
-    }`}
+    onClick={disabled ? undefined : onClick}
+    disabled={disabled}
+    className={`w-14 h-8 flex items-center rounded-full p-1 transition ${
+      disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+    } ${checked ? "bg-[#0f766e]" : darkMode ? "bg-gray-500" : "bg-gray-300"}`}
   >
     <span
       className={`w-6 h-6 bg-white rounded-full shadow-md transform transition ${
@@ -18,11 +19,15 @@ const ToggleSwitch = ({ checked, onClick, darkMode }) => (
     ></span>
   </button>
 );
-
 export default function ProjectSettings() {
-  const { darkMode } = useOutletContext();
+  const { darkMode, userRole } = useOutletContext();
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
+const canViewProjectSettings = ["Admin", "Manager", "Employee"].includes(
+  userRole,
+);
+const canEditProjectSettings = ["Admin", "Manager"].includes(userRole);
+const isReadOnlyRole = userRole === "Employee";
 
   const [projectPreferences, setProjectPreferences] = useState({
     defaultStatus: "Planning",
@@ -63,9 +68,17 @@ export default function ProjectSettings() {
   const subTextClass = darkMode ? "text-gray-300" : "text-gray-500";
   const dividerClass = darkMode ? "border-gray-600" : "border-gray-200";
 
-  const selectClass = darkMode
-    ? "w-full px-4 py-3 rounded-xl border bg-gray-600 border-gray-500 text-white outline-none cursor-pointer"
-    : "w-full px-4 py-3 rounded-xl border bg-gray-50 border-gray-200 text-gray-700 outline-none cursor-pointer";
+ const selectClass = darkMode
+   ? `w-full px-4 py-3 rounded-xl border bg-gray-600 border-gray-500 text-white outline-none ${
+       !canEditProjectSettings
+         ? "opacity-60 cursor-not-allowed"
+         : "cursor-pointer"
+     }`
+   : `w-full px-4 py-3 rounded-xl border bg-gray-50 border-gray-200 text-gray-700 outline-none ${
+       !canEditProjectSettings
+         ? "opacity-60 cursor-not-allowed"
+         : "cursor-pointer"
+     }`;
 
   const handleProjectPreferenceChange = (e) => {
     const { name, value } = e.target;
@@ -95,7 +108,17 @@ export default function ProjectSettings() {
       [field]: !prev[field],
     }));
   };
+
 const handleSaveProjectSettings = () => {
+  if (!canEditProjectSettings) {
+    showModal(
+      "Read Only Access",
+      "You can view project settings, but only Admin and Manager can update them.",
+      "error",
+    );
+    return;
+  }
+
   setIsSaving(true);
 
   setTimeout(() => {
@@ -107,6 +130,86 @@ const handleSaveProjectSettings = () => {
     );
   }, 1200);
 };
+
+  if (!canViewProjectSettings) {
+    return (
+      <div className="space-y-6">
+        {showMessageModal && (
+          <SettingsMessageModal
+            darkMode={darkMode}
+            title={modalData.title}
+            message={modalData.message}
+            type={modalData.type}
+            onClose={() => setShowMessageModal(false)}
+          />
+        )}
+
+        <div className="space-y-2">
+          <div>
+            <h1 className={`text-2xl font-bold ${headingClass}`}>
+              Project Settings
+            </h1>
+            <p className={`text-sm mt-1 ${subTextClass}`}>
+              Manage project preferences, task defaults, notifications, and
+              access controls
+            </p>
+          </div>
+
+          <div
+            className={`flex w-fit items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium ${
+              darkMode
+                ? "bg-gray-700 text-gray-300 border border-gray-600"
+                : "bg-gray-100 text-gray-600 border border-gray-200"
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => navigate("/projects")}
+              className={`inline-flex items-center gap-2 cursor-pointer transition hover:underline ${
+                darkMode
+                  ? "text-gray-300 hover:text-white"
+                  : "text-gray-600 hover:text-black"
+              }`}
+            >
+              <FolderKanban size={14} />
+              <span>Projects</span>
+            </button>
+
+            <ChevronRight size={14} />
+
+            <span
+              className={
+                darkMode
+                  ? "text-white font-semibold"
+                  : "text-black font-semibold"
+              }
+            >
+              Project Settings
+            </span>
+          </div>
+        </div>
+
+        <div className={cardClass}>
+          <div className="p-8 text-center">
+            <h2 className={`text-xl font-semibold mb-2 ${headingClass}`}>
+              Access Restricted
+            </h2>
+            <p className={`text-sm ${subTextClass}`}>
+              Only Admin and Manager can access Project Settings.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => navigate("/projects")}
+              className="mt-5 px-5 py-2.5 rounded-xl bg-[#0f766e] text-white hover:opacity-90 cursor-pointer"
+            >
+              Back to Projects
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -191,6 +294,7 @@ const handleSaveProjectSettings = () => {
                   value={projectPreferences.defaultStatus}
                   onChange={handleProjectPreferenceChange}
                   className={selectClass}
+                  disabled={!canEditProjectSettings}
                 >
                   <option>Planning</option>
                   <option>In Progress</option>
@@ -212,6 +316,7 @@ const handleSaveProjectSettings = () => {
                   value={projectPreferences.defaultPriority}
                   onChange={handleProjectPreferenceChange}
                   className={selectClass}
+                  disabled={!canEditProjectSettings}
                 >
                   <option>Low</option>
                   <option>Medium</option>
@@ -239,6 +344,7 @@ const handleSaveProjectSettings = () => {
                   checked={projectPreferences.autoAssignTasks}
                   onClick={() => handleProjectToggle("autoAssignTasks")}
                   darkMode={darkMode}
+                  disabled={!canEditProjectSettings}
                 />
               </div>
 
@@ -261,6 +367,7 @@ const handleSaveProjectSettings = () => {
                   checked={projectPreferences.allowClientAccess}
                   onClick={() => handleProjectToggle("allowClientAccess")}
                   darkMode={darkMode}
+                  disabled={!canEditProjectSettings}
                 />
               </div>
             </div>
@@ -289,6 +396,7 @@ const handleSaveProjectSettings = () => {
                   checked={notificationSettings.deadlineAlerts}
                   onClick={() => handleNotificationToggle("deadlineAlerts")}
                   darkMode={darkMode}
+                  disabled={!canEditProjectSettings}
                 />
               </div>
 
@@ -306,6 +414,7 @@ const handleSaveProjectSettings = () => {
                   checked={notificationSettings.projectUpdates}
                   onClick={() => handleNotificationToggle("projectUpdates")}
                   darkMode={darkMode}
+                  disabled={!canEditProjectSettings}
                 />
               </div>
 
@@ -321,6 +430,7 @@ const handleSaveProjectSettings = () => {
                   checked={notificationSettings.taskAssignments}
                   onClick={() => handleNotificationToggle("taskAssignments")}
                   darkMode={darkMode}
+                  disabled={!canEditProjectSettings}
                 />
               </div>
             </div>
@@ -354,6 +464,7 @@ const handleSaveProjectSettings = () => {
                     handleVisibilityToggle("showProgressToClients")
                   }
                   darkMode={darkMode}
+                  disabled={!canEditProjectSettings}
                 />
               </div>
 
@@ -371,6 +482,7 @@ const handleSaveProjectSettings = () => {
                   checked={visibilitySettings.allowTeamComments}
                   onClick={() => handleVisibilityToggle("allowTeamComments")}
                   darkMode={darkMode}
+                  disabled={!canEditProjectSettings}
                 />
               </div>
 
@@ -386,6 +498,7 @@ const handleSaveProjectSettings = () => {
                   checked={visibilitySettings.enableProjectReports}
                   onClick={() => handleVisibilityToggle("enableProjectReports")}
                   darkMode={darkMode}
+                  disabled={!canEditProjectSettings}
                 />
               </div>
             </div>
@@ -400,6 +513,19 @@ const handleSaveProjectSettings = () => {
             </div>
 
             <div className="p-6">
+              {isReadOnlyRole && (
+                <div
+                  className={`mb-4 px-4 py-3 rounded-xl text-sm ${
+                    darkMode
+                      ? "bg-yellow-500/10 text-yellow-300 border border-yellow-500/20"
+                      : "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                  }`}
+                >
+                  You have view-only access. Only Admin and Manager can change
+                  project settings.
+                </div>
+              )}
+
               <p className={`text-sm mb-5 ${subTextClass}`}>
                 Save all project-related settings and preferences for your
                 workspace.
@@ -408,18 +534,24 @@ const handleSaveProjectSettings = () => {
               <button
                 type="button"
                 onClick={handleSaveProjectSettings}
-                disabled={isSaving}
+                disabled={!canEditProjectSettings || isSaving}
                 className={`w-full py-3 rounded-xl text-white text-base font-medium transition ${
-                  isSaving
-                    ? "bg-[#0f766e]/70 cursor-not-allowed"
-                    : "bg-[#0f766e] hover:opacity-90 cursor-pointer"
+                  !canEditProjectSettings
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : isSaving
+                      ? "bg-[#0f766e]/70 cursor-not-allowed"
+                      : "bg-[#0f766e] hover:opacity-90 cursor-pointer"
                 }`}
               >
                 <span className="flex items-center justify-center gap-2">
-                  {isSaving && (
+                  {isSaving && canEditProjectSettings && (
                     <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
                   )}
-                  {isSaving ? "Saving..." : "Save Project Settings"}
+                  {!canEditProjectSettings
+                    ? "View Only Access"
+                    : isSaving
+                      ? "Saving..."
+                      : "Save Project Settings"}
                 </span>
               </button>
             </div>

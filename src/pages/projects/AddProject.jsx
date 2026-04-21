@@ -1,37 +1,29 @@
-import { useState, useEffect } from "react";
-import {
-  Folder,
-  User,
-  Calendar,
-  Percent,
-  Palette,
-  Users,
-  ImagePlus,
-  Type,
-} from "lucide-react";
+import { useState } from "react";
+import { Folder, Search } from "lucide-react";
+// import { useNavigate } from "react-router-dom";
+import AddCustomer from "../customers/AddCustomer";
+import AddEmployee from "../employees/AddEmployee";
 
-export default function AddProject({ darkMode, setShowAdd, onAddProject }) {
+export default function AddProject({ darkMode, setShowAdd, onAddProject , userRole}) {
+  // const navigate = useNavigate();
+
+  const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
+  const [showAddEmployeeModal, setShowAddEmployeeModal] = useState(false);
+  const canManageEmployees = ["Admin", "Manager"].includes(userRole);
+
   const [formData, setFormData] = useState({
     projectName: "",
-    clientName: "",
+    customerId: "",
     startDate: "",
     dueDate: "",
     status: "Planning",
     progress: "",
-    team: [],
-    extraMembers: 0,
+    assignedEmployees: [],
     icon: "",
     iconColor: "bg-teal-500",
   });
 
   const [errors, setErrors] = useState({});
-
-  // 🔥 Clean up image URLs (important)
-  useEffect(() => {
-    return () => {
-      formData.team.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [formData.team]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -42,96 +34,53 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject }) {
     }));
   };
 
-  // const handleTeamChange = (e) => {
-  //   const files = Array.from(e.target.files);
+  const validateForm = () => {
+    const newErrors = {};
 
-  //   if (files.length > 0) {
-  //     const imageUrls = files.map((file) => URL.createObjectURL(file));
+    if (!formData.projectName.trim())
+      newErrors.projectName = "Project name is required";
 
-  //     setFormData((prev) => ({
-  //       ...prev,
-  //       team: imageUrls,
-  //     }));
-  //   }
-  // };
-
-
-  const handleTeamChange = (e) => {
-    const files = Array.from(e.target.files);
-
-    // Validate file types
-    const validTypes = ["image/png", "image/jpg", "image/jpeg"];
-
-    const isValid = files.every((file) => validTypes.includes(file.type));
-
-    if (!isValid) {
-      setErrors((prev) => ({
-        ...prev,
-        team: "Only PNG, JPG, JPEG images are allowed",
-      }));
-      return;
+    if (!formData.customerId) {
+      newErrors.customerId = "Select a customer";
     }
 
-    // Clear error
-    setErrors((prev) => ({
-      ...prev,
-      team: "",
-    }));
+    if (!formData.startDate) newErrors.startDate = "Start date is required";
 
-    // Convert to preview URLs (important for UI)
-    const imageUrls = files.map((file) => URL.createObjectURL(file));
+    if (!formData.dueDate) newErrors.dueDate = "Due date is required";
 
-    setFormData((prev) => ({
-      ...prev,
-      team: imageUrls,
-    }));
+    // Correct date validation (only once)
+    if (
+      formData.startDate &&
+      formData.dueDate &&
+      new Date(formData.dueDate) < new Date(formData.startDate)
+    ) {
+      newErrors.dueDate = "Due date cannot be before start date";
+    }
+
+    if (formData.progress === "") newErrors.progress = "Progress is required";
+    else if (formData.progress < 0 || formData.progress > 100)
+      newErrors.progress = "Progress must be between 0 and 100";
+
+    if (!formData.icon.trim()) newErrors.icon = "Project icon is required";
+    else if (formData.icon.length > 1) newErrors.icon = "Use only one letter";
+
+    if (formData.assignedEmployees.length === 0) {
+      newErrors.assignedEmployees = "Select at least one team member";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
-const validateForm = () => {
-  const newErrors = {};
-
-  if (!formData.projectName.trim())
-    newErrors.projectName = "Project name is required";
-
-  if (!formData.clientName.trim())
-    newErrors.clientName = "Client name is required";
-
-  if (!formData.startDate) newErrors.startDate = "Start date is required";
-
-  if (!formData.dueDate) newErrors.dueDate = "Due date is required";
-
-  // ✅ Correct date validation (only once)
-  if (
-    formData.startDate &&
-    formData.dueDate &&
-    new Date(formData.dueDate) < new Date(formData.startDate)
-  ) {
-    newErrors.dueDate = "Due date cannot be before start date";
-  }
-
-  if (formData.progress === "") newErrors.progress = "Progress is required";
-  else if (formData.progress < 0 || formData.progress > 100)
-    newErrors.progress = "Progress must be between 0 and 100";
-
-  if (!formData.icon.trim()) newErrors.icon = "Project icon is required";
-  else if (formData.icon.length > 1) newErrors.icon = "Use only one letter";
-
-  if (formData.team.length === 0)
-    newErrors.team = "At least one team image is required";
-
-  setErrors(newErrors);
-  return Object.keys(newErrors).length === 0;
-};
 
   const resetForm = () => {
     setFormData({
       projectName: "",
-      clientName: "",
+      customerId: "",
       startDate: "",
       dueDate: "",
       status: "Planning",
       progress: "",
-      team: [],
-      extraMembers: 0,
+      assignedEmployees: [],
       icon: "",
       iconColor: "bg-teal-500",
     });
@@ -145,11 +94,10 @@ const validateForm = () => {
 
     onAddProject({
       ...formData,
+      clientName: selectedCustomer?.name || "",
       progress: Number(formData.progress),
-      extraMembers: Number(formData.extraMembers),
       icon: formData.icon.toUpperCase(),
     });
-
     resetForm();
     // setShowAdd(false);
   };
@@ -162,8 +110,153 @@ const validateForm = () => {
 
   const labelClass = "block text-sm font-medium mb-2";
 
+const [employeeOptions, setEmployeeOptions] = useState([
+  {
+    id: "emp1",
+    name: "Priya Singh",
+    role: "Manager",
+    image: "../assets/Profile.jpg",
+  },
+  {
+    id: "emp2",
+    name: "Rahul Sharma",
+    role: "Employee",
+    image: "../assets/Profile2.jpg",
+  },
+  {
+    id: "emp3",
+    name: "John Doe",
+    role: "Employee",
+    image: "../assets/Profile3.jpg",
+  },
+  {
+    id: "emp4",
+    name: "Jennifer Brown",
+    role: "Employee",
+    image: "../assets/Profile4.jpg",
+  },
+  {
+    id: "emp5",
+    name: "Amit Patil",
+    role: "Employee",
+    image: "../assets/Profile5.jpg",
+  },
+]);
+  const [customerOptions, setCustomerOptions] = useState([
+    { id: "c1", name: "ABC Tech Solutions", image: "../assets/Profile.jpg" },
+    { id: "c2", name: "XYZ Innovations", image: "../assets/Profile2.jpg" },
+    { id: "c3", name: "Acme Corp", image: "../assets/Profile3.jpg" },
+    { id: "c4", name: "Global Ventures", image: "../assets/Profile4.jpg" },
+    { id: "c5", name: "MediCare Inc", image: "../assets/Profile5.jpg" },
+  ]);
+
+  const selectedCustomer = customerOptions.find(
+    (customer) => customer.id === formData.customerId,
+  );
+
+  const handleEmployeeSelect = (employee) => {
+    const alreadySelected = formData.assignedEmployees.some(
+      (member) => member.id === employee.id,
+    );
+
+    if (alreadySelected) {
+      setFormData((prev) => ({
+        ...prev,
+        assignedEmployees: prev.assignedEmployees.filter(
+          (member) => member.id !== employee.id,
+        ),
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        assignedEmployees: [...prev.assignedEmployees, employee],
+      }));
+    }
+
+    setErrors((prev) => ({
+      ...prev,
+      assignedEmployees: "",
+    }));
+  };
+
+  const handleCustomerSelect = (customer) => {
+    setFormData((prev) => ({
+      ...prev,
+      customerId: customer.id,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      customerId: "",
+    }));
+  };
+
+  const handleAddCustomer = (newCustomer) => {
+    const newCustomerWithId = {
+      id: `c${Date.now()}`,
+      name: newCustomer.name,
+      image: newCustomer.image || "",
+    };
+
+    setCustomerOptions((prev) => [...prev, newCustomerWithId]);
+
+    setFormData((prev) => ({
+      ...prev,
+      customerId: newCustomerWithId.id,
+    }));
+
+    setShowAddCustomerModal(false);
+  };
+
+
+  const handleAddEmployee = (newEmployee) => {
+    const newEmployeeWithId = {
+      id: `emp${Date.now()}`,
+      name: newEmployee.name,
+      role: newEmployee.role || "Employee",
+      image: newEmployee.image || "../assets/Profile.jpg",
+    };
+
+    setEmployeeOptions((prev) => [...prev, newEmployeeWithId]);
+
+    setFormData((prev) => ({
+      ...prev,
+      assignedEmployees: [...prev.assignedEmployees, newEmployeeWithId],
+    }));
+
+    setShowAddEmployeeModal(false);
+  };
+  const [employeeSearch, setEmployeeSearch] = useState("");
+
+
+
+const [customerSearch, setCustomerSearch] = useState("");
+
+const filteredCustomers = customerOptions.filter((customer) =>
+  customer.name.toLowerCase().includes(customerSearch.trim().toLowerCase()),
+);
+  
+  const filteredEmployees = employeeOptions.filter(
+    (employee) =>
+      employee.name.toLowerCase().includes(employeeSearch.toLowerCase()) ||
+      employee.role.toLowerCase().includes(employeeSearch.toLowerCase()),
+  );
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur px-4">
+      {showAddCustomerModal && (
+        <AddCustomer
+          darkMode={darkMode}
+          setShowAddModal={setShowAddCustomerModal}
+          onAddCustomer={handleAddCustomer}
+        />
+      )}
+      {showAddEmployeeModal && (
+        <AddEmployee
+          darkMode={darkMode}
+          setShowAddModal={setShowAddEmployeeModal}
+          onAddCustomer={handleAddEmployee}
+        />
+      )}
       <div
         className={`w-full max-w-5xl rounded-2xl p-8 shadow-xl max-h-[90vh] overflow-y-auto ${
           darkMode
@@ -209,19 +302,106 @@ const validateForm = () => {
             </div>
 
             {/* Client */}
-            <div>
-              <label className={labelClass}>Client Name</label>
-              <div className="flex gap-2">
-                <User size={18} />
+            <div className="md:col-span-2">
+              <div className="flex items-center justify-between mb-2">
+                <label className={labelClass}>Select Customer</label>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAddCustomerModal(true)}
+                  className="text-sm font-medium text-[#0f766e] hover:underline cursor-pointer"
+                >
+                  + Add Customer
+                </button>
+              </div>
+              {/* Search */}
+              <div
+                className={`flex items-center px-4 py-3 rounded-xl w-full lg:w-96 border mb-4 ${
+                  darkMode
+                    ? "bg-gray-600 border-gray-500"
+                    : "bg-gray-50 border-gray-200"
+                }`}
+              >
+                <Search size={16} className="text-gray-500" />
                 <input
-                  name="clientName"
-                  value={formData.clientName}
-                  onChange={handleChange}
-                  className={inputClass}
+                  type="text"
+                  placeholder="Search customers..."
+                  value={customerSearch}
+                  onChange={(e) => setCustomerSearch(e.target.value)}
+                  className={`bg-transparent outline-none ml-2 w-full text-sm ${
+                    darkMode
+                      ? "text-white placeholder:text-gray-300"
+                      : "text-gray-700 placeholder:text-gray-400"
+                  }`}
                 />
               </div>
-              {errors.clientName && (
-                <p className="text-red-500 text-xs">{errors.clientName}</p>
+
+              <div
+                className={`rounded-2xl border p-4 flex flex-wrap gap-4 ${
+                  darkMode
+                    ? "bg-gray-700 border-gray-600"
+                    : "bg-gray-50 border-gray-200"
+                }`}
+              >
+                {filteredCustomers.length > 0 ? (
+                  filteredCustomers.map((customer) => {
+                    const isSelected = formData.customerId === customer.id;
+
+                    return (
+                      <button
+                        type="button"
+                        key={customer.id}
+                        onClick={() => handleCustomerSelect(customer)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition cursor-pointer ${
+                          isSelected
+                            ? "border-[#0f766e] bg-[#0f766e]/10"
+                            : darkMode
+                              ? "border-gray-600 bg-gray-800 hover:bg-gray-600"
+                              : "border-gray-200 bg-white hover:bg-gray-100"
+                        }`}
+                      >
+                        {customer.image ? (
+                          <img
+                            src={customer.image}
+                            alt={customer.name}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white flex items-center justify-center font-semibold">
+                            {customer.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+
+                        <div className="text-left">
+                          <p
+                            className={`font-medium ${
+                              darkMode ? "text-white" : "text-black"
+                            }`}
+                          >
+                            {customer.name}
+                          </p>
+                          <p
+                            className={`text-sm ${
+                              darkMode ? "text-gray-300" : "text-gray-500"
+                            }`}
+                          >
+                            Customer
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <p
+                    className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                  >
+                    No customers found
+                  </p>
+                )}
+              </div>
+
+              {errors.customerId && (
+                <p className="text-red-500 text-xs mt-1">{errors.customerId}</p>
               )}
             </div>
 
@@ -301,43 +481,111 @@ const validateForm = () => {
               )}
             </div>
 
-            {/* Team Images */}
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Team Images
-              </label>
+            {/* Team Members */}
+            <div className="md:col-span-2">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium">
+                  Assign To ({formData.assignedEmployees.length} person
+                  {formData.assignedEmployees.length !== 1 ? "s" : ""})
+                </label>
 
-              <input
-                type="file"
-                multiple
-                accept=".png, .jpg, .jpeg"
-                onChange={handleTeamChange}
-                className={`w-full px-4 py-3 rounded-xl border outline-none cursor-pointer 
-    file:mr-4 file:rounded-lg file:border-0 file:px-3 file:py-2 file:text-sm ${
-      darkMode
-        ? "bg-gray-700 border-gray-600 text-white file:bg-gray-600 file:text-white"
-        : "bg-gray-50 border-gray-200 text-black file:bg-gray-200 file:text-black"
-    }`}
-              />
+                {canManageEmployees && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddEmployeeModal(true)}
+                    className="text-sm font-medium text-[#0f766e] hover:underline cursor-pointer"
+                  >
+                    + Add Employee
+                  </button>
+                )}
+              </div>
 
-              {errors.team && (
-                <p className="text-red-500 text-xs mt-1">{errors.team}</p>
-              )}
+              {/* Search */}
+              <div
+                className={`flex items-center px-4 py-3 rounded-xl w-full lg:w-96 border mb-4 ${
+                  darkMode
+                    ? "bg-gray-600 border-gray-500"
+                    : "bg-gray-50 border-gray-200"
+                }`}
+              >
+                <Search size={16} className="text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="Search employees..."
+                  value={employeeSearch}
+                  onChange={(e) => setEmployeeSearch(e.target.value)}
+                  className={`bg-transparent outline-none ml-2 w-full text-sm ${
+                    darkMode
+                      ? "text-white placeholder:text-gray-300"
+                      : "text-gray-700 placeholder:text-gray-400"
+                  }`}
+                />
+              </div>
 
-              {/* Preview Images */}
-              {formData.team?.length > 0 && (
-                <div className="flex mt-3">
-                  {formData.team.map((img, index) => (
-                    <img
-                      key={index}
-                      src={img}
-                      alt="team"
-                      className={`w-10 h-10 rounded-full object-cover border-2 ${
-                        index !== 0 ? "-ml-2" : ""
-                      }`}
-                    />
-                  ))}
-                </div>
+              <div
+                className={`rounded-2xl border p-4 flex flex-wrap gap-4 max-h-[220px] overflow-y-auto ${
+                  darkMode
+                    ? "bg-gray-700 border-gray-600"
+                    : "bg-gray-50 border-gray-200"
+                }`}
+              >
+                {filteredEmployees.length > 0 ? (
+                  filteredEmployees.map((employee) => {
+                    const isSelected = formData.assignedEmployees.some(
+                      (member) => member.id === employee.id,
+                    );
+
+                    return (
+                      <button
+                        type="button"
+                        key={employee.id}
+                        onClick={() => handleEmployeeSelect(employee)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition cursor-pointer ${
+                          isSelected
+                            ? "border-[#0f766e] bg-[#0f766e]/10"
+                            : darkMode
+                              ? "border-gray-600 bg-gray-800 hover:bg-gray-600"
+                              : "border-gray-200 bg-white hover:bg-gray-100"
+                        }`}
+                      >
+                        <img
+                          src={employee.image}
+                          alt={employee.name}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+
+                        <div className="text-left">
+                          <p
+                            className={`font-medium ${
+                              darkMode ? "text-white" : "text-black"
+                            }`}
+                          >
+                            {employee.name}
+                          </p>
+                          <p
+                            className={`text-sm ${
+                              darkMode ? "text-gray-300" : "text-gray-500"
+                            }`}
+                          >
+                            {employee.role}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <p
+                    className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                  >
+                    No employees found
+                  </p>
+                )}
+              </div>
+
+              {errors.assignedEmployees && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.assignedEmployees}
+                </p>
               )}
             </div>
           </div>

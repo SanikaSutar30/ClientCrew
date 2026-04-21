@@ -20,32 +20,42 @@ import EditEmployee from "./EditEmployee";
 import ConfirmationModal from "../../components/layout/ConfirmationModal";
 
 export default function Employees() {
-  const { darkMode } = useOutletContext();
+  const { darkMode, userRole } = useOutletContext();
+
+  const savedUser = JSON.parse(localStorage.getItem("user")) || {};
+
+  const currentUserTeamId = savedUser.teamId ?? 101;
+  
+  const isAdmin = userRole === "Admin";
+  const isManager = userRole === "Manager";
+  const isEmployee = userRole === "Employee";
+
+  const canViewEmployees = isAdmin || isManager || isEmployee;
+  const canAddEmployees = isAdmin || isManager;
+  const canEditEmployees = isAdmin || isManager;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState("All Roles");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
 
-  
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddConfirmModal, setShowAddConfirmModal] = useState(false);
   const [pendingEmployee, setPendingEmployee] = useState(null);
 
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  
-const [showViewConfirm, setShowViewConfirm] = useState(false);
-const [pendingViewEmployee, setPendingViewEmployee] = useState(null);
+
+  const [showViewConfirm, setShowViewConfirm] = useState(false);
+  const [pendingViewEmployee, setPendingViewEmployee] = useState(null);
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [showEditConfirm, setShowEditConfirm] = useState(false);
   const [pendingEditEmployee, setPendingEditEmployee] = useState(null);
 
-  
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTitle, setDeleteTitle] = useState("");
   const [deleteMessage, setDeleteMessage] = useState("");
-  
+
   const [employees, setEmployees] = useState([
     {
       id: 1,
@@ -59,6 +69,7 @@ const [pendingViewEmployee, setPendingViewEmployee] = useState(null);
       projects: 8,
       joinedDate: "2024-01-12",
       image: "../assets/Profile.jpg",
+      teamId: 100,
     },
     {
       id: 2,
@@ -72,6 +83,7 @@ const [pendingViewEmployee, setPendingViewEmployee] = useState(null);
       projects: 6,
       joinedDate: "2024-02-08",
       image: "../assets/Profile2.jpg",
+      teamId: 101,
     },
     {
       id: 3,
@@ -85,6 +97,7 @@ const [pendingViewEmployee, setPendingViewEmployee] = useState(null);
       projects: 4,
       joinedDate: "2024-03-15",
       image: "../assets/Profile3.jpg",
+      teamId: 101,
     },
     {
       id: 4,
@@ -98,6 +111,7 @@ const [pendingViewEmployee, setPendingViewEmployee] = useState(null);
       projects: 5,
       joinedDate: "2024-04-22",
       image: "../assets/Profile4.jpg",
+      teamId: 101,
     },
     {
       id: 5,
@@ -111,6 +125,7 @@ const [pendingViewEmployee, setPendingViewEmployee] = useState(null);
       projects: 2,
       joinedDate: "2024-05-10",
       image: "../assets/Profile5.jpg",
+      teamId: 102,
     },
     {
       id: 6,
@@ -124,16 +139,42 @@ const [pendingViewEmployee, setPendingViewEmployee] = useState(null);
       projects: 3,
       joinedDate: "2024-06-05",
       image: "../assets/Profile6.jpg",
+      teamId: 102,
     },
   ]);
 
+  const canEditEmployee = (employee) => {
+    if (userRole === "Admin") {
+      return employee.role !== "Admin";
+    }
+
+    if (userRole === "Manager") {
+      return employee.role === "Employee";
+    }
+
+    return false;
+  };
+
+  const canDeleteEmployee = (employee) => {
+    if (userRole === "Admin") {
+      return employee.role !== "Admin";
+    }
+
+    if (userRole === "Manager") {
+      return employee.role === "Employee";
+    }
+
+    return false;
+  };
+
   const handleAddEmployee = (newEmployee) => {
+    if (!canAddEmployees) return;
     setPendingEmployee(newEmployee);
     setShowAddConfirmModal(true);
   };
 
   const confirmAddEmployee = () => {
-    if (!pendingEmployee) return;
+    if (!pendingEmployee || !canAddEmployees) return;
 
     setEmployees((prev) => [pendingEmployee, ...prev]);
     setShowAddConfirmModal(false);
@@ -146,13 +187,20 @@ const [pendingViewEmployee, setPendingViewEmployee] = useState(null);
     setPendingEmployee(null);
   };
 
-const handleViewClick = (employee) => {
-  setPendingViewEmployee(employee);
-  setShowViewConfirm(true);
+  const handleViewClick = (employee) => {
+    if (!canViewEmployees) return;
+
+    if (userRole === "Manager" && employee.role === "Admin") return;
+
+    if (userRole === "Employee" && employee.teamId !== currentUserTeamId)
+      return;
+
+    setPendingViewEmployee(employee);
+    setShowViewConfirm(true);
   };
-  
+
   const confirmViewEmployee = () => {
-    if (!pendingViewEmployee) return;
+    if (!pendingViewEmployee || !canViewEmployees) return;
 
     setSelectedEmployee(pendingViewEmployee);
     setShowViewModal(true);
@@ -165,13 +213,16 @@ const handleViewClick = (employee) => {
     setPendingViewEmployee(null);
   };
 
-
   const handleEditClick = (employee) => {
+    if (!canEditEmployees) return;
+    if (!canEditEmployee(employee)) return;
+
     setSelectedEmployee(employee);
     setShowEditModal(true);
   };
 
   const handleUpdateEmployee = (updatedEmployee) => {
+    if (!canEditEmployees) return;
     setPendingEditEmployee(updatedEmployee);
     setShowEditConfirm(true);
   };
@@ -197,6 +248,8 @@ const handleViewClick = (employee) => {
   };
 
   const handleDeleteClick = (employee) => {
+    if (!canDeleteEmployee(employee)) return;
+
     setSelectedEmployee(employee);
     setDeleteTitle("Delete Employee");
     setDeleteMessage(
@@ -205,16 +258,29 @@ const handleViewClick = (employee) => {
     setShowDeleteConfirm(true);
   };
 
- const handleDeleteEmployee = (employeeId) => {
-   setEmployees((prev) =>
-     prev.filter((employee) => employee.id !== employeeId),
-   );
-   setShowDeleteConfirm(false);
-   setSelectedEmployee(null);
+  const handleDeleteEmployee = (employeeId) => {
+    if (!selectedEmployee) return;
+    if (!canDeleteEmployee(selectedEmployee)) return;
+
+    setEmployees((prev) =>
+      prev.filter((employee) => employee.id !== employeeId),
+    );
+    setShowDeleteConfirm(false);
+    setSelectedEmployee(null);
   };
-  
+
   const filteredEmployees = useMemo(() => {
     return employees.filter((employee) => {
+      if (userRole === "Manager" && employee.role === "Admin") {
+        return false;
+      }
+
+      if (userRole === "Employee") {
+        if (employee.teamId !== currentUserTeamId) {
+          return false;
+        }
+      }
+
       const matchesSearch =
         employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -228,15 +294,26 @@ const handleViewClick = (employee) => {
 
       return matchesSearch && matchesRole && matchesStatus;
     });
-  }, [employees, searchTerm, selectedRole, selectedStatus]);
-  
+  }, [
+    employees,
+    searchTerm,
+    selectedRole,
+    selectedStatus,
+    userRole,
+    currentUserTeamId,
+  ]);
 
-  const totalEmployees = employees.length;
-  const activeEmployees = employees.filter(
+  const totalEmployees = filteredEmployees.length;
+  const activeEmployees = filteredEmployees.filter(
     (emp) => emp.status === "Active",
   ).length;
-  const managers = employees.filter((emp) => emp.role === "Manager").length;
-  const admins = employees.filter((emp) => emp.role === "Admin").length;
+  const managers = filteredEmployees.filter(
+    (emp) => emp.role === "Manager",
+  ).length;
+  const admins = filteredEmployees.filter((emp) => emp.role === "Admin").length;
+ const teamEmployees = filteredEmployees.filter(
+   (emp) => emp.role === "Employee",
+ ).length;
 
   const getStatusClasses = (status) => {
     if (status === "Active") {
@@ -260,27 +337,25 @@ const handleViewClick = (employee) => {
 
   const subTextClass = darkMode ? "text-gray-400" : "text-gray-500";
 
-
-
   return (
-    <div
-      className={`min-h-screen  ${darkMode ? "bg-gray-900" : "bg-gray-100"}`}
-    >
-      {showAddModal && (
+    <div className={`min-h-screen ${darkMode ? "bg-gray-900" : "bg-gray-100"}`}>
+      {showAddModal && canAddEmployees && (
         <AddEmployee
           darkMode={darkMode}
           setShowAddModal={setShowAddModal}
           onAddEmployee={handleAddEmployee}
         />
       )}
-      {showViewModal && selectedEmployee && (
+
+      {showViewModal && selectedEmployee && canViewEmployees && (
         <ViewEmployee
           darkMode={darkMode}
           employee={selectedEmployee}
           setShowViewModal={setShowViewModal}
         />
       )}
-      {showEditModal && selectedEmployee && (
+
+      {showEditModal && selectedEmployee && canEditEmployees && (
         <EditEmployee
           darkMode={darkMode}
           employee={selectedEmployee}
@@ -288,6 +363,7 @@ const handleViewClick = (employee) => {
           onUpdateEmployee={handleUpdateEmployee}
         />
       )}
+
       <ConfirmationModal
         darkMode={darkMode}
         isOpen={showAddConfirmModal}
@@ -340,30 +416,39 @@ const handleViewClick = (employee) => {
           setSelectedEmployee(null);
         }}
       />
-      {/* Header */}
+
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        
         <div>
           <h1
-            className={`text-2xl font-bold ${darkMode ? "text-white" : "text-gray-900"}`}
+            className={`text-2xl font-bold ${
+              darkMode ? "text-white" : "text-gray-900"
+            }`}
           >
-            Employee Team
+            {isEmployee ? "My Team" : "Employee Team"}
           </h1>
           <p className={`mt-1 text-sm ${subTextClass}`}>
-            Manage your ClientCrew team members, roles, and activity.
+            {isEmployee
+              ? "View your manager and teammates in ClientCrew."
+              : "Manage your ClientCrew team members, roles, and activity."}
           </p>
         </div>
 
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-[#0f766e] text-white hover:opacity-90 cursor-pointer"
-        >
-          <Plus size={18} />
-          Add Employee
-        </button>
+        {canAddEmployees && (
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-[#0f766e] text-white hover:opacity-90 cursor-pointer"
+          >
+            <Plus size={18} />
+            Add Employee
+          </button>
+        )}
       </div>
 
-      {/* Stats Cards */}
+      
+      {/* start cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
+
         <div className={`rounded-2xl p-4 shadow-sm ${cardClass}`}>
           <div className="flex items-center justify-between">
             <div>
@@ -403,8 +488,12 @@ const handleViewClick = (employee) => {
         <div className={`rounded-2xl p-5 shadow-sm ${cardClass}`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className={`text-sm ${subTextClass}`}>Admins</p>
-              <h2 className="text-2xl font-bold mt-2">{admins}</h2>
+              <p className={`text-sm ${subTextClass}`}>
+                {isEmployee ? "Teammates" : "Admins"}
+              </p>
+              <h2 className="text-2xl font-bold mt-2">
+                {isEmployee ? teamEmployees : admins}
+              </h2>
             </div>
             <div className="p-3 rounded-xl bg-orange-100 text-orange-600">
               <ShieldCheck size={22} />
@@ -413,11 +502,9 @@ const handleViewClick = (employee) => {
         </div>
       </div>
 
-      {/* Search and filters */}
-      <div
-        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 "
-      >
-        {/* Search input */}
+      
+      {/* search  */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4">
         <div
           className={`flex items-center px-3 py-2 rounded-lg w-full md:w-80 border ${
             darkMode
@@ -439,9 +526,7 @@ const handleViewClick = (employee) => {
           />
         </div>
 
-        {/* Filter dropdowns */}
         <div className="flex gap-3">
-          {/* Role filter */}
           <select
             value={selectedRole}
             onChange={(e) => setSelectedRole(e.target.value)}
@@ -455,10 +540,8 @@ const handleViewClick = (employee) => {
             <option>Admin</option>
             <option>Manager</option>
             <option>Employee</option>
-            <option>Customer</option>
           </select>
 
-          {/* Status filter */}
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
@@ -474,9 +557,9 @@ const handleViewClick = (employee) => {
             <option>Inactive</option>
           </select>
         </div>
+
       </div>
 
-      {/* Employee Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredEmployees.map((employee) => (
           <div
@@ -484,12 +567,17 @@ const handleViewClick = (employee) => {
             className={`rounded-2xl p-5 shadow-sm hover:shadow-md transition ${cardClass}`}
           >
             <div className="flex items-start justify-between gap-4">
+              
               <div className="flex items-center gap-4">
+
+                {/* employee image*/}
                 <img
                   src={employee.image}
                   alt={employee.name}
                   className="w-14 h-14 rounded-full object-cover border border-gray-300"
                 />
+
+                {/* employee name, role and department */}
                 <div>
                   <h3 className="text-lg font-semibold">{employee.name}</h3>
                   <p className={`text-sm ${subTextClass}`}>
@@ -498,6 +586,7 @@ const handleViewClick = (employee) => {
                 </div>
               </div>
 
+              {/* employee status */}
               <span
                 className={`text-xs font-medium px-3 py-1 rounded-full ${getStatusClasses(
                   employee.status,
@@ -507,6 +596,8 @@ const handleViewClick = (employee) => {
               </span>
             </div>
 
+            
+            {/* employee mail */}
             <div className="mt-5 space-y-3">
               <div
                 className={`flex items-center gap-3 text-sm ${subTextClass}`}
@@ -515,6 +606,8 @@ const handleViewClick = (employee) => {
                 <span>{employee.email}</span>
               </div>
 
+              
+              {/* employee phone */}
               <div
                 className={`flex items-center gap-3 text-sm ${subTextClass}`}
               >
@@ -531,44 +624,47 @@ const handleViewClick = (employee) => {
             </div>
 
             <div className="mt-5 flex items-center justify-end gap-2">
-              {/* View */}
-              <button
-                onClick={() => handleViewClick(employee)}
-                title="View Employee"
-                className={`p-2 rounded-lg transition cursor-pointer ${
-                  darkMode
-                    ? "bg-blue-900/40 hover:bg-blue-900/60 text-blue-400"
-                    : "bg-blue-50 hover:bg-blue-100 text-blue-600"
-                }`}
-              >
-                <Eye size={16} />
-              </button>
+              {canViewEmployees && (
+                <button
+                  onClick={() => handleViewClick(employee)}
+                  title="View Employee"
+                  className={`p-2 rounded-lg transition cursor-pointer ${
+                    darkMode
+                      ? "bg-blue-900/40 hover:bg-blue-900/60 text-blue-400"
+                      : "bg-blue-50 hover:bg-blue-100 text-blue-600"
+                  }`}
+                >
+                  <Eye size={16} />
+                </button>
+              )}
 
-              {/* Edit */}
-              <button
-                onClick={() => handleEditClick(employee)}
-                title="Edit Employee"
-                className={`p-2 rounded-lg transition cursor-pointer ${
-                  darkMode
-                    ? "bg-green-900/40 hover:bg-green-900/60 text-green-400"
-                    : "bg-green-50 hover:bg-green-100 text-green-600"
-                }`}
-              >
-                <Pencil size={16} />
-              </button>
+              {canEditEmployees && canEditEmployee(employee) && (
+                <button
+                  onClick={() => handleEditClick(employee)}
+                  title="Edit Employee"
+                  className={`p-2 rounded-lg transition cursor-pointer ${
+                    darkMode
+                      ? "bg-green-900/40 hover:bg-green-900/60 text-green-400"
+                      : "bg-green-50 hover:bg-green-100 text-green-600"
+                  }`}
+                >
+                  <Pencil size={16} />
+                </button>
+              )}
 
-              {/* Delete */}
-              <button
-                onClick={() => handleDeleteClick(employee)}
-                title="Delete Employee"
-                className={`p-2 rounded-lg transition cursor-pointer ${
-                  darkMode
-                    ? "bg-red-900/40 hover:bg-red-900/60 text-red-400"
-                    : "bg-red-50 hover:bg-red-100 text-red-600"
-                }`}
-              >
-                <Trash2 size={16} />
-              </button>
+              {canDeleteEmployee(employee) && (
+                <button
+                  onClick={() => handleDeleteClick(employee)}
+                  title="Delete Employee"
+                  className={`p-2 rounded-lg transition cursor-pointer ${
+                    darkMode
+                      ? "bg-red-900/40 hover:bg-red-900/60 text-red-400"
+                      : "bg-red-50 hover:bg-red-100 text-red-600"
+                  }`}
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
             </div>
           </div>
         ))}

@@ -15,7 +15,7 @@ import ConfirmationModal from "../components/layout/ConfirmationModal";
 function Login() {
   const navigate = useNavigate();
 
-  const [role, setRole] = useState("Admin");
+  const [role, setRole] = useState("");
   const [showLoginSuccess, setShowLoginSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -355,7 +355,17 @@ function Login() {
         confirmText="OK"
         onConfirm={() => {
           setShowLoginSuccess(false);
+
+          localStorage.setItem("token", "demo-token");
           localStorage.setItem("userRole", role);
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              email: formData.email,
+              role: role,
+            }),
+          );
+
           navigate("/dashboard");
         }}
       />

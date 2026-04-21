@@ -19,16 +19,20 @@ export default function EditCustomer({
 
   const [errors, setErrors] = useState({});
 
-  // Handle text input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
   };
 
-  // Handle new image selection
   const handleImageChange = (e) => {
     const file = e.target.files[0];
 
@@ -57,24 +61,60 @@ export default function EditCustomer({
     }
   };
 
-  // Submit updated customer data
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Name is required";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = "Phone number is required";
+    }
+
+    if (!formData.joinedDate) {
+      newErrors.joinedDate = "Joined date is required";
+    }
+
+    if (!formData.image) {
+      newErrors.image = "Profile image is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!validateForm()) return;
+
     onUpdateCustomer(formData);
   };
 
+  const inputClass = `w-full mt-1 px-4 py-2 rounded-xl border outline-none ${
+    darkMode
+      ? "bg-gray-700 border-gray-600 text-white"
+      : "bg-white border-gray-300 text-black"
+  }`;
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
-      {/* Modal container */}
       <div
         className={`w-full max-w-2xl rounded-2xl shadow-xl p-6 ${
           darkMode ? "bg-gray-800 text-white" : "bg-white text-black"
         }`}
       >
-        {/* Modal header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold">Edit Customer</h2>
           <button
+            type="button"
             onClick={() => setShowEditModal(false)}
             className="p-2 rounded-lg text-gray-500 hover:text-red-500 text-xl cursor-pointer"
           >
@@ -82,12 +122,10 @@ export default function EditCustomer({
           </button>
         </div>
 
-        {/* Edit form */}
         <form
           onSubmit={handleSubmit}
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
-          {/* Name field */}
           <div>
             <label className="text-sm font-medium">Name</label>
             <input
@@ -95,15 +133,13 @@ export default function EditCustomer({
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className={`w-full mt-1 px-4 py-2 rounded-xl border outline-none ${
-                darkMode
-                  ? "bg-gray-700 border-gray-600 text-white"
-                  : "bg-white border-gray-300 text-black"
-              }`}
+              className={inputClass}
             />
+            {errors.name && (
+              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+            )}
           </div>
 
-          {/* Email field */}
           <div>
             <label className="text-sm font-medium">Email</label>
             <input
@@ -111,15 +147,13 @@ export default function EditCustomer({
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className={`w-full mt-1 px-4 py-2 rounded-xl border outline-none ${
-                darkMode
-                  ? "bg-gray-700 border-gray-600 text-white"
-                  : "bg-white border-gray-300 text-black"
-              }`}
+              className={inputClass}
             />
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+            )}
           </div>
 
-          {/* Phone field */}
           <div>
             <label className="text-sm font-medium">Phone</label>
             <input
@@ -127,26 +161,20 @@ export default function EditCustomer({
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              className={`w-full mt-1 px-4 py-2 rounded-xl border outline-none ${
-                darkMode
-                  ? "bg-gray-700 border-gray-600 text-white"
-                  : "bg-white border-gray-300 text-black"
-              }`}
+              className={inputClass}
             />
+            {errors.phone && (
+              <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+            )}
           </div>
 
-          {/* Status field */}
           <div>
             <label className="text-sm font-medium">Status</label>
             <select
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className={`w-full mt-1 px-4 py-2 rounded-xl border outline-none ${
-                darkMode
-                  ? "bg-gray-700 border-gray-600 text-white"
-                  : "bg-white border-gray-300 text-black"
-              }`}
+              className={inputClass}
             >
               <option value="Active">Active</option>
               <option value="Pending">Pending</option>
@@ -154,7 +182,6 @@ export default function EditCustomer({
             </select>
           </div>
 
-          {/* Joined date field */}
           <div>
             <label className="text-sm font-medium">Joined Date</label>
             <input
@@ -162,15 +189,13 @@ export default function EditCustomer({
               name="joinedDate"
               value={formData.joinedDate}
               onChange={handleChange}
-              className={`w-full mt-1 px-4 py-2 rounded-xl border outline-none ${
-                darkMode
-                  ? "bg-gray-700 border-gray-600 text-white"
-                  : "bg-white border-gray-300 text-black"
-              }`}
+              className={inputClass}
             />
+            {errors.joinedDate && (
+              <p className="text-red-500 text-xs mt-1">{errors.joinedDate}</p>
+            )}
           </div>
 
-          {/* Profile image field */}
           <div>
             <label className="text-sm font-medium">Profile Image</label>
             <input
@@ -188,7 +213,6 @@ export default function EditCustomer({
             )}
           </div>
 
-          {/* Preview selected image */}
           <div className="md:col-span-2">
             <label className="text-sm font-medium block mb-2">
               Current Preview
@@ -202,18 +226,22 @@ export default function EditCustomer({
             </div>
           </div>
 
-          {/* Action buttons */}
           <div className="md:col-span-2 flex justify-end gap-3 mt-4">
             <button
               type="button"
               onClick={() => setShowEditModal(false)}
-              className="px-4 py-2 rounded-xl border border-gray-300 cursor-pointer"
+              className={`px-4 py-2 rounded-xl border cursor-pointer ${
+                darkMode
+                  ? "border-gray-600 text-white hover:bg-gray-700"
+                  : "border-gray-300 text-black hover:bg-gray-100"
+              }`}
             >
               Cancel
             </button>
+
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-[#0f766e] text-white cursor-pointer"
+              className="px-5 py-2 rounded-xl bg-[#0f766e] text-white cursor-pointer hover:opacity-90"
             >
               Update Customer
             </button>

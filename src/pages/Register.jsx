@@ -25,7 +25,7 @@ const Register = () => {
     fullName: "",
     email: "",
     password: "",
-    role: "Admin",
+    role: "",
   });
 
   const [errors, setErrors] = useState({
@@ -398,7 +398,18 @@ const Register = () => {
         confirmText="OK"
         onConfirm={() => {
           setShowAccountCreationSuccess(false);
+
+          localStorage.setItem("token", "demo-token");
           localStorage.setItem("userRole", formData.role);
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              fullName: formData.fullName,
+              email: formData.email,
+              role: formData.role,
+            }),
+          );
+
           navigate("/dashboard");
         }}
       />

@@ -7,21 +7,54 @@ export default function EditProject({
   setShowEdit,
   onUpdateProject,
 }) {
-  const [formData, setFormData] = useState({
-    id: project.id,
-    projectName: project.projectName,
-    clientName: project.clientName,
-    startDate: project.startDate,
-    dueDate: project.dueDate,
-    status: project.status,
-    progress: project.progress,
-    icon: project.icon,
-    iconColor: project.iconColor,
-    team: project.team || [],
-    extraMembers: project.extraMembers || 0,
-  });
+const [formData, setFormData] = useState({
+  id: project.id,
+  projectName: project.projectName,
+  clientName: project.clientName,
+  startDate: project.startDate,
+  dueDate: project.dueDate,
+  status: project.status,
+  progress: project.progress,
+  icon: project.icon,
+  iconColor: project.iconColor,
+  assignedEmployees: project.assignedEmployees || [],
+});
 
   const [errors, setErrors] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const employeeOptions = [
+    {
+      id: "emp1",
+      name: "Priya Singh",
+      role: "Manager",
+      image: "../assets/Profile.jpg",
+    },
+    {
+      id: "emp2",
+      name: "Rahul Sharma",
+      role: "Employee",
+      image: "../assets/Profile2.jpg",
+    },
+    {
+      id: "emp3",
+      name: "John Doe",
+      role: "Employee",
+      image: "../assets/Profile3.jpg",
+    },
+    {
+      id: "emp4",
+      name: "Jennifer Brown",
+      role: "Employee",
+      image: "../assets/Profile4.jpg",
+    },
+    {
+      id: "emp5",
+      name: "Amit Patil",
+      role: "Employee",
+      image: "../assets/Profile5.jpg",
+    },
+  ];
 
   // Handle input change
   const handleChange = (e) => {
@@ -33,18 +66,31 @@ export default function EditProject({
     }));
   };
 
-  // Handle team images
-  const _handleTeamChange = (e) => {
-    const files = Array.from(e.target.files);
 
-    if (files.length > 0) {
-      const imageUrls = files.map((file) => URL.createObjectURL(file));
 
+  const handleEmployeeSelect = (employee) => {
+    const alreadySelected = formData.assignedEmployees.some(
+      (member) => member.id === employee.id,
+    );
+
+    if (alreadySelected) {
       setFormData((prev) => ({
         ...prev,
-        team: imageUrls,
+        assignedEmployees: prev.assignedEmployees.filter(
+          (member) => member.id !== employee.id,
+        ),
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        assignedEmployees: [...prev.assignedEmployees, employee],
       }));
     }
+
+    setErrors((prev) => ({
+      ...prev,
+      assignedEmployees: "",
+    }));
   };
 
   // Validation
@@ -58,6 +104,9 @@ export default function EditProject({
     if (!formData.clientName.trim()) {
       newErrors.clientName = "Client name is required";
     }
+    // if (!formData.icon.trim()) {
+    //   newErrors.icon = "Project icon is required";
+    // }
 
     if (!formData.startDate) {
       newErrors.startDate = "Start date is required";
@@ -83,6 +132,10 @@ export default function EditProject({
       newErrors.progress = "Progress must be between 0 and 100";
     }
 
+
+    if (formData.assignedEmployees.length === 0) {
+      newErrors.assignedEmployees = "Select at least one team member";
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -93,18 +146,17 @@ const handleSubmit = (e) => {
 
   if (!validateForm()) return;
 
-  onUpdateProject({
-    ...formData,
-    progress: Number(formData.progress),
-    extraMembers: Number(formData.extraMembers),
-    icon: formData.icon.toUpperCase(),
-  });
+onUpdateProject({
+  ...formData,
+  progress: Number(formData.progress),
+  icon: formData.icon.toUpperCase(),
+});
 };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4 py-6">
       <div
-        className={`w-full max-w-3xl rounded-2xl shadow-xl p-6 ${
+        className={`w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl p-6 ${
           darkMode ? "bg-gray-800 text-white" : "bg-white text-black"
         }`}
       >
@@ -157,6 +209,9 @@ const handleSubmit = (e) => {
                   : "bg-white border-gray-300 text-black"
               }`}
             />
+            {errors.clientName && (
+              <p className="text-red-500 text-xs mt-1">{errors.clientName}</p>
+            )}
           </div>
 
           {/* Start Date */}
@@ -173,6 +228,9 @@ const handleSubmit = (e) => {
                   : "bg-white border-gray-300 text-black"
               }`}
             />
+            {errors.startDate && (
+              <p className="text-red-500 text-xs mt-1">{errors.startDate}</p>
+            )}
           </div>
 
           {/* Due Date */}
@@ -228,6 +286,9 @@ const handleSubmit = (e) => {
                   : "bg-white border-gray-300 text-black"
               }`}
             />
+            {errors.progress && (
+              <p className="text-red-500 text-xs mt-1">{errors.progress}</p>
+            )}
           </div>
 
           {/* Preview */}
@@ -250,8 +311,84 @@ const handleSubmit = (e) => {
             </div>
           </div>
 
+          <div className="md:col-span-2">
+            <label className="text-sm font-medium block mb-2">
+              Assigned Members ({formData.assignedEmployees.length})
+            </label>
+
+            <input
+              type="text"
+              placeholder="Search employees..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`w-full mb-3 px-4 py-2 rounded-xl border text-sm ${
+                darkMode
+                  ? "bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                  : "bg-white border-gray-300 text-black placeholder-gray-400"
+              }`}
+            />
+
+            <div
+              className={`rounded-2xl border p-4 flex flex-wrap gap-4 max-h-[170px] overflow-y-auto ${
+                darkMode
+                  ? "bg-gray-700 border-gray-600"
+                  : "bg-gray-50 border-gray-200"
+              }`}
+            >
+              {employeeOptions
+                .filter((emp) =>
+                  emp.name.toLowerCase().includes(searchTerm.toLowerCase()),
+                )
+                .map((employee) => {
+                  const isSelected = formData.assignedEmployees.some(
+                    (member) => member.id === employee.id,
+                  );
+
+                  return (
+                    <button
+                      type="button"
+                      key={employee.id}
+                      onClick={() => handleEmployeeSelect(employee)}
+                      className={`flex items-center gap-3 px-4 py-3  w-[220px] rounded-2xl border transition cursor-pointer ${
+                        isSelected
+                          ? "border-[#0f766e] bg-[#0f766e]/20 shadow-sm"
+                          : darkMode
+                            ? "border-gray-600 bg-gray-800 hover:bg-gray-600"
+                            : "border-gray-200 bg-white hover:bg-gray-100"
+                      }`}
+                    >
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300">
+                        <img
+                          src={employee.image}
+                          alt={employee.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+
+                      <div className="text-left">
+                        <p className="text-sm font-medium">{employee.name}</p>
+                        <p
+                          className={`text-xs ${
+                            darkMode ? "text-gray-300" : "text-gray-500"
+                          }`}
+                        >
+                          {employee.role}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+            </div>
+
+            {errors.assignedEmployees && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.assignedEmployees}
+              </p>
+            )}
+          </div>
+
           {/* Buttons */}
-          <div className="md:col-span-2 flex justify-end gap-3 mt-4">
+          <div className="md:col-span-2 flex justify-end gap-4  mt-4">
             <button
               type="button"
               onClick={() => setShowEdit(false)}

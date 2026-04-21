@@ -19,22 +19,34 @@ import {
   FileText,
   CheckSquare,
   Settings,
-  LayoutGrid
+  LayoutGrid,
 } from "lucide-react";
-import { PieChart, Pie,Cell, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 // Components
 import AddProject from "./AddProject";
 import EditProject from "./EditProject";
 import ViewProject from "./ViewProject";
 
 export default function Projects() {
-
   // State
-  const { darkMode } = useOutletContext();
+  const { darkMode, userRole } = useOutletContext();
+
+  const canManageProjects = ["Admin", "Manager"].includes(userRole);
+  // const canViewProjects = ["Admin", "Manager", "Employee", "Customer"].includes(
+  //   userRole,
+  // );
+
+  // Temporary logged-in employee id for frontend testing
+  const loggedInEmployeeId = "emp1";
+  const loggedInCustomerName = "ABC Tech Solutions";
+
+  // to test employee role
+  // const loggedInEmployeeId = "emp5";
+
   // Modal state
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
-  
+
   const [showView, setShowView] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
@@ -51,14 +63,14 @@ export default function Projects() {
   const [pendingProject, setPendingProject] = useState(null);
 
   const handleQuickAddTask = (newTask) => {
-  console.log("New Task:", newTask);
+    console.log("New Task:", newTask);
 
-  setShowAddTaskModal(false);
-  setSuccessTitle("Task Created!");
-  setSuccessMessage("Your task has been created successfully.");
-  setShowSuccessModal(true);
-};
-  // Sample projects data
+    setShowAddTaskModal(false);
+    setSuccessTitle("Task Created!");
+    setSuccessMessage("Your task has been created successfully.");
+    setShowSuccessModal(true);
+  };
+
   const [projects, setProjects] = useState([
     {
       id: 1,
@@ -70,8 +82,20 @@ export default function Projects() {
       dueDate: "2024-07-19",
       status: "In Progress",
       progress: 70,
-      team: ["../assets/Profile.jpg", "../assets/Profile2.jpg"],
-      extraMembers: 2,
+      assignedEmployees: [
+        {
+          id: "emp1",
+          name: "Priya Singh",
+          role: "Manager",
+          image: "../assets/Profile.jpg",
+        },
+        {
+          id: "emp2",
+          name: "Rahul Sharma",
+          role: "Employee",
+          image: "../assets/Profile2.jpg",
+        },
+      ],
     },
     {
       id: 2,
@@ -83,8 +107,20 @@ export default function Projects() {
       dueDate: "2024-05-22",
       status: "Completed",
       progress: 100,
-      team: ["../assets/Profile3.jpg", "../assets/Profile4.jpg"],
-      extraMembers: 1,
+      assignedEmployees: [
+        {
+          id: "emp2",
+          name: "Rahul Sharma",
+          role: "Employee",
+          image: "../assets/Profile2.jpg",
+        },
+        {
+          id: "emp3",
+          name: "John Doe",
+          role: "Employee",
+          image: "../assets/Profile3.jpg",
+        },
+      ],
     },
     {
       id: 3,
@@ -96,8 +132,20 @@ export default function Projects() {
       dueDate: "2024-09-04",
       status: "On Hold",
       progress: 35,
-      team: ["../assets/Profile5.jpg", "../assets/Profile6.jpg"],
-      extraMembers: 0,
+      assignedEmployees: [
+        {
+          id: "emp1",
+          name: "Priya Singh",
+          role: "Manager",
+          image: "../assets/Profile.jpg",
+        },
+        {
+          id: "emp4",
+          name: "Jennifer Brown",
+          role: "Employee",
+          image: "../assets/Profile4.jpg",
+        },
+      ],
     },
     {
       id: 4,
@@ -109,8 +157,20 @@ export default function Projects() {
       dueDate: "2024-03-13",
       status: "In Progress",
       progress: 60,
-      team: ["../assets/Profile2.jpg", "../assets/Profile3.jpg"],
-      extraMembers: 3,
+      assignedEmployees: [
+        {
+          id: "emp3",
+          name: "John Doe",
+          role: "Employee",
+          image: "../assets/Profile3.jpg",
+        },
+        {
+          id: "emp4",
+          name: "Jennifer Brown",
+          role: "Employee",
+          image: "../assets/Profile4.jpg",
+        },
+      ],
     },
     {
       id: 5,
@@ -122,8 +182,20 @@ export default function Projects() {
       dueDate: "2024-03-01",
       status: "In Progress",
       progress: 80,
-      team: ["../assets/Profile4.jpg", "../assets/Profile5.jpg"],
-      extraMembers: 1,
+      assignedEmployees: [
+        {
+          id: "emp1",
+          name: "Priya Singh",
+          role: "Manager",
+          image: "../assets/Profile.jpg",
+        },
+        {
+          id: "emp5",
+          name: "Amit Patil",
+          role: "Employee",
+          image: "../assets/Profile5.jpg",
+        },
+      ],
     },
     {
       id: 6,
@@ -135,8 +207,14 @@ export default function Projects() {
       dueDate: "2024-10-20",
       status: "Planning",
       progress: 10,
-      team: ["../assets/Profile6.jpg"],
-      extraMembers: 0,
+      assignedEmployees: [
+        {
+          id: "emp2",
+          name: "Rahul Sharma",
+          role: "Employee",
+          image: "../assets/Profile2.jpg",
+        },
+      ],
     },
   ]);
 
@@ -151,64 +229,72 @@ export default function Projects() {
   const itemsPerPage = 6;
 
   // Handlers
- const handleAddProject = (newProject) => {
-   const projectToAdd = {
-     id: projects.length + 1,
-     icon: newProject.icon || "P",
-     iconColor: newProject.iconColor || "bg-teal-500",
-     projectName: newProject.projectName,
-     clientName: newProject.clientName,
-     startDate: newProject.startDate,
-     dueDate: newProject.dueDate,
-     status: newProject.status,
-     progress: Number(newProject.progress || 0),
-     team: newProject.team || ["../assets/Profile.jpg"],
-     extraMembers: Number(newProject.extraMembers || 0),
-   };
+  const handleAddProject = (newProject) => {
+    if (!canManageProjects) return;
 
-   setProjects((prev) => [projectToAdd, ...prev]);
-   setShowAdd(false);
+    const projectToAdd = {
+      id: projects.length + 1,
+      icon: newProject.icon || "P",
+      iconColor: newProject.iconColor || "bg-teal-500",
+      projectName: newProject.projectName,
+      clientName: newProject.clientName,
+      startDate: newProject.startDate,
+      dueDate: newProject.dueDate,
+      status: newProject.status,
+      progress: Number(newProject.progress || 0),
+      assignedEmployees: newProject.assignedEmployees || [],
+    };
 
-   setSuccessTitle("Project Created!");
-   setSuccessMessage("Your project has been created successfully.");
-   setShowSuccessModal(true);
- };
-//  Open edit modal
+    setProjects((prev) => [projectToAdd, ...prev]);
+    setShowAdd(false);
+
+    setSuccessTitle("Project Created!");
+    setSuccessMessage("Your project has been created successfully.");
+    setShowSuccessModal(true);
+  };
+
+  //  Open edit modal
   const handleEditClick = (project) => {
+    if (!canManageProjects) return;
     setSelectedProject(project);
     setShowEdit(true);
   };
-const handleDeleteClick = (project) => {
-  setSelectedProject(project);
-  setDeleteTitle("Delete Project");
-  setDeleteMessage(
-    `Are you sure you want to delete ${project.projectName || "this project"}?`,
-  );
-  setShowDeleteConfirm(true);
-};
 
+  const handleDeleteClick = (project) => {
+    if (!canManageProjects) return;
+    setSelectedProject(project);
+    setDeleteTitle("Delete Project");
+    setDeleteMessage(
+      `Are you sure you want to delete ${project.projectName || "this project"}?`,
+    );
+    setShowDeleteConfirm(true);
+  };
   // Update selected project
-const handleUpdateProject = (updatedProject) => {
-  setProjects((prev) =>
-    prev.map((project) =>
-      project.id === updatedProject.id ? updatedProject : project,
-    ),
-  );
+  const handleUpdateProject = (updatedProject) => {
+    if (!canManageProjects) return;
 
-  setShowEdit(false);
-  setSelectedProject(null);
+    setProjects((prev) =>
+      prev.map((project) =>
+        project.id === updatedProject.id ? updatedProject : project,
+      ),
+    );
 
-  setSuccessTitle("Project Updated!");
-  setSuccessMessage("Your project has been updated successfully.");
-  setShowSuccessModal(true);
-};
+    setShowEdit(false);
+    setSelectedProject(null);
+
+    setSuccessTitle("Project Updated!");
+    setSuccessMessage("Your project has been updated successfully.");
+    setShowSuccessModal(true);
+  };
 
   // Delete selected project
-const handleDeleteProject = (projectId) => {
-  setProjects((prev) => prev.filter((project) => project.id !== projectId));
-  setShowDeleteConfirm(false);
-  setSelectedProject(null);
-};
+  const handleDeleteProject = (projectId) => {
+    if (!canManageProjects) return;
+
+    setProjects((prev) => prev.filter((project) => project.id !== projectId));
+    setShowDeleteConfirm(false);
+    setSelectedProject(null);
+  };
 
   // Open view modal
   const handleViewClick = (project) => {
@@ -245,12 +331,25 @@ const handleDeleteProject = (projectId) => {
     }
   };
 
+  const visibleProjects =
+    userRole === "Employee"
+      ? projects.filter((project) =>
+          project.assignedEmployees?.some(
+            (member) => member.id === loggedInEmployeeId,
+          ),
+        )
+      : userRole === "Customer"
+        ? projects.filter(
+            (project) => project.clientName === loggedInCustomerName,
+          )
+        : projects;
+
   const uniqueClients = [
     "All Clients",
-    ...new Set(projects.map((p) => p.clientName)),
+    ...new Set(visibleProjects.map((p) => p.clientName)),
   ];
 
-  const filteredProjects = projects
+  const filteredProjects = visibleProjects
     .filter((project) => {
       const matchesSearch =
         project.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -282,31 +381,30 @@ const handleDeleteProject = (projectId) => {
   );
 
   const projectStatusData = [
-  {
-    name: "In Progress",
-    value: projects.filter((p) => p.status === "In Progress").length,
-    color: "#0f766e",
-  },
-  {
-    name: "Completed",
-    value: projects.filter((p) => p.status === "Completed").length,
-    color: "#5b7cfa",
-  },
-  {
-    name: "On Hold",
-    value: projects.filter((p) => p.status === "On Hold").length,
-    color: "#f4a340",
-  },
-  {
-    name: "Planning",
-    value: projects.filter((p) => p.status === "Planning").length,
-    color: "#38bdf8",
-  },
-];
+    {
+      name: "In Progress",
+      value: visibleProjects.filter((p) => p.status === "In Progress").length,
+      color: "#0f766e",
+    },
+    {
+      name: "Completed",
+      value: visibleProjects.filter((p) => p.status === "Completed").length,
+      color: "#5b7cfa",
+    },
+    {
+      name: "On Hold",
+      value: visibleProjects.filter((p) => p.status === "On Hold").length,
+      color: "#f4a340",
+    },
+    {
+      name: "Planning",
+      value: visibleProjects.filter((p) => p.status === "Planning").length,
+      color: "#38bdf8",
+    },
+  ];
+  const totalProjects = visibleProjects.length;
 
-  const totalProjects = projects.length;
-
-  const upcomingDeadlines = [...projects]
+  const upcomingDeadlines = [...visibleProjects]
     .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
     .slice(0, 5);
   const navigate = useNavigate();
@@ -318,6 +416,7 @@ const handleDeleteProject = (projectId) => {
           darkMode={darkMode}
           setShowAdd={setShowAdd}
           onAddProject={handleAddProject}
+          userRole={userRole}
         />
       )}
 
@@ -344,6 +443,9 @@ const handleDeleteProject = (projectId) => {
           darkMode={darkMode}
           onClose={() => setShowAddTaskModal(false)}
           onAddTask={handleQuickAddTask}
+          defaultStatus="To Do"
+          userRole={userRole}
+          projectData={selectedProject}
         />
       )}
 
@@ -407,43 +509,47 @@ const handleDeleteProject = (projectId) => {
           </p>
         </div>
 
-        <button
-          onClick={() => setShowAdd(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-[#0f766e] text-white hover:opacity-90 cursor-pointer"
-        >
-          <Plus size={16} />
-          Add Project
-        </button>
-
+        {canManageProjects && (
+          <button
+            onClick={() => setShowAdd(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-[#0f766e] text-white hover:opacity-90 cursor-pointer"
+          >
+            <Plus size={16} />
+            Add Project
+          </button>
+        )}
       </div>
 
       {/* Stats cards */}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           {
             title: "Total Project",
-            value: projects.length,
+            value: visibleProjects.length,
             icon: Folder,
             color: "text-blue-600",
             bg: "bg-blue-100",
           },
           {
             title: "In Progress",
-            value: projects.filter((p) => p.status === "In Progress").length,
+            value: visibleProjects.filter((p) => p.status === "In Progress")
+              .length,
             icon: LoaderCircle,
             color: "text-emerald-600",
             bg: "bg-emerald-100",
           },
           {
             title: "Completed",
-            value: projects.filter((p) => p.status === "Completed").length,
+            value: visibleProjects.filter((p) => p.status === "Completed")
+              .length,
             icon: CheckCircle2,
             color: "text-green-600",
             bg: "bg-green-100",
           },
           {
             title: "On Hold",
-            value: projects.filter((p) => p.status === "On Hold").length,
+            value: visibleProjects.filter((p) => p.status === "On Hold").length,
             icon: PauseCircle,
             color: "text-orange-600",
             bg: "bg-orange-100",
@@ -460,7 +566,6 @@ const handleDeleteProject = (projectId) => {
                   : "bg-white border border-gray-200"
               }`}
             >
-              
               {/* Left content */}
               <div>
                 <p
@@ -693,37 +798,25 @@ const handleDeleteProject = (projectId) => {
 
                 {/* Team */}
                 <div className="flex items-center">
-                  {project.team.map((member, index) => (
+                  {project.assignedEmployees?.map((member, index) => (
                     <div
-                      key={index}
+                      key={member.id}
                       className={`w-8 h-8 rounded-full overflow-hidden border-2 ${
                         darkMode ? "border-gray-700" : "border-white"
                       } ${index !== 0 ? "-ml-2" : ""}`}
+                      title={`${member.name} - ${member.role}`}
                     >
                       <img
-                        src={member}
-                        alt="team member"
+                        src={member.image}
+                        alt={member.name}
                         className="w-full h-full object-cover"
                       />
                     </div>
                   ))}
-
-                  {project.extraMembers > 0 && (
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold -ml-2 ${
-                        darkMode
-                          ? "bg-gray-500 text-white border-2 border-gray-700"
-                          : "bg-gray-200 text-gray-700 border-2 border-white"
-                      }`}
-                    >
-                      +{project.extraMembers}
-                    </div>
-                  )}
                 </div>
 
                 {/* Actions */}
                 <div className="flex items-center gap-2">
-                  {/* View */}
                   <button
                     onClick={() => handleViewClick(project)}
                     title="View Project"
@@ -732,23 +825,25 @@ const handleDeleteProject = (projectId) => {
                     <Eye size={16} />
                   </button>
 
-                  {/* Edit */}
-                  <button
-                    onClick={() => handleEditClick(project)}
-                    title="Edit Project"
-                    className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 cursor-pointer"
-                  >
-                    <Pencil size={16} />
-                  </button>
+                  {canManageProjects && (
+                    <>
+                      <button
+                        onClick={() => handleEditClick(project)}
+                        title="Edit Project"
+                        className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 cursor-pointer"
+                      >
+                        <Pencil size={16} />
+                      </button>
 
-                  {/* Delete */}
-                  <button
-                    onClick={() => handleDeleteClick(project)}
-                    title="Delete Project"
-                    className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                      <button
+                        onClick={() => handleDeleteClick(project)}
+                        title="Delete Project"
+                        className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))
@@ -1011,100 +1106,212 @@ const handleDeleteProject = (projectId) => {
 
         {/* Quick Actions */}
         <div
-          className={`p-6 rounded-2xl shadow-sm ${
+          className={`p-4 rounded-2xl shadow-sm ${
             darkMode
               ? "bg-gray-700 border border-gray-600"
               : "bg-white border border-gray-100"
           }`}
         >
           <h2
-            className={`text-xl font-semibold mb-6 ${
+            className={`text-xl font-semibold mb-4 ${
               darkMode ? "text-white" : "text-black"
             }`}
           >
             Quick Actions
           </h2>
 
-          <div className="grid grid-cols-2 gap-4">
-            {/* Add Project */}
-            <button
-              onClick={() => setShowAdd(true)}
-              className={`p-4 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
-                darkMode
-                  ? "bg-gray-600 border-gray-500 hover:bg-gray-500"
-                  : "bg-white border-gray-200 hover:bg-gray-50"
-              }`}
-            >
-              <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-teal-700 text-white flex items-center justify-center">
-                <Plus size={20} />
-              </div>
-              <p
-                className={`font-medium text-sm ${darkMode ? "text-white" : "text-black"}`}
-              >
-                Add Project
-              </p>
-            </button>
+          <div className="grid grid-cols-2 gap-3">
+            {/* Admin / Manager */}
+            {canManageProjects ? (
+              <>
+                <button
+                  onClick={() => setShowAdd(true)}
+                  className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
+                    darkMode
+                      ? "bg-gray-600 border-gray-500 hover:bg-gray-500"
+                      : "bg-white border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-[#0f766e] text-white flex items-center justify-center">
+                    <Folder size={18} />
+                  </div>
+                  <p
+                    className={`font-medium ${
+                      darkMode ? "text-white" : "text-black"
+                    }`}
+                  >
+                    Add Project
+                  </p>
+                </button>
 
-            {/* Add Task */}
-            <button
-              onClick={() => setShowAddTaskModal(true)}
-              className={`p-4 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
-                darkMode
-                  ? "bg-gray-600 border-gray-500 hover:bg-gray-500"
-                  : "bg-white border-gray-200 hover:bg-gray-50"
-              }`}
-            >
-              <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-indigo-500 text-white flex items-center justify-center">
-                <CheckSquare size={20} />
-              </div>
-              <p
-                className={`font-medium text-sm ${darkMode ? "text-white" : "text-black"}`}
-              >
-                Add Task
-              </p>
-            </button>
+                <button
+                  onClick={() => setShowAddTaskModal(true)}
+                  className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
+                    darkMode
+                      ? "bg-gray-600 border-gray-500 hover:bg-gray-500"
+                      : "bg-white border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-indigo-500 text-white flex items-center justify-center">
+                    <CheckSquare size={18} />
+                  </div>
+                  <p
+                    className={`font-medium ${
+                      darkMode ? "text-white" : "text-black"
+                    }`}
+                  >
+                    Add Task
+                  </p>
+                </button>
 
-            {/* Manage Tasks */}
-            <button
-              onClick={() => navigate("/tasks")}
-              className={`p-4 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
-                darkMode
-                  ? "bg-gray-600 border-gray-500 hover:bg-gray-500"
-                  : "bg-white border-gray-200 hover:bg-gray-50"
-              }`}
-            >
-              <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-yellow-500 text-white flex items-center justify-center">
-                <LayoutGrid size={20} />
-              </div>
-              <p
-                className={`font-medium text-sm ${darkMode ? "text-white" : "text-black"}`}
-              >
-                Manage Tasks
-              </p>
-            </button>
+                <button
+                  onClick={() => navigate("/tasks")}
+                  className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
+                    darkMode
+                      ? "bg-gray-600 border-gray-500 hover:bg-gray-500"
+                      : "bg-white border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-blue-500 text-white flex items-center justify-center">
+                    <LayoutGrid size={18} />
+                  </div>
+                  <p
+                    className={`font-medium ${
+                      darkMode ? "text-white" : "text-black"
+                    }`}
+                  >
+                    View Tasks
+                  </p>
+                </button>
 
-            {/* Settings */}
-            <button
-              onClick={() => navigate("/projects/settings")}
-              className={`p-4 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
-                darkMode
-                  ? "bg-gray-600 border-gray-500 hover:bg-gray-500"
-                  : "bg-white border-gray-200 hover:bg-gray-50"
-              }`}
-            >
-              <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-red-500 text-white flex items-center justify-center">
-                <Settings size={20} />
-              </div>
-              <p
-                className={`font-medium text-sm ${darkMode ? "text-white" : "text-black"}`}
-              >
-                Settings
-              </p>
-            </button>
+                <button
+                  onClick={() => navigate("/projects/settings")}
+                  className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
+                    darkMode
+                      ? "bg-gray-600 border-gray-500 hover:bg-gray-500"
+                      : "bg-white border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-red-500 text-white flex items-center justify-center">
+                    <Settings size={18} />
+                  </div>
+                  <p
+                    className={`font-medium ${
+                      darkMode ? "text-white" : "text-black"
+                    }`}
+                  >
+                    Settings
+                  </p>
+                </button>
+              </>
+            ) : userRole === "Employee" ? (
+              <>
+                <button
+                  onClick={() => setShowAddTaskModal(true)}
+                  className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
+                    darkMode
+                      ? "bg-gray-600 border-gray-500 hover:bg-gray-500"
+                      : "bg-white border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-indigo-500 text-white flex items-center justify-center">
+                    <CheckSquare size={18} />
+                  </div>
+                  <p
+                    className={`font-medium ${
+                      darkMode ? "text-white" : "text-black"
+                    }`}
+                  >
+                    Add Task
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => navigate("/tasks")}
+                  className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
+                    darkMode
+                      ? "bg-gray-600 border-gray-500 hover:bg-gray-500"
+                      : "bg-white border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-blue-500 text-white flex items-center justify-center">
+                    <LayoutGrid size={18} />
+                  </div>
+                  <p
+                    className={`font-medium ${
+                      darkMode ? "text-white" : "text-black"
+                    }`}
+                  >
+                    View Tasks
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => navigate("/projects/settings")}
+                  className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
+                    darkMode
+                      ? "bg-gray-600 border-gray-500 hover:bg-gray-500"
+                      : "bg-white border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-red-500 text-white flex items-center justify-center">
+                    <Settings size={18} />
+                  </div>
+                  <p
+                    className={`font-medium ${
+                      darkMode ? "text-white" : "text-black"
+                    }`}
+                  >
+                    Settings
+                  </p>
+                </button>
+              </>
+            ) : userRole === "Customer" ? (
+              <>
+                <button
+                  onClick={() => navigate("/employees")}
+                  className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
+                    darkMode
+                      ? "bg-gray-600 border-gray-500 hover:bg-gray-500"
+                      : "bg-white border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-blue-500 text-white flex items-center justify-center">
+                    <Users size={18} />
+                  </div>
+                  <p
+                    className={`font-medium ${
+                      darkMode ? "text-white" : "text-black"
+                    }`}
+                  >
+                    View Team
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => navigate("/reports")}
+                  className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
+                    darkMode
+                      ? "bg-gray-600 border-gray-500 hover:bg-gray-500"
+                      : "bg-white border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-indigo-500 text-white flex items-center justify-center">
+                    <FileText size={18} />
+                  </div>
+                  <p
+                    className={`font-medium ${
+                      darkMode ? "text-white" : "text-black"
+                    }`}
+                  >
+                    View Reports
+                  </p>
+                </button>
+              </>
+            ) : null}
           </div>
         </div>
       </div>
     </div>
   );
 }
-

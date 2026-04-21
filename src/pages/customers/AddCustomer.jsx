@@ -1,11 +1,25 @@
 import { useState } from "react";
+import { Search } from "lucide-react";
+import AddProject from "../projects/AddProject";
 
 export default function AddCustomer({
   darkMode,
   setShowAddModal,
   onAddCustomer,
+  userRole,
 }) {
-  // Store form values
+  const canAddProject = ["Admin", "Manager"].includes(userRole);
+  const [projectSearch, setProjectSearch] = useState("");
+  const [showAddProjectModal, setShowAddProjectModal] = useState(false);
+
+
+  const [projectOptions, setProjectOptions] = useState([
+    { id: "p1", name: "E-commerce Website" },
+    { id: "p2", name: "CRM Platform Enhancement" },
+    { id: "p3", name: "Healthcare Management System" },
+    { id: "p4", name: "Mobile App Development" },
+  ]);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -13,34 +27,66 @@ export default function AddCustomer({
     status: "Active",
     joinedDate: "",
     image: "",
+    projectId: "",
   });
 
-  // Store validation errors
   const [errors, setErrors] = useState({});
 
-  // Handle text and select input changes
+
+    const filteredProjects = projectOptions.filter((project) =>
+      project.name.toLowerCase().includes(projectSearch.toLowerCase()),
+    );
+
+  const inputClass = `w-full px-4 py-3 rounded-xl border outline-none ${
+    darkMode
+      ? "bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
+      : "bg-gray-50 border-gray-200 text-black placeholder:text-gray-400"
+  }`;
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
   };
 
-  // Handle image file selection
   const handleImageChange = (e) => {
     const file = e.target.files[0];
 
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setFormData((prev) => ({
+    if (!file) return;
+
+    const validTypes = ["image/png", "image/jpeg", "image/jpg"];
+
+    if (!validTypes.includes(file.type)) {
+      setErrors((prev) => ({
         ...prev,
-        image: imageUrl,
+        image: "Only PNG, JPG and JPEG images are allowed",
       }));
+      return;
     }
+
+    const imageUrl = URL.createObjectURL(file);
+
+    setFormData((prev) => ({
+      ...prev,
+      image: imageUrl,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      image: "",
+    }));
   };
 
-  // Validate form before submit
+ 
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -62,6 +108,10 @@ export default function AddCustomer({
       newErrors.joinedDate = "Joined date is required";
     }
 
+    if (!formData.projectId) {
+      newErrors.projectId = "Please select a project";
+    }
+
     if (!formData.image) {
       newErrors.image = "Profile image is required";
     }
@@ -70,21 +120,46 @@ export default function AddCustomer({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submit customer form
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     onAddCustomer(formData);
-    setShowAddModal(false);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px] px-4">
-      {/* Modal container */}
+      {showAddProjectModal && (
+        <AddProject
+          darkMode={darkMode}
+          setShowAdd={setShowAddProjectModal}
+          userRole={userRole}
+          onAddProject={(newProject) => {
+            const newProjectOption = {
+              id: `p${Date.now()}`,
+              name: newProject.projectName,
+            };
+
+     setProjectOptions((prev) => {
+       const alreadyExists = prev.some(
+         (project) =>
+           project.name.toLowerCase() === newProject.projectName.toLowerCase(),
+       );
+
+       if (alreadyExists) return prev;
+       return [...prev, newProjectOption];
+     });
+
+            setFormData((prev) => ({
+              ...prev,
+              projectId: newProjectOption.id,
+            }));
+
+            setShowAddProjectModal(false);
+          }}
+        />
+      )}
       <div
         className={`w-full max-w-4xl rounded-2xl p-8 shadow-xl ${
           darkMode
@@ -92,7 +167,6 @@ export default function AddCustomer({
             : "bg-white border border-gray-200 text-black"
         }`}
       >
-        {/* Modal header */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-semibold">Add Customer</h2>
@@ -101,7 +175,6 @@ export default function AddCustomer({
             </p>
           </div>
 
-          {/* Close button */}
           <button
             type="button"
             onClick={() => setShowAddModal(false)}
@@ -111,10 +184,8 @@ export default function AddCustomer({
           </button>
         </div>
 
-        {/* Customer form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Full name field */}
             <div>
               <label className="block text-sm font-medium mb-2">
                 Full Name
@@ -125,18 +196,13 @@ export default function AddCustomer({
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="Enter full name"
-                className={`w-full px-4 py-3 rounded-xl border outline-none ${
-                  darkMode
-                    ? "bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
-                    : "bg-gray-50 border-gray-200 text-black placeholder:text-gray-400"
-                }`}
+                className={inputClass}
               />
               {errors.name && (
                 <p className="text-red-500 text-xs mt-1">{errors.name}</p>
               )}
             </div>
 
-            {/* Email field */}
             <div>
               <label className="block text-sm font-medium mb-2">
                 Email Address
@@ -147,18 +213,13 @@ export default function AddCustomer({
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="Enter email address"
-                className={`w-full px-4 py-3 rounded-xl border outline-none ${
-                  darkMode
-                    ? "bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
-                    : "bg-gray-50 border-gray-200 text-black placeholder:text-gray-400"
-                }`}
+                className={inputClass}
               />
               {errors.email && (
                 <p className="text-red-500 text-xs mt-1">{errors.email}</p>
               )}
             </div>
 
-            {/* Phone field */}
             <div>
               <label className="block text-sm font-medium mb-2">
                 Phone Number
@@ -169,29 +230,20 @@ export default function AddCustomer({
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="Enter phone number"
-                className={`w-full px-4 py-3 rounded-xl border outline-none ${
-                  darkMode
-                    ? "bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
-                    : "bg-gray-50 border-gray-200 text-black placeholder:text-gray-400"
-                }`}
+                className={inputClass}
               />
               {errors.phone && (
                 <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
               )}
             </div>
 
-            {/* Status field */}
             <div>
               <label className="block text-sm font-medium mb-2">Status</label>
               <select
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 rounded-xl border outline-none cursor-pointer ${
-                  darkMode
-                    ? "bg-gray-700 border-gray-600 text-white"
-                    : "bg-gray-50 border-gray-200 text-black"
-                }`}
+                className={`${inputClass} cursor-pointer`}
               >
                 <option value="Active">Active</option>
                 <option value="Pending">Pending</option>
@@ -199,7 +251,6 @@ export default function AddCustomer({
               </select>
             </div>
 
-            {/* Joined date field */}
             <div>
               <label className="block text-sm font-medium mb-2">
                 Joined Date
@@ -209,19 +260,69 @@ export default function AddCustomer({
                 name="joinedDate"
                 value={formData.joinedDate}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 rounded-xl border outline-none ${
-                  darkMode
-                    ? "bg-gray-700 border-gray-600 text-white"
-                    : "bg-gray-50 border-gray-200 text-black"
-                }`}
+                className={inputClass}
               />
               {errors.joinedDate && (
                 <p className="text-red-500 text-xs mt-1">{errors.joinedDate}</p>
               )}
             </div>
 
-            {/* Profile image field */}
             <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium">Project</label>
+
+                {canAddProject && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddProjectModal(true)}
+                    className="text-sm font-medium text-[#0f766e] hover:underline cursor-pointer"
+                  >
+                    + Add Project
+                  </button>
+                )}
+              </div>
+
+              <div
+                className={`flex items-center px-4 py-3 rounded-xl border mb-3 ${
+                  darkMode
+                    ? "bg-gray-700 border-gray-600"
+                    : "bg-gray-50 border-gray-200"
+                }`}
+              >
+                <Search size={16} className="text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="Search projects..."
+                  value={projectSearch}
+                  onChange={(e) => setProjectSearch(e.target.value)}
+                  className={`bg-transparent outline-none ml-2 w-full text-sm ${
+                    darkMode
+                      ? "text-white placeholder:text-gray-300"
+                      : "text-gray-700 placeholder:text-gray-400"
+                  }`}
+                />
+              </div>
+
+              <select
+                name="projectId"
+                value={formData.projectId}
+                onChange={handleChange}
+                className={`${inputClass} cursor-pointer`}
+              >
+                <option value="">Select project</option>
+                {filteredProjects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+
+              {errors.projectId && (
+                <p className="text-red-500 text-xs mt-1">{errors.projectId}</p>
+              )}
+            </div>
+
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-2">
                 Profile Image
               </label>
@@ -241,9 +342,7 @@ export default function AddCustomer({
             </div>
           </div>
 
-          {/* Form action buttons */}
           <div className="flex justify-end gap-3 pt-2">
-            {/* Cancel button */}
             <button
               type="button"
               onClick={() => setShowAddModal(false)}
@@ -256,7 +355,6 @@ export default function AddCustomer({
               Cancel
             </button>
 
-            {/* Save button */}
             <button
               type="submit"
               className="px-5 py-2.5 rounded-xl text-white bg-[#0f766e] hover:opacity-90 cursor-pointer"

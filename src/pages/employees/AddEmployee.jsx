@@ -1,10 +1,14 @@
 import { useState } from "react";
+import { useOutletContext } from "react-router-dom";
 
 export default function AddEmployee({
   darkMode,
   setShowAddModal,
   onAddEmployee,
 }) {
+
+
+  const { userRole } = useOutletContext();
   // Store form values
   const [formData, setFormData] = useState({
     name: "",
@@ -90,6 +94,10 @@ export default function AddEmployee({
 const handleSubmit = (e) => {
   e.preventDefault();
 
+  // 🔒 RBAC protection
+  if (userRole === "Manager" && formData.role !== "Employee") {
+    return;
+  }
   if (!validateForm()) {
     return;
   }
@@ -99,7 +107,7 @@ const handleSubmit = (e) => {
     id: Date.now(),
     projects: Number(formData.projects),
   });
-};
+};;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px] px-4">
@@ -212,10 +220,21 @@ const handleSubmit = (e) => {
                     : "bg-gray-50 border-gray-200 text-black"
                 }`}
               >
-                <option value="Admin">Admin</option>
-                <option value="Manager">Manager</option>
-                <option value="Employee">Employee</option>
-                <option value="Customer">Customer</option>
+                {/* Admin can see all */}
+                {userRole === "Admin" && (
+                  <>
+                    <option value="Admin">Admin</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Employee">Employee</option>
+                  </>
+                )}
+
+                {/* Manager can only add Employee & Customer */}
+                {userRole === "Manager" && (
+                  <>
+                    <option value="Employee">Employee</option>
+                  </>
+                )}
               </select>
             </div>
 

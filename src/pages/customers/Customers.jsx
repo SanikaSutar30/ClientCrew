@@ -3,13 +3,18 @@ import { Search, Plus, Download, Eye, Pencil, Trash2 } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
 import AddCustomer from "./AddCustomer";
 import EditCustomer from "./EditCustomer";
-import DeleteCustomer from "./DeleteCustomer";
 import ViewCustomer from "./ViewCustomer";
+import ConfirmationModal from "../../components/layout/ConfirmationModal";
 
 export default function Customers() {
-  // Get dark mode from layout
-const { darkMode } = useOutletContext();
-  // Store customer list
+  const { darkMode, userRole } = useOutletContext();
+
+  const canManageCustomers = ["Admin", "Manager"].includes(userRole);
+  const canViewCustomers = ["Admin", "Manager", "Employee"].includes(userRole);
+
+  // Temporary logged-in employee id for frontend role testing
+  const loggedInEmployeeId = "emp1";
+
   const [customers, setCustomers] = useState([
     {
       id: 1,
@@ -67,75 +72,186 @@ const { darkMode } = useOutletContext();
     },
   ]);
 
-  // Control modal visibility
+  // Temporary project data for role-based filtering
+  const projects = [
+    {
+      id: "p1",
+      projectName: "CRM Dashboard",
+      customerId: 1,
+      assignedEmployees: ["emp1", "emp2"],
+    },
+    {
+      id: "p2",
+      projectName: "Billing System",
+      customerId: 3,
+      assignedEmployees: ["emp1"],
+    },
+    {
+      id: "p3",
+      projectName: "Mobile App",
+      customerId: 5,
+      assignedEmployees: ["emp1", "emp3"],
+    },
+    {
+      id: "p4",
+      projectName: "Support Portal",
+      customerId: 2,
+      assignedEmployees: ["emp2"],
+    },
+    {
+      id: "p5",
+      projectName: "HR Management",
+      customerId: 4,
+      assignedEmployees: ["emp3"],
+    },
+  ];
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
 
-  // Control table filters and pagination
+  const [showAddConfirmModal, setShowAddConfirmModal] = useState(false);
+  const [pendingCustomer, setPendingCustomer] = useState(null);
+
+  const [showViewConfirm, setShowViewConfirm] = useState(false);
+  const [pendingViewCustomer, setPendingViewCustomer] = useState(null);
+
+  const [showEditConfirm, setShowEditConfirm] = useState(false);
+  const [pendingEditCustomer, setPendingEditCustomer] = useState(null);
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTitle, setDeleteTitle] = useState("");
+  const [deleteMessage, setDeleteMessage] = useState("");
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [sortOrder, setSortOrder] = useState("Newest");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Set items per page
   const itemsPerPage = 5;
 
-  // Add a new customer
   const handleAddCustomer = (newCustomer) => {
-    setCustomers((prev) => [
-      {
-        id: prev.length + 1,
-        ...newCustomer,
-      },
-      ...prev,
-    ]);
-    setCurrentPage(1);
-    setShowAddModal(false);
+    if (!canManageCustomers) return;
+
+    setPendingCustomer({
+      id: customers.length + 1,
+      ...newCustomer,
+    });
+    setShowAddConfirmModal(true);
   };
 
-  // Open edit modal
+  const confirmAddCustomer = () => {
+    if (!pendingCustomer || !canManageCustomers) return;
+
+    setCustomers((prev) => [pendingCustomer, ...prev]);
+    setCurrentPage(1);
+    setShowAddConfirmModal(false);
+    setShowAddModal(false);
+    setPendingCustomer(null);
+  };
+
+  const cancelAddCustomer = () => {
+    setShowAddConfirmModal(false);
+    setPendingCustomer(null);
+  };
+
   const handleEditClick = (customer) => {
+    if (!canManageCustomers) return;
     setSelectedCustomer(customer);
     setShowEditModal(true);
   };
 
-  // Open delete modal
   const handleDeleteClick = (customer) => {
+    if (!canManageCustomers) return;
+
     setSelectedCustomer(customer);
-    setShowDeleteModal(true);
+    setDeleteTitle("Delete Customer");
+    setDeleteMessage(
+      `Are you sure you want to delete ${customer.name || "this customer"}?`,
+    );
+    setShowDeleteConfirm(true);
   };
 
-  // Open view modal
   const handleViewClick = (customer) => {
-    setSelectedCustomer(customer);
-    setShowViewModal(true);
+    if (!canViewCustomers) return;
+
+    setPendingViewCustomer(customer);
+    setShowViewConfirm(true);
   };
 
-  // Update selected customer
+  const confirmViewCustomer = () => {
+    if (!pendingViewCustomer || !canViewCustomers) return;
+
+    setSelectedCustomer(pendingViewCustomer);
+    setShowViewModal(true);
+    setShowViewConfirm(false);
+    setPendingViewCustomer(null);
+  };
+
+  const cancelViewCustomer = () => {
+    setShowViewConfirm(false);
+    setPendingViewCustomer(null);
+  };
+
   const handleUpdateCustomer = (updatedCustomer) => {
+    if (!canManageCustomers) return;
+
+    setPendingEditCustomer(updatedCustomer);
+    setShowEditConfirm(true);
+  };
+
+  const confirmUpdateCustomer = () => {
+    if (!pendingEditCustomer || !canManageCustomers) return;
+
     setCustomers((prev) =>
       prev.map((customer) =>
-        customer.id === updatedCustomer.id ? updatedCustomer : customer,
+        customer.id === pendingEditCustomer.id ? pendingEditCustomer : customer,
       ),
     );
+
+    setShowEditConfirm(false);
     setShowEditModal(false);
     setSelectedCustomer(null);
+    setPendingEditCustomer(null);
   };
 
-  // Delete selected customer
+  const cancelUpdateCustomer = () => {
+    setShowEditConfirm(false);
+    setPendingEditCustomer(null);
+  };
+
   const handleDeleteCustomer = (customerId) => {
+    if (!canManageCustomers) return;
+
     setCustomers((prev) =>
       prev.filter((customer) => customer.id !== customerId),
     );
-    setShowDeleteModal(false);
+    setShowDeleteConfirm(false);
     setSelectedCustomer(null);
   };
 
-  // Filter and sort customers
-  const filteredCustomers = customers
+  // Employee should only see customers related to assigned projects
+  const employeeProjects =
+    userRole === "Employee"
+      ? projects.filter((project) =>
+          project.assignedEmployees.includes(loggedInEmployeeId),
+        )
+      : projects;
+
+  const employeeCustomerIds = employeeProjects.map(
+    (project) => project.customerId,
+  );
+
+  const visibleCustomers =
+    userRole === "Employee"
+      ? customers.filter((customer) =>
+          employeeCustomerIds.includes(customer.id),
+        )
+      : customers;
+
+  const filteredCustomers = visibleCustomers
     .filter((customer) => {
       const search = searchTerm.toLowerCase();
 
@@ -157,18 +273,26 @@ const { darkMode } = useOutletContext();
       return sortOrder === "Newest" ? dateB - dateA : dateA - dateB;
     });
 
-  // Calculate pagination values
   const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
   const safeCurrentPage =
     totalPages === 0 ? 1 : Math.min(currentPage, totalPages);
 
-  // Get current page customers
   const paginatedCustomers = filteredCustomers.slice(
     (safeCurrentPage - 1) * itemsPerPage,
     safeCurrentPage * itemsPerPage,
   );
 
-  // Return badge style based on status
+  const totalCustomersCount = visibleCustomers.length;
+  const activeCustomersCount = visibleCustomers.filter(
+    (customer) => customer.status === "Active",
+  ).length;
+  const pendingCustomersCount = visibleCustomers.filter(
+    (customer) => customer.status === "Pending",
+  ).length;
+  const inactiveCustomersCount = visibleCustomers.filter(
+    (customer) => customer.status === "Inactive",
+  ).length;
+
   const getStatusClasses = (status) => {
     switch (status) {
       case "Active":
@@ -182,49 +306,105 @@ const { darkMode } = useOutletContext();
     }
   };
 
+  if (!canViewCustomers) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">Customers</h1>
+          <p
+            className={`text-sm ${
+              darkMode ? "text-gray-300" : "text-gray-500"
+            }`}
+          >
+            You do not have access to view customers.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Add customer modal */}
-      {showAddModal && (
+      {showAddModal && canManageCustomers && (
         <AddCustomer
           darkMode={darkMode}
           setShowAddModal={setShowAddModal}
           onAddCustomer={handleAddCustomer}
+          userRole={userRole}
         />
       )}
 
-      {/* Edit customer modal */}
-      {showEditModal && selectedCustomer && (
+      {showEditModal && selectedCustomer && canManageCustomers && (
         <EditCustomer
           darkMode={darkMode}
           customer={selectedCustomer}
           setShowEditModal={setShowEditModal}
           onUpdateCustomer={handleUpdateCustomer}
+          
         />
       )}
 
-      {/* Delete customer modal */}
-      {showDeleteModal && selectedCustomer && (
-        <DeleteCustomer
-          darkMode={darkMode}
-          customer={selectedCustomer}
-          setShowDeleteModal={setShowDeleteModal}
-          onDeleteCustomer={handleDeleteCustomer}
-        />
-      )}
-
-      {/* View customer modal */}
-      {showViewModal && selectedCustomer && (
+      {showViewModal && selectedCustomer && canViewCustomers && (
         <ViewCustomer
           darkMode={darkMode}
           customer={selectedCustomer}
           setShowViewModal={setShowViewModal}
         />
       )}
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showAddConfirmModal}
+        type="success"
+        title="Add Customer"
+        message={`Are you sure you want to add ${pendingCustomer?.name || "this customer"}?`}
+        confirmText="Add"
+        cancelText="Cancel"
+        onConfirm={confirmAddCustomer}
+        onCancel={cancelAddCustomer}
+      />
 
-      {/* Page header */}
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showViewConfirm}
+        type="success"
+        title="Open Customer"
+        message={`Do you want to view ${pendingViewCustomer?.name || "this customer"}?`}
+        confirmText="Yes, Open"
+        cancelText="Cancel"
+        onConfirm={confirmViewCustomer}
+        onCancel={cancelViewCustomer}
+      />
+
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showEditConfirm}
+        type="success"
+        title="Update Customer"
+        message={`Are you sure you want to update ${pendingEditCustomer?.name || "this customer"}?`}
+        confirmText="Update"
+        cancelText="Cancel"
+        onConfirm={confirmUpdateCustomer}
+        onCancel={cancelUpdateCustomer}
+      />
+
+      <ConfirmationModal
+        darkMode={darkMode}
+        isOpen={showDeleteConfirm}
+        type="error"
+        title={deleteTitle}
+        message={deleteMessage}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={() =>
+          selectedCustomer && handleDeleteCustomer(selectedCustomer.id)
+        }
+        onCancel={() => {
+          setShowDeleteConfirm(false);
+          setSelectedCustomer(null);
+        }}
+      />
+
       <div className="flex items-center justify-between">
-        {/* Title section */}
         <div>
           <h1 className="text-2xl font-bold">Customers</h1>
           <p
@@ -236,38 +416,25 @@ const { darkMode } = useOutletContext();
           </p>
         </div>
 
-        {/* Header buttons */}
-        <div className="flex gap-3">
-          {/* Export button */}
-          <button
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium shadow-sm border cursor-pointer transition ${
-              darkMode
-                ? "bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
-                : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <Download size={16} />
-            Export
-          </button>
-
-          {/* Add customer button */}
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-[#0f766e] text-white hover:opacity-90 cursor-pointer"
-          >
-            <Plus size={16} />
-            Add Customer
-          </button>
+        <div >
+          {canManageCustomers && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-[#0f766e] text-white hover:opacity-90 cursor-pointer"
+            >
+              <Plus size={16} />
+              Add Customer
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { title: "Total Customers", value: "256" },
-          { title: "Active Customers", value: "231" },
-          { title: "New This Month", value: "12" },
-          { title: "Inactive", value: "25" },
+          { title: "Total Customers", value: totalCustomersCount },
+          { title: "Active Customers", value: activeCustomersCount },
+          { title: "Pending Customers", value: pendingCustomersCount },
+          { title: "Inactive", value: inactiveCustomersCount },
         ].map((item) => (
           <div
             key={item.title}
@@ -295,7 +462,6 @@ const { darkMode } = useOutletContext();
         ))}
       </div>
 
-      {/* Main table card */}
       <div
         className={`rounded-xl shadow-sm overflow-hidden ${
           darkMode
@@ -303,13 +469,11 @@ const { darkMode } = useOutletContext();
             : "bg-white border border-gray-200 text-black"
         }`}
       >
-        {/* Search and filters */}
         <div
           className={`flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 border-b ${
             darkMode ? "border-gray-600" : "border-gray-200"
           }`}
         >
-          {/* Search input */}
           <div
             className={`flex items-center px-3 py-2 rounded-lg w-full md:w-80 border ${
               darkMode
@@ -334,9 +498,7 @@ const { darkMode } = useOutletContext();
             />
           </div>
 
-          {/* Filter dropdowns */}
           <div className="flex gap-3">
-            {/* Status filter */}
             <select
               value={statusFilter}
               onChange={(e) => {
@@ -355,7 +517,6 @@ const { darkMode } = useOutletContext();
               <option value="Inactive">Inactive</option>
             </select>
 
-            {/* Sort order */}
             <select
               value={sortOrder}
               onChange={(e) => {
@@ -374,10 +535,9 @@ const { darkMode } = useOutletContext();
           </div>
         </div>
 
-        {/* Table header */}
         <div className="px-4 pt-3">
           <div
-            className={`grid grid-cols-[60px_2.2fr_2fr_1.6fr_1fr_1.4fr_1fr] px-4 py-3 text-sm font-semibold rounded-lg ${
+            className={`grid grid-cols-[60px_2.2fr_2fr_1.6fr_1fr_1.4fr_1.2fr] px-4 py-3 text-sm font-semibold rounded-lg ${
               darkMode ? "bg-gray-600 text-white" : "bg-gray-100 text-gray-700"
             }`}
           >
@@ -391,7 +551,6 @@ const { darkMode } = useOutletContext();
           </div>
         </div>
 
-        {/* Table body */}
         <div className="px-4 pb-4">
           {filteredCustomers.length === 0 ? (
             <div className="text-center py-6 text-gray-500 text-sm">
@@ -401,18 +560,16 @@ const { darkMode } = useOutletContext();
             paginatedCustomers.map((customer) => (
               <div
                 key={customer.id}
-                className={`grid grid-cols-[60px_2.2fr_2fr_1.6fr_1fr_1.4fr_1fr] items-center px-3 py-2 border-b last:border-b-0 hover:bg-gray-100 rounded-xl transition cursor-pointer ${
+                className={`grid grid-cols-[60px_2.2fr_2fr_1.6fr_1fr_1.4fr_1.2fr] items-center px-3 py-2 border-b last:border-b-0 hover:bg-gray-100 rounded-xl transition ${
                   darkMode
                     ? "border-gray-600 hover:bg-gray-500"
                     : "border-gray-100"
                 }`}
               >
-                {/* Customer ID */}
                 <span className={darkMode ? "text-white" : "text-black"}>
                   {customer.id}
                 </span>
 
-                {/* Customer name and image */}
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300 shrink-0">
                     <img
@@ -430,7 +587,6 @@ const { darkMode } = useOutletContext();
                   </span>
                 </div>
 
-                {/* Customer email */}
                 <span
                   className={`truncate ${
                     darkMode ? "text-gray-300" : "text-gray-500"
@@ -439,12 +595,10 @@ const { darkMode } = useOutletContext();
                   {customer.email}
                 </span>
 
-                {/* Customer phone */}
                 <span className={darkMode ? "text-gray-300" : "text-gray-500"}>
                   {customer.phone}
                 </span>
 
-                {/* Customer status */}
                 <span
                   className={`text-xs font-semibold px-3 py-1 rounded-full w-fit ${getStatusClasses(
                     customer.status,
@@ -453,49 +607,48 @@ const { darkMode } = useOutletContext();
                   {customer.status}
                 </span>
 
-                {/* Customer joined date */}
                 <span className={darkMode ? "text-gray-300" : "text-gray-500"}>
                   {new Date(customer.joinedDate).toLocaleDateString()}
                 </span>
 
-                {/* Action buttons */}
                 <div className="flex items-center gap-2 justify-start">
-                  {/* Edit button */}
-                  <button
-                    onClick={() => handleEditClick(customer)}
-                    className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 cursor-pointer"
-                  >
-                    <Pencil size={16} />
-                  </button>
+                  {canManageCustomers && (
+                    <>
+                      <button
+                        onClick={() => handleEditClick(customer)}
+                        className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 cursor-pointer"
+                      >
+                        <Pencil size={16} />
+                      </button>
 
-                  {/* Delete button */}
-                  <button
-                    onClick={() => handleDeleteClick(customer)}
-                    className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                      <button
+                        onClick={() => handleDeleteClick(customer)}
+                        className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </>
+                  )}
 
-                  {/* View button */}
-                  <button
-                    onClick={() => handleViewClick(customer)}
-                    className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer"
-                  >
-                    <Eye size={16} />
-                  </button>
+                  {canViewCustomers && (
+                    <button
+                      onClick={() => handleViewClick(customer)}
+                      className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer"
+                    >
+                      <Eye size={16} />
+                    </button>
+                  )}
                 </div>
               </div>
             ))
           )}
         </div>
 
-        {/* Pagination section */}
         <div
           className={`flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-4 py-4 border-t ${
             darkMode ? "border-gray-600" : "border-gray-200"
           }`}
         >
-          {/* Pagination info */}
           <p
             className={`text-sm ${
               darkMode ? "text-gray-300" : "text-gray-500"
@@ -518,9 +671,7 @@ const { darkMode } = useOutletContext();
             customers
           </p>
 
-          {/* Pagination buttons */}
           <div className="flex items-center gap-2">
-            {/* Previous button */}
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={safeCurrentPage === 1}
@@ -537,7 +688,6 @@ const { darkMode } = useOutletContext();
               Previous
             </button>
 
-            {/* Page number buttons */}
             {Array.from({ length: totalPages }, (_, index) => index + 1).map(
               (page) => (
                 <button
@@ -556,7 +706,6 @@ const { darkMode } = useOutletContext();
               ),
             )}
 
-            {/* Next button */}
             <button
               onClick={() =>
                 setCurrentPage((prev) => Math.min(prev + 1, totalPages || 1))
@@ -577,7 +726,6 @@ const { darkMode } = useOutletContext();
           </div>
         </div>
       </div>
-      
     </div>
   );
 }

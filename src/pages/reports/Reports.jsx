@@ -5,15 +5,7 @@ import EmployeeReports from "./EmployeeReports";
 import CustomerReports from "./CustomerReports";
 
 export default function Reports() {
-  const { darkMode } = useOutletContext();
-
-    // const userRole = "Admin";
-
-  //     const userRole = "Manager";
-
-  // const userRole = "Employee";
-    const userRole = "Customer";
-
+  const { darkMode, userRole } = useOutletContext();
 
   const renderReportsByRole = () => {
     switch (userRole) {
@@ -28,7 +20,7 @@ export default function Reports() {
       default:
         return (
           <div
-            className={`rounded-2xl shadow-sm border ${
+            className={`rounded-2xl shadow-sm border p-6 ${
               darkMode
                 ? "bg-gray-800 border-gray-700 text-white"
                 : "bg-white border-gray-200 text-gray-800"

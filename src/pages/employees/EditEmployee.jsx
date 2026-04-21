@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import { X } from "lucide-react";
 
 export default function EditEmployee({
@@ -7,6 +8,8 @@ export default function EditEmployee({
   setShowEditModal,
   onUpdateEmployee,
 }) {
+
+  const { userRole } = useOutletContext();
   const [formData, setFormData] = useState({
     id: employee.id,
     name: employee.name,
@@ -205,10 +208,34 @@ export default function EditEmployee({
                   : "bg-white border-gray-300 text-black"
               }`}
             >
-              <option value="Admin">Admin</option>
-              <option value="Manager">Manager</option>
-              <option value="Employee">Employee</option>
-              <option value="Customer">Customer</option>
+              {/* ADMIN → full control */}
+              {userRole === "Admin" && (
+                <>
+                  <option value="Admin">Admin</option>
+                  <option value="Manager">Manager</option>
+                  <option value="Employee">Employee</option>
+                </>
+              )}
+
+              {/* MANAGER → restricted */}
+              {userRole === "Manager" && (
+                <>
+                  {/* Editing Manager */}
+                  {employee.role === "Manager" && (
+                    <>
+                      <option value="Manager">Manager</option>
+                      <option value="Employee">Employee</option>
+                    </>
+                  )}
+
+                  {/* Editing Employee */}
+                  {employee.role === "Employee" && (
+                    <>
+                      <option value="Employee">Employee</option>
+                    </>
+                  )}
+                </>
+              )}
             </select>
           </div>
 

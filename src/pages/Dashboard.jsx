@@ -52,8 +52,8 @@ const customerGrowthData = [
 ];
 
 export default function Dashboard() {
-  const { darkMode } = useOutletContext();
-
+const outletContext = useOutletContext() || {};
+const darkMode = outletContext.darkMode ?? false;
     // Modal visibility state
     const [showAddModal, setShowAddModal] = useState(false);
 

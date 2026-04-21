@@ -173,19 +173,24 @@ export default function ViewProject({ darkMode, project, setShowView }) {
                   </span>
                 </div>
 
+                
                 <div
                   className={`p-4 rounded-xl ${
                     darkMode ? "bg-gray-800" : "bg-white"
                   }`}
                 >
+
                   <div className="flex items-center gap-2 mb-1">
                     <Users size={16} className="text-pink-500" />
                     <span className="text-sm font-medium">
-                      Extra Team Members
+                      Assigned Members
                     </span>
                   </div>
-                  <p className="text-sm">{project.extraMembers}</p>
+                  <p className="text-sm">
+                    {project.assignedEmployees?.length || 0}
+                  </p>
                 </div>
+                
               </div>
 
               <div
@@ -222,35 +227,35 @@ export default function ViewProject({ darkMode, project, setShowView }) {
                   <Users size={16} className="text-indigo-500" />
                   <span className="text-sm font-medium">Team Members</span>
                 </div>
-
-                <div className="flex items-center">
-                  {project.team?.map((member, index) => (
+                <div className="flex flex-wrap gap-3">
+                  {project.assignedEmployees?.map((member) => (
                     <div
-                      key={index}
-                      className={`w-12 h-12 rounded-full overflow-hidden border-2 ${
-                        darkMode ? "border-gray-800" : "border-white"
-                      } ${index !== 0 ? "-ml-3" : ""}`}
-                    >
-                      <img
-                        src={member}
-                        alt={`team-${index}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
-
-                  {project.extraMembers > 0 && (
-                    <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center text-xs font-semibold -ml-3 ${
-                        darkMode
-                          ? "bg-gray-600 text-white border-2 border-gray-800"
-                          : "bg-gray-200 text-gray-700 border-2 border-white"
+                      key={member.id}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-xl ${
+                        darkMode ? "bg-gray-700" : "bg-gray-100"
                       }`}
                     >
-                      +{project.extraMembers}
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300">
+                        <img
+                          src={member.image}
+                          alt={member.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-medium">{member.name}</p>
+                        <p
+                          className={`text-xs ${
+                            darkMode ? "text-gray-300" : "text-gray-500"
+                          }`}
+                        >
+                          {member.role}
+                        </p>
+                      </div>
                     </div>
-                  )}
-                </div>
+                  ))}
+                </div>{" "}
               </div>
 
               <div className="flex justify-end">

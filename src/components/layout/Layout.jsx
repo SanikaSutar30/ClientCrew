@@ -5,6 +5,8 @@ import Topbar from "./Topbar";
 
 function Layout() {
   const [darkMode, setDarkMode] = useState(false);
+  // const userRole = localStorage.getItem("userRole") || "Employee";
+  const userRole = localStorage.getItem("userRole") ?? "Employee";
 
   const [notifications, setNotifications] = useState([
     {
@@ -43,24 +45,23 @@ function Layout() {
       id: 5,
       message: "Project 'ClientCrew Redesign' has been marked as completed.",
       time: "5h ago",
-
       isRead: true,
       type: "project",
       link: "/projects",
-
-
-    }, {
+    },
+    {
       id: 6,
       message: "New login from Chrome on Windows.",
       time: "1d ago",
       isRead: true,
       type: "login",
-    }
+    },
   ]);
+
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar darkMode={darkMode} />
+      <Sidebar darkMode={darkMode}/>
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <Topbar
@@ -68,6 +69,7 @@ function Layout() {
           setDarkMode={setDarkMode}
           notifications={notifications}
           setNotifications={setNotifications}
+          userRole={userRole}
         />
 
         <div
@@ -81,6 +83,7 @@ function Layout() {
               setDarkMode,
               notifications,
               setNotifications,
+              userRole,
             }}
           />
         </div>

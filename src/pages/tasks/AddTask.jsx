@@ -1,13 +1,54 @@
 import { useState } from "react";
-import { X, CalendarDays, ChevronDown, Check } from "lucide-react";
+import { X, Search } from "lucide-react";
+import AddEmployee from "../employees/AddEmployee";
+import AddProject from "../projects/AddProject";
 
 export default function AddTask({
   darkMode,
   onClose,
-  // setShowAddTask,
   onAddTask,
   defaultStatus = "To Do",
+  userRole,
 }) {
+  const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+  const loggedInEmail = storedUser.email || "";
+const [projectSearch, setProjectSearch] = useState("");
+  const [teamMembers, setTeamMembers] = useState(
+    [
+    {
+      name: "Priya Singh",
+      email: "priya@gmail.com",
+      role: "Manager",
+      avatar: "../assets/Profile.jpg",
+    },
+    {
+      name: "Rahul Sharma",
+      email: "rahul@gmail.com",
+      role: "Employee",
+      avatar: "../assets/Profile2.jpg",
+    },
+    {
+      name: "John Doe",
+      email: "john@gmail.com",
+      role: "Employee",
+      avatar: "../assets/Profile3.jpg",
+    },
+    {
+      name: "Jennifer Brown",
+      email: "jennifer@gmail.com",
+      role: "Employee",
+      avatar: "../assets/Profile4.jpg",
+    },
+    {
+      name: "Amit Patil",
+      email: "amit@gmail.com",
+      role: "Employee",
+      avatar: "../assets/Profile5.jpg",
+    },
+  ]);
+
+  const [showAddEmployee, setShowAddEmployee] = useState(false);
+
   const [formData, setFormData] = useState({
     title: "",
     project: "",
@@ -19,26 +60,43 @@ export default function AddTask({
     status: defaultStatus,
   });
 
-  const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
   const [errors, setErrors] = useState({});
+  const [employeeSearch, setEmployeeSearch] = useState("");
+const canAddProject = ["Admin", "Manager"].includes(userRole);
 
-  const teamMembers = [
-    { name: "Priya Singh", avatar: "../assets/Profile.jpg" },
-    { name: "Rahul Sharma", avatar: "../assets/Profile2.jpg" },
-    { name: "John Doe", avatar: "../assets/Profile3.jpg" },
-    { name: "Jennifer Brown", avatar: "../assets/Profile4.jpg" },
-    { name: "Amit Patil", avatar: "../assets/Profile5.jpg" },
-  ];
+const [showAddProjectModal, setShowAddProjectModal] = useState(false);
 
-  const projectOptions = [
-    "E-commerce Website",
-    "Mobile App Development",
-    "CRM Platform Enhancement",
-    "Digital Marketing Campaign",
-    "Healthcare Management System",
-  ];
+const [projectOptions, setProjectOptions] = useState([
+  "E-commerce Website",
+  "Mobile App Development",
+  "CRM Platform Enhancement",
+  "Digital Marketing Campaign",
+  "Healthcare Management System",
+]);
+  const visibleTeamMembers =
+    userRole === "Admin"
+      ? teamMembers
+      : userRole === "Manager"
+        ? teamMembers.filter((member) => member.role === "Employee")
+        : userRole === "Employee"
+          ? teamMembers.filter((member) => member.email === loggedInEmail)
+          : [];
 
-  const priorityOptions = ["Low", "Medium", "High"];
+  
+const filteredProjects = projectOptions.filter((project) =>
+  project.toLowerCase().includes(projectSearch.toLowerCase()),
+);
+  const filteredEmployees = visibleTeamMembers.filter(
+    (emp) =>
+      emp.name.toLowerCase().includes(employeeSearch.toLowerCase()) ||
+      emp.role.toLowerCase().includes(employeeSearch.toLowerCase()),
+  );
+
+  const inputClass = `w-full px-4 py-3 rounded-xl border outline-none ${
+    darkMode
+      ? "bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
+      : "bg-white border-gray-200 text-black placeholder:text-gray-400"
+  }`;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -46,6 +104,11 @@ export default function AddTask({
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
     }));
   };
 
@@ -55,14 +118,11 @@ export default function AddTask({
       assignee: member.name,
       avatar: member.avatar,
     }));
-  };
 
-  const handlePrioritySelect = (priority) => {
-    setFormData((prev) => ({
+    setErrors((prev) => ({
       ...prev,
-      priority,
+      assignee: "",
     }));
-    setShowPriorityDropdown(false);
   };
 
   const getTagByPriority = (priority) => {
@@ -118,83 +178,106 @@ export default function AddTask({
     return Object.keys(newErrors).length === 0;
   };
 
-const handleSubmit = (e) => {
-  e.preventDefault();
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-  if (!validateForm()) return;
+    if (!validateForm()) return;
 
-  const newTask = {
-    id: Date.now().toString(),
-    title: formData.title,
-    assignee: formData.assignee,
-    avatar: formData.avatar,
-    dueDate: new Date(formData.dueDate).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    }),
-    status: formData.status,
-    project: formData.project,
-    tag: getTagByPriority(formData.priority),
-    priority: formData.priority,
-    description: formData.description,
-    borderColor: getBorderColorByStatus(formData.status),
+    const newTask = {
+      id: Date.now().toString(),
+      ...formData,
+      dueDate: new Date(formData.dueDate).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      }),
+      tag: getTagByPriority(formData.priority),
+      borderColor: getBorderColorByStatus(formData.status),
+    };
+
+    onAddTask?.(newTask);
+    onClose?.();
   };
 
-  onAddTask?.(newTask);
-  onClose?.();
-};
-
-  const inputClass = `w-full px-4 py-3 rounded-xl border outline-none ${
-    darkMode
-      ? "bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
-      : "bg-white border-gray-200 text-black placeholder:text-gray-400"
-  }`;
+  // keep this AFTER all hooks
+  if (userRole === "Customer") return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-start justify-center px-4 pt-24 overflow-y-auto backdrop-blur-[3px]">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4 py-6 bg-black/20 backdrop-blur-[3px]">
+      {showAddEmployee && (
+        <AddEmployee
+          darkMode={darkMode}
+          setShowAddModal={setShowAddEmployee}
+          onAddEmployee={(newEmployee) => {
+            const employeeToAdd = {
+              ...newEmployee,
+              email: newEmployee.email,
+              avatar: newEmployee.image || "../assets/Profile.jpg",
+            };
+
+            setTeamMembers((prev) => [...prev, employeeToAdd]);
+
+            setFormData((prev) => ({
+              ...prev,
+              assignee: employeeToAdd.name,
+              avatar: employeeToAdd.avatar,
+            }));
+          }}
+        />
+      )}
+
+      {showAddProjectModal && (
+        <AddProject
+          darkMode={darkMode}
+          setShowAdd={setShowAddProjectModal}
+          userRole={userRole}
+          onAddProject={(newProject) => {
+            const projectName = newProject.projectName;
+
+            setProjectOptions((prev) => {
+              if (prev.includes(projectName)) return prev;
+              return [...prev, projectName];
+            });
+
+            setFormData((prev) => ({
+              ...prev,
+              project: projectName,
+            }));
+
+            setShowAddProjectModal(false);
+          }}
+        />
+      )}
       <div
-        className={`w-full max-w-4xl rounded-3xl shadow-xl overflow-hidden ${
-          darkMode
-            ? "bg-gray-800 border border-gray-700 text-white"
-            : "bg-white border border-gray-200 text-black"
+        className={`w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-xl ${
+          darkMode ? "bg-gray-800 text-white" : "bg-white text-black"
         }`}
       >
-        {/* Header */}
         <div
           className={`flex items-center justify-between px-8 py-6 border-b ${
             darkMode ? "border-gray-700" : "border-gray-200"
           }`}
         >
           <h2 className="text-2xl font-bold">Add Task</h2>
-
           <button
             type="button"
-            onClick={() => onClose?.()}
-            className={`w-11 h-11 rounded-2xl flex items-center justify-center cursor-pointer ${
-              darkMode
-                ? "bg-gray-700 text-gray-300 hover:text-white"
-                : "bg-gray-100 text-gray-500 hover:text-black"
-            }`}
+            onClick={onClose}
+            className="cursor-pointer text-gray-500 hover:text-red-500"
           >
-            <X size={22} />
+            <X />
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="px-8 py-6 space-y-6">
-          {/* Row 1 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Task Name */}
+          <div className="grid md:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-semibold mb-2">
                 Task Name <span className="text-red-500">*</span>
               </label>
               <input
-                type="text"
                 name="title"
+                placeholder="Enter task name"
                 value={formData.title}
                 onChange={handleChange}
-                placeholder="Enter task name..."
                 className={inputClass}
               />
               {errors.title && (
@@ -202,11 +285,42 @@ const handleSubmit = (e) => {
               )}
             </div>
 
-            {/* Project */}
             <div>
-              <label className="block text-sm font-semibold mb-2">
-                Project <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium">Project</label>
+
+                {canAddProject && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddProjectModal(true)}
+                    className="text-sm font-medium text-[#0f766e] hover:underline cursor-pointer"
+                  >
+                    + Add Project
+                  </button>
+                )}
+              </div>
+
+              <div
+                className={`flex items-center px-4 py-3 rounded-xl border mb-3 ${
+                  darkMode
+                    ? "bg-gray-700 border-gray-600"
+                    : "bg-gray-50 border-gray-200"
+                }`}
+              >
+                <Search size={16} className="text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="Search projects..."
+                  value={projectSearch}
+                  onChange={(e) => setProjectSearch(e.target.value)}
+                  className={`bg-transparent outline-none ml-2 w-full text-sm ${
+                    darkMode
+                      ? "text-white placeholder:text-gray-300"
+                      : "text-gray-700 placeholder:text-gray-400"
+                  }`}
+                />
+              </div>
+
               <select
                 name="project"
                 value={formData.project}
@@ -214,24 +328,60 @@ const handleSubmit = (e) => {
                 className={`${inputClass} cursor-pointer`}
               >
                 <option value="">Select project</option>
-                {projectOptions.map((project) => (
+                {filteredProjects.map((project) => (
                   <option key={project} value={project}>
                     {project}
                   </option>
                 ))}
               </select>
+
               {errors.project && (
                 <p className="text-red-500 text-xs mt-1">{errors.project}</p>
               )}
             </div>
           </div>
 
-          {/* Assign To */}
           <div>
-            <label className="block text-sm font-semibold mb-2">
-              Assign To{" "}
-              <span className="text-gray-400 font-normal">(1 person)</span>
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-semibold">
+                Assign To{" "}
+                <span className="text-gray-400 font-normal">
+                  ({filteredEmployees.length} person
+                  {filteredEmployees.length !== 1 ? "s" : ""})
+                </span>
+              </label>
+
+              {(userRole === "Admin" || userRole === "Manager") && (
+                <button
+                  type="button"
+                  onClick={() => setShowAddEmployee(true)}
+                  className="text-sm text-[#0f766e] font-medium hover:underline cursor-pointer"
+                >
+                  + Add Employee
+                </button>
+              )}
+            </div>
+
+            <div
+              className={`flex items-center px-4 py-3 rounded-xl w-full lg:w-96 border mb-4 ${
+                darkMode
+                  ? "bg-gray-700 border-gray-600"
+                  : "bg-gray-50 border-gray-200"
+              }`}
+            >
+              <Search size={16} className="text-gray-500" />
+              <input
+                type="text"
+                placeholder="Search team members..."
+                value={employeeSearch}
+                onChange={(e) => setEmployeeSearch(e.target.value)}
+                className={`bg-transparent outline-none ml-2 w-full text-sm ${
+                  darkMode
+                    ? "text-white placeholder:text-gray-300"
+                    : "text-gray-700 placeholder:text-gray-400"
+                }`}
+              />
+            </div>
 
             <div
               className={`p-4 rounded-2xl border ${
@@ -240,35 +390,55 @@ const handleSubmit = (e) => {
                   : "bg-gray-50 border-gray-200"
               }`}
             >
-              <div className="flex flex-wrap gap-3">
-                {teamMembers.map((member) => {
-                  const isSelected = formData.assignee === member.name;
+              {filteredEmployees.length > 0 ? (
+                <div className="flex flex-wrap gap-3">
+                  {filteredEmployees.map((m) => {
+                    const isSelected = formData.assignee === m.name;
 
-                  return (
-                    <button
-                      key={member.name}
-                      type="button"
-                      onClick={() => handleAssigneeSelect(member)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition ${
-                        isSelected
-                          ? "border-[#0f766e] bg-[#0f766e]/10"
-                          : darkMode
-                            ? "border-gray-600 bg-gray-800 hover:bg-gray-600"
-                            : "border-gray-200 bg-white hover:bg-gray-100"
-                      }`}
-                    >
-                      <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-300 shrink-0">
-                        <img
-                          src={member.avatar}
-                          alt={member.name}
-                          className="w-full h-full object-cover object-top"
-                        />
-                      </div>
-                      <span className="text-sm">{member.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
+                    return (
+                      <button
+                        key={m.email}
+                        type="button"
+                        onClick={() => handleAssigneeSelect(m)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition ${
+                          isSelected
+                            ? "border-[#0f766e] bg-[#0f766e]/10"
+                            : darkMode
+                              ? "border-gray-600 bg-gray-800 hover:bg-gray-600"
+                              : "border-gray-200 bg-white hover:bg-gray-100"
+                        }`}
+                      >
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-300 shrink-0">
+                          <img
+                            src={m.avatar}
+                            alt={m.name}
+                            className="w-full h-full object-cover object-top"
+                          />
+                        </div>
+
+                        <div className="flex flex-col text-left">
+                          <span className="text-sm font-medium">{m.name}</span>
+                          <span
+                            className={`text-xs ${
+                              darkMode ? "text-gray-300" : "text-gray-500"
+                            }`}
+                          >
+                            {m.role}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p
+                  className={`text-sm ${
+                    darkMode ? "text-gray-300" : "text-gray-500"
+                  }`}
+                >
+                  No team members found
+                </p>
+              )}
             </div>
 
             {errors.assignee && (
@@ -276,82 +446,22 @@ const handleSubmit = (e) => {
             )}
           </div>
 
-          {/* Row 2 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Due Date */}
-            <div>
-              <label className="block text-sm font-semibold mb-2">
-                Due Date <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  name="dueDate"
-                  value={formData.dueDate}
-                  onChange={handleChange}
-                  className={`${inputClass} pr-10`}
-                />
-                <CalendarDays
-                  size={18}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                />
-              </div>
-              {errors.dueDate && (
-                <p className="text-red-500 text-xs mt-1">{errors.dueDate}</p>
-              )}
-            </div>
-
-            {/* Priority */}
-            <div className="relative">
-              <label className="block text-sm font-semibold mb-2">
-                Priority
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowPriorityDropdown((prev) => !prev)}
-                className={`w-full px-4 py-3 rounded-xl border flex items-center justify-between cursor-pointer ${
-                  darkMode
-                    ? "bg-gray-700 border-gray-600 text-white"
-                    : "bg-white border-gray-200 text-black"
-                }`}
-              >
-                <span>{formData.priority}</span>
-                <ChevronDown size={18} className="text-gray-400" />
-              </button>
-
-              {showPriorityDropdown && (
-                <div
-                  className={`absolute top-full left-0 mt-2 w-full rounded-2xl shadow-lg border z-20 overflow-hidden ${
-                    darkMode
-                      ? "bg-gray-800 border-gray-700"
-                      : "bg-white border-gray-200"
-                  }`}
-                >
-                  {priorityOptions.map((priority) => (
-                    <button
-                      key={priority}
-                      type="button"
-                      onClick={() => handlePrioritySelect(priority)}
-                      className={`w-full px-4 py-3 flex items-center justify-between text-left cursor-pointer ${
-                        formData.priority === priority
-                          ? darkMode
-                            ? "bg-gray-700"
-                            : "bg-orange-50"
-                          : darkMode
-                            ? "hover:bg-gray-700"
-                            : "hover:bg-gray-50"
-                      }`}
-                    >
-                      <span>{priority}</span>
-                      {formData.priority === priority && <Check size={16} />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+          <div>
+            <label className="block text-sm font-semibold mb-2">
+              Due Date <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              name="dueDate"
+              value={formData.dueDate}
+              onChange={handleChange}
+              className={inputClass}
+            />
+            {errors.dueDate && (
+              <p className="text-red-500 text-xs mt-1">{errors.dueDate}</p>
+            )}
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-sm font-semibold mb-2">
               Description
@@ -366,22 +476,14 @@ const handleSubmit = (e) => {
             />
           </div>
 
-          {/* Footer */}
           <div
-            className={`flex items-center gap-4 pt-6 border-t ${
+            className={`flex items-center justify-end gap-4 pt-6 border-t ${
               darkMode ? "border-gray-700" : "border-gray-200"
             }`}
           >
             <button
-              type="submit"
-              className="px-6 py-3 rounded-xl bg-[#0f766e] text-white font-medium cursor-pointer hover:opacity-90"
-            >
-              Create Task
-            </button>
-
-            <button
               type="button"
-              onClick={() => onClose?.()}
+              onClick={onClose}
               className={`px-6 py-3 rounded-xl font-medium cursor-pointer ${
                 darkMode
                   ? "bg-gray-700 text-white hover:bg-gray-600"
@@ -389,6 +491,12 @@ const handleSubmit = (e) => {
               }`}
             >
               Cancel
+            </button>
+            <button
+              type="submit"
+              className="bg-[#0f766e] text-white px-6 py-3 rounded-xl cursor-pointer hover:opacity-90"
+            >
+              Create Task
             </button>
           </div>
         </form>

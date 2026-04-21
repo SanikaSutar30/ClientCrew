@@ -1,10 +1,6 @@
 import { X, Mail, Phone, CalendarDays, BadgeCheck } from "lucide-react";
 
-export default function ViewCustomer({
-  darkMode,
-  customer,
-  setShowViewModal,
-}) {
+export default function ViewCustomer({ darkMode, customer, setShowViewModal }) {
   const getStatusClasses = (status) => {
     switch (status) {
       case "Active":
@@ -28,8 +24,9 @@ export default function ViewCustomer({
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold">Customer Details</h2>
           <button
+            type="button"
             onClick={() => setShowViewModal(false)}
-            className="p-2 rounded-lg text-gray-500 hover:text-red-500 text-xl cursor-pointer"
+            className="p-2 rounded-lg text-gray-500 hover:text-red-500 hover:bg-gray-100/10 text-xl cursor-pointer"
           >
             <X size={20} />
           </button>
@@ -43,7 +40,7 @@ export default function ViewCustomer({
           }`}
         >
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-            <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-300 shrink-0 border border-gray-400 cursor-pointer">
+            <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-300 shrink-0 border border-gray-400">
               <img
                 src={customer.image}
                 alt={customer.name}
@@ -119,8 +116,9 @@ export default function ViewCustomer({
 
               <div className="flex justify-end">
                 <button
+                  type="button"
                   onClick={() => setShowViewModal(false)}
-                  className="px-4 py-2 rounded-xl bg-[#0f766e] text-white cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-[#0f766e] text-white cursor-pointer hover:opacity-90"
                 >
                   Close
                 </button>

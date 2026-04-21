@@ -10,20 +10,37 @@ import { useOutletContext } from "react-router-dom";
 import SettingsMessageModal from "./SettingsMessageModal";
 
 export default function MyProfile() {
-  const { darkMode } = useOutletContext();
+  const { darkMode, userRole } = useOutletContext();
+
+  const savedUser = JSON.parse(localStorage.getItem("user")) || {};
+
+  const roleLabelMap = {
+    Admin: "Administrator",
+    Manager: "Manager",
+    Employee: "Employee",
+    Customer: "Customer",
+  };
+
+  const profileIdMap = {
+    Admin: "ADM-001",
+    Manager: "MNG-001",
+    Employee: "EMP-001",
+    Customer: "CUS-001",
+  };
 
   const [isEditing, setIsEditing] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [profileData, setProfileData] = useState({
-    id: "ADM-001",
-    name: "Admin Name",
-    email: "admin@company.com",
-    phone: "+91 9876543210",
-    role: "Administrator",
-    status: "Active",
-    joinedDate: "2024-01-10",
-    image: "../assets/Profile.jpg",
+    id: profileIdMap[userRole] || "USR-001",
+    name:
+      savedUser.fullName || savedUser.email?.split("@")[0] || "ClientCrew User",
+    email: savedUser.email || "user@clientcrew.com",
+    phone: savedUser.phone || "+91 9876543210",
+    role: roleLabelMap[userRole] || userRole || "User",
+    status: savedUser.status || "Active",
+    joinedDate: savedUser.joinedDate || "2024-01-10",
+    image: savedUser.image || "../assets/Profile.jpg",
   });
 
   const [editData, setEditData] = useState(profileData);
@@ -114,6 +131,21 @@ export default function MyProfile() {
     }
 
     setProfileData(editData);
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        ...savedUser,
+        fullName: editData.name,
+        email: editData.email,
+        phone: editData.phone,
+        role: userRole,
+        status: editData.status,
+        joinedDate: editData.joinedDate,
+        image: editData.image,
+      }),
+    );
+
     setErrors({});
     setIsEditing(false);
     setShowSuccessModal(true);
@@ -268,17 +300,7 @@ export default function MyProfile() {
                       <span className="text-sm font-medium">Role</span>
                     </div>
 
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        name="role"
-                        value={editData.role}
-                        onChange={handleChange}
-                        className={inputClass}
-                      />
-                    ) : (
-                      <p className="text-sm">{profileData.role}</p>
-                    )}
+                    <p className="text-sm">{profileData.role}</p>
                   </div>
 
                   <div

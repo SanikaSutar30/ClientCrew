@@ -28,21 +28,22 @@ import { CSS } from "@dnd-kit/utilities";
 
 
 // TaskCard Component
-function TaskCard({ task, darkMode, getTagClasses, onDoubleClick }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({
-      id: task.id,
-      data: {
-        type: "task",
-        task,
-      },
-    });
+function TaskCard({ task, darkMode, getTagClasses, onDoubleClick, canDrag }) {
+const { attributes, listeners, setNodeRef, transform, isDragging } =
+  useDraggable({
+    id: task.id,
+    disabled: !canDrag,
+    data: {
+      type: "task",
+      task,
+    },
+  });
 
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.6 : 1,
-    cursor: "grab",
-  };
+const style = {
+  transform: CSS.Translate.toString(transform),
+  opacity: isDragging ? 0.6 : 1,
+  cursor: canDrag ? "grab" : "default",
+};
 
   return (
     <div
@@ -58,7 +59,9 @@ function TaskCard({ task, darkMode, getTagClasses, onDoubleClick }) {
         darkMode
           ? "bg-gray-700 border border-gray-600"
           : "bg-white border border-gray-200"
-      } shadow-sm px-4 py-4 hover:shadow-md transition cursor-pointer`}
+      } shadow-sm px-4 py-4 hover:shadow-md transition ${
+        canDrag ? "cursor-grab" : "cursor-default opacity-95"
+      }`}
     >
       {/* // Task Header */}
       <div className="flex items-start justify-between gap-3">
@@ -186,6 +189,7 @@ function TaskColumn({
   setDefaultStatus,
   setShowAddTask,
   handleViewTask,
+  canDragTask,
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: column.title,
@@ -235,6 +239,7 @@ function TaskColumn({
             darkMode={darkMode}
             getTagClasses={getTagClasses}
             onDoubleClick={handleViewTask}
+            canDrag={canDragTask(task)}
           />
         ))}
       </div>
@@ -259,7 +264,46 @@ function TaskColumn({
 
 export default function Tasks() {
   // Get dark mode state from context
-  const { darkMode } = useOutletContext();
+const { darkMode, userRole } = useOutletContext();
+
+  
+  
+const isAdmin = userRole === "Admin";
+const isManager = userRole === "Manager";
+  const isEmployee = userRole === "Employee";
+  
+  
+  // const canEditTask = (task) => {
+  //   if (isAdmin) return true;
+  //   if (isManager) return task.assignee === loggedInManagerName;
+  //   if (isEmployee) return task.assignee === loggedInEmployeeName;
+  //   return false;
+  // };
+
+  const canEditTask = (task) => {
+    if (isAdmin) return true;
+
+    if (isManager) {
+      return (
+        task.assignee === loggedInManagerName ||
+        managerTeam.includes(task.assignee)
+      );
+    }
+
+    if (isEmployee) {
+      return task.assignee === loggedInEmployeeName;
+    }
+
+    return false;
+  };
+  const loggedInEmployeeName = "Amit Patil";
+  const loggedInManagerName = "Priya Singh";
+  const employeeProjects = [
+    "E-commerce Website",
+    "CRM Platform Enhancement",
+    "Healthcare Management System",
+  ];
+
   // State for selected project filter
   const [selectedProject, setSelectedProject] = useState("All Projects");
 
@@ -282,17 +326,26 @@ export default function Tasks() {
    setShowViewConfirm(true);
  };
 
-  const handleEditTask = (task) => {
-    setSelectedTask(task);
-    setShowViewTask(false);
-    setShowEditTask(true);
-  };
+const handleEditTask = (task) => {
+  if (!canEditTask(task)) return;
 
-  const handleDeleteClick = (task) => {
-    setSelectedTask(task);
-    setShowDeleteTask(true);
-  };
+  setSelectedTask(task);
+  setShowViewTask(false);
+  setShowEditTask(true);
+};
+  
+const handleDeleteClick = (task) => {
+  if (!canEditTask(task)) return;
+
+  setSelectedTask(task);
+  setShowDeleteTask(true);
+};
+  
+
+  
 const handleUpdateTask = (updatedTask) => {
+  if (!canEditTask(updatedTask)) return;
+
   setTasks((prev) =>
     prev.map((task) => (task.id === updatedTask.id ? updatedTask : task)),
   );
@@ -305,11 +358,19 @@ const handleUpdateTask = (updatedTask) => {
   setShowSuccessModal(true);
 };
 
+  
   const handleDeleteTask = (taskId) => {
-    setTasks((prev) => prev.filter((task) => task.id !== taskId));
-    setShowDeleteTask(false);
-    setSelectedTask(null);
-  };
+  const taskToDelete = tasks.find((task) => task.id === taskId);
+
+  if (!taskToDelete || !canEditTask(taskToDelete)) return;
+
+  setTasks((prev) => prev.filter((task) => task.id !== taskId));
+  setShowDeleteTask(false);
+  setSelectedTask(null);
+};
+
+
+
   // Initial tasks data
   const [tasks, setTasks] = useState([
     {
@@ -398,11 +459,37 @@ const handleUpdateTask = (updatedTask) => {
       borderColor: "border-l-emerald-400",
     },
   ]);
+
+  const managerTeam = [
+    "Amit Patil",
+    "Rahul Sharma",
+    "John Doe",
+    "Jennifer Brown",
+  
+  ];
+
+const visibleTasks =
+  userRole === "Admin"
+    ? tasks
+    : userRole === "Manager"
+      ? tasks.filter(
+          (task) =>
+            task.assignee === loggedInManagerName ||
+            managerTeam.includes(task.assignee),
+        )
+      : userRole === "Employee"
+        ? tasks.filter(
+            (task) =>
+              task.assignee === loggedInEmployeeName &&
+              employeeProjects.includes(task.project),
+          )
+        : [];
+  
   // Filter tasks based on selected project
   const filteredTasks =
     selectedProject === "All Projects"
-      ? tasks
-      : tasks.filter((task) => task.project === selectedProject);
+      ? visibleTasks
+      : visibleTasks.filter((task) => task.project === selectedProject);
 
   // Column definitions with colors and badge styles
   const columns = [
@@ -433,6 +520,10 @@ const handleUpdateTask = (updatedTask) => {
     },
   ];
 
+  const projectOptions = [
+    "All Projects",
+    ...new Set(visibleTasks.map((task) => task.project)),
+  ];
   // Function to get tag classes based on tag type
   const getTagClasses = (tag) => {
     switch (tag) {
@@ -479,26 +570,29 @@ const handleUpdateTask = (updatedTask) => {
  };
 
   // Handle drag end event to update task status
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
+const handleDragEnd = (event) => {
+  const { active, over } = event;
 
-    if (!over) return;
+  if (!over) return;
 
-    const taskId = String(active.id);
-    const newStatus = String(over.id);
+  const taskId = String(active.id);
+  const newStatus = String(over.id);
 
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              status: newStatus,
-              borderColor: getBorderColorByStatus(newStatus),
-            }
-          : task,
-      ),
-    );
-  };
+  const draggedTask = tasks.find((task) => task.id === taskId);
+  if (!draggedTask || !canEditTask(draggedTask)) return;
+
+  setTasks((prev) =>
+    prev.map((task) =>
+      task.id === taskId
+        ? {
+            ...task,
+            status: newStatus,
+            borderColor: getBorderColorByStatus(newStatus),
+          }
+        : task,
+    ),
+  );
+};
 
   return (
     <div className="space-y-6">
@@ -508,6 +602,7 @@ const handleUpdateTask = (updatedTask) => {
           onClose={() => setShowAddTask(false)}
           onAddTask={handleAddTask}
           defaultStatus={defaultStatus}
+          userRole={userRole}
         />
       )}
       {showViewTask && selectedTask && (
@@ -517,6 +612,7 @@ const handleUpdateTask = (updatedTask) => {
           setShowViewTask={setShowViewTask}
           onEditTask={handleEditTask}
           onDeleteTask={handleDeleteClick}
+          userRole={userRole}
         />
       )}
 
@@ -526,6 +622,7 @@ const handleUpdateTask = (updatedTask) => {
           task={selectedTask}
           setShowEditTask={setShowEditTask}
           onUpdateTask={handleUpdateTask}
+          userRole={userRole}
         />
       )}
 
@@ -537,6 +634,7 @@ const handleUpdateTask = (updatedTask) => {
           setShowDeleteTask={setShowDeleteTask}
           onDeleteTask={handleDeleteTask}
           setShowViewTask={setShowViewTask}
+          userRole={userRole}
         />
       )}
 
@@ -593,24 +691,13 @@ const handleUpdateTask = (updatedTask) => {
                 : "bg-white border-gray-200 text-gray-700"
             }`}
           >
-            {/* // Project Filter Options */}
-            <option value="All Projects">All Projects</option>
-            <option value="E-commerce Website">E-commerce Website</option>
-            <option value="Mobile App Development">
-              Mobile App Development
-            </option>
-            <option value="CRM Platform Enhancement">
-              CRM Platform Enhancement
-            </option>
-            <option value="Digital Marketing Campaign">
-              Digital Marketing Campaign
-            </option>
-            <option value="Healthcare Management System">
-              Healthcare Management System
-            </option>
+            {projectOptions.map((project) => (
+              <option key={project} value={project}>
+                {project}
+              </option>
+            ))}
           </select>
 
-          {/* // New Task Button */}
           <button
             onClick={() => {
               setDefaultStatus("To Do");
@@ -644,6 +731,7 @@ const handleUpdateTask = (updatedTask) => {
                   setDefaultStatus={setDefaultStatus}
                   setShowAddTask={setShowAddTask}
                   handleViewTask={handleViewTask}
+                  canDragTask={canEditTask}
                 />
               );
             })}
