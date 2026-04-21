@@ -24,7 +24,12 @@ import {
 } from "@dnd-kit/core";
 // Utilities
 import { CSS } from "@dnd-kit/utilities";
-// TODO: Improve task filtering
+import {
+  getAllTasks,
+  addTask,
+  updateTask,
+  deleteTask,
+} from "../../services/taskService";
 
 
 // TaskCard Component
@@ -272,13 +277,6 @@ const isAdmin = userRole === "Admin";
 const isManager = userRole === "Manager";
   const isEmployee = userRole === "Employee";
   
-  
-  // const canEditTask = (task) => {
-  //   if (isAdmin) return true;
-  //   if (isManager) return task.assignee === loggedInManagerName;
-  //   if (isEmployee) return task.assignee === loggedInEmployeeName;
-  //   return false;
-  // };
 
   const canEditTask = (task) => {
     if (isAdmin) return true;
@@ -296,6 +294,7 @@ const isManager = userRole === "Manager";
 
     return false;
   };
+  
   const loggedInEmployeeName = "Amit Patil";
   const loggedInManagerName = "Priya Singh";
   const employeeProjects = [
@@ -346,9 +345,13 @@ const handleDeleteClick = (task) => {
 const handleUpdateTask = (updatedTask) => {
   if (!canEditTask(updatedTask)) return;
 
-  setTasks((prev) =>
-    prev.map((task) => (task.id === updatedTask.id ? updatedTask : task)),
-  );
+  const taskToUpdate = {
+    ...updatedTask,
+    borderColor: getBorderColorByStatus(updatedTask.status),
+  };
+
+  updateTask(taskToUpdate);
+  setTasks(getAllTasks());
 
   setShowEditTask(false);
   setSelectedTask(null);
@@ -359,106 +362,20 @@ const handleUpdateTask = (updatedTask) => {
 };
 
   
-  const handleDeleteTask = (taskId) => {
-  const taskToDelete = tasks.find((task) => task.id === taskId);
+ const handleDeleteTask = (taskId) => {
+   const taskToDelete = tasks.find((task) => task.id === taskId);
 
-  if (!taskToDelete || !canEditTask(taskToDelete)) return;
+   if (!taskToDelete || !canEditTask(taskToDelete)) return;
 
-  setTasks((prev) => prev.filter((task) => task.id !== taskId));
-  setShowDeleteTask(false);
-  setSelectedTask(null);
-};
-
+   deleteTask(taskId);
+   setTasks(getAllTasks());
+   setShowDeleteTask(false);
+   setSelectedTask(null);
+ };
 
 
   // Initial tasks data
-  const [tasks, setTasks] = useState([
-    {
-      id: "1",
-      title: "Design homepage mockup",
-      assignee: "Priya Singh",
-      avatar: "../assets/Profile.jpg",
-      dueDate: "Apr 25",
-      status: "To Do",
-      project: "E-commerce Website",
-      borderColor: "border-l-blue-400",
-    },
-    {
-      id: "2",
-      title: "Research competitors",
-      assignee: "Rahul Sharma",
-      avatar: "../assets/Profile2.jpg",
-      dueDate: "Apr 26",
-      status: "To Do",
-      project: "CRM Platform Enhancement",
-      borderColor: "border-l-blue-400",
-    },
-    {
-      id: "3",
-      title: "Develop user authentication",
-      assignee: "John Doe",
-      avatar: "../assets/Profile3.jpg",
-      dueDate: "Apr 28",
-      status: "In Progress",
-      project: "Mobile App Development",
-      tag: "Development",
-      progress: 60,
-      subtasks: "3 / 5",
-      borderColor: "border-l-amber-400",
-    },
-    {
-      id: "4",
-      title: "Create marketing plan",
-      assignee: "Jennifer Brown",
-      avatar: "../assets/Profile4.jpg",
-      dueDate: "May 5",
-      status: "Review",
-      project: "Digital Marketing Campaign",
-      tag: "Marketing",
-      borderColor: "border-l-purple-400",
-    },
-    {
-      id: "5",
-      title: "Fix payment issue",
-      assignee: "Amit Patil",
-      avatar: "../assets/Profile5.jpg",
-      dueDate: "May 1",
-      status: "Blocked",
-      project: "E-commerce Website",
-      tag: "Critical",
-      borderColor: "border-l-red-400",
-    },
-    {
-      id: "6",
-      title: "Finalize logo design",
-      assignee: "Jennifer Brown",
-      avatar: "../assets/Profile6.jpg",
-      dueDate: "Apr 20",
-      status: "Done",
-      project: "Healthcare Management System",
-      borderColor: "border-l-emerald-400",
-    },
-    {
-      id: "7",
-      title: "Write unit tests",
-      assignee: "Priya Singh",
-      avatar: "../assets/Profile.jpg",
-      dueDate: "May 3",
-      status: "In Progress",
-      project: "Healthcare Management System",
-      borderColor: "border-l-amber-400",
-    },
-    {
-      id: "8",
-      title: "Set up web hosting",
-      assignee: "Priya Singh",
-      avatar: "../assets/Profile.jpg",
-      dueDate: "Apr 22",
-      status: "Done",
-      project: "E-commerce Website",
-      borderColor: "border-l-emerald-400",
-    },
-  ]);
+const [tasks, setTasks] = useState(getAllTasks());
 
   const managerTeam = [
     "Amit Patil",
@@ -524,6 +441,7 @@ const visibleTasks =
     "All Projects",
     ...new Set(visibleTasks.map((task) => task.project)),
   ];
+
   // Function to get tag classes based on tag type
   const getTagClasses = (tag) => {
     switch (tag) {
@@ -555,20 +473,19 @@ const visibleTasks =
     }
   };
 
- const handleAddTask = (newTask) => {
-   setTasks((prev) => [
-     {
-       ...newTask,
-       borderColor: getBorderColorByStatus(newTask.status),
-     },
-     ...prev,
-   ]);
+const handleAddTask = (newTask) => {
+  const taskToAdd = {
+    ...newTask,
+    borderColor: getBorderColorByStatus(newTask.status),
+  };
 
-   setSuccessTitle("Task Created!");
-   setSuccessMessage("Your task has been created successfully.");
-   setShowSuccessModal(true);
- };
+  addTask(taskToAdd);
+  setTasks(getAllTasks());
 
+  setSuccessTitle("Task Created!");
+  setSuccessMessage("Your task has been created successfully.");
+  setShowSuccessModal(true);
+};
   // Handle drag end event to update task status
 const handleDragEnd = (event) => {
   const { active, over } = event;
@@ -578,20 +495,17 @@ const handleDragEnd = (event) => {
   const taskId = String(active.id);
   const newStatus = String(over.id);
 
-  const draggedTask = tasks.find((task) => task.id === taskId);
+  const draggedTask = tasks.find((task) => String(task.id) === taskId);
   if (!draggedTask || !canEditTask(draggedTask)) return;
 
-  setTasks((prev) =>
-    prev.map((task) =>
-      task.id === taskId
-        ? {
-            ...task,
-            status: newStatus,
-            borderColor: getBorderColorByStatus(newStatus),
-          }
-        : task,
-    ),
-  );
+  const updatedTask = {
+    ...draggedTask,
+    status: newStatus,
+    borderColor: getBorderColorByStatus(newStatus),
+  };
+
+  updateTask(updatedTask);
+  setTasks(getAllTasks());
 };
 
   return (
