@@ -86,7 +86,6 @@ export default function CustomerReports({ darkMode }) {
     {
       title: "My Projects",
       value: "3",
-      change: "+1",
       icon: FolderKanban,
       iconBg: "bg-blue-100",
       iconColor: "text-blue-600",
@@ -95,7 +94,6 @@ export default function CustomerReports({ darkMode }) {
     {
       title: "Completed Milestones",
       value: "14",
-      change: "+3",
       icon: CheckCircle2,
       iconBg: "bg-green-100",
       iconColor: "text-green-600",
@@ -104,7 +102,6 @@ export default function CustomerReports({ darkMode }) {
     {
       title: "Pending Milestones",
       value: "5",
-      change: "-1",
       icon: Clock3,
       iconBg: "bg-orange-100",
       iconColor: "text-orange-600",
@@ -113,7 +110,6 @@ export default function CustomerReports({ darkMode }) {
     {
       title: "Total Billing",
       value: "₹95,000",
-      change: "+12%",
       icon: CircleDollarSign,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
@@ -149,6 +145,7 @@ export default function CustomerReports({ darkMode }) {
         </p>
       </div>
 
+      {/* cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {customerStats.map((item) => {
           const Icon = item.icon;
@@ -156,13 +153,14 @@ export default function CustomerReports({ darkMode }) {
           return (
             <div
               key={item.title}
-              className={`p-5 rounded-xl shadow-sm flex items-center justify-between transition hover:scale-[1.02] min-w-0 ${
+              className={`p-5 rounded-2xl shadow-sm hover:shadow-md transition flex items-center justify-between ${
                 darkMode
                   ? "bg-gray-700 border border-gray-600"
-                  : "bg-white border border-gray-200"
+                  : "bg-white border border-gray-100"
               }`}
             >
-              <div className="min-w-0">
+              {/* LEFT */}
+              <div>
                 <p
                   className={`text-sm font-medium ${
                     darkMode ? "text-gray-300" : "text-gray-500"
@@ -171,7 +169,7 @@ export default function CustomerReports({ darkMode }) {
                   {item.title}
                 </p>
 
-                <div className="flex items-end gap-3 mt-4 min-w-0">
+                <div className="flex items-center gap-3 mt-2">
                   <h2
                     className={`text-2xl font-bold ${
                       darkMode ? "text-white" : "text-black"
@@ -180,21 +178,20 @@ export default function CustomerReports({ darkMode }) {
                     {item.value}
                   </h2>
 
-                  <span
-                    className={`text-xs font-semibold px-2 py-1 rounded-md ${item.changeClass}`}
-                  >
-                    {item.change}
-                  </span>
                 </div>
               </div>
 
-              <div className={`p-2 rounded-lg ${item.iconBg}`}>
-                <Icon size={18} className={item.iconColor} />
+              {/* RIGHT ICON */}
+              <div
+                className={`w-12 h-12 flex items-center justify-center rounded-xl ${item.iconBg}`}
+              >
+                <Icon size={22} className={item.iconColor} />
               </div>
             </div>
           );
         })}
       </div>
+      
 
       <div
         className={`p-5 rounded-xl shadow-sm min-w-0 ${
