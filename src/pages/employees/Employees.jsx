@@ -17,8 +17,7 @@ import {
 import AddEmployee from "./AddEmployee";
 import ViewEmployee from "./ViewEmployee";
 import EditEmployee from "./EditEmployee";
-import ConfirmationModal from "../../components/layout/ConfirmationModal";
-
+import { ConfirmationModal } from "../../components/layout";
 export default function Employees() {
   const { darkMode, userRole } = useOutletContext();
 

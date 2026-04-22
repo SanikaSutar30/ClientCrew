@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { Search, Plus, Download, Eye, Pencil, Trash2 } from "lucide-react";
+import { Search, Plus, Eye, Pencil, Trash2 } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
+
 import AddCustomer from "./AddCustomer";
 import EditCustomer from "./EditCustomer";
 import ViewCustomer from "./ViewCustomer";
-import ConfirmationModal from "../../components/layout/ConfirmationModal";
+
+import { ConfirmationModal } from "../../components/layout";
+
 import {
   getAllCustomers,
   addCustomer,
@@ -21,7 +24,8 @@ export default function Customers() {
   // Temporary logged-in employee id for frontend role testing
   const loggedInEmployeeId = "emp1";
 
-const [customers, setCustomers] = useState(getAllCustomers());
+  const [customers, setCustomers] = useState(getAllCustomers());
+
   // Temporary project data for role-based filtering
   const projects = [
     {
@@ -86,7 +90,7 @@ const [customers, setCustomers] = useState(getAllCustomers());
     if (!canManageCustomers) return;
 
     setPendingCustomer({
-      id: customers.length + 1,
+      id: Math.max(...customers.map((c) => c.id), 0) + 1,
       ...newCustomer,
     });
     setShowAddConfirmModal(true);
@@ -154,15 +158,15 @@ const [customers, setCustomers] = useState(getAllCustomers());
   };
 
   const confirmUpdateCustomer = () => {
-   if (!pendingEditCustomer || !canManageCustomers) return;
+    if (!pendingEditCustomer || !canManageCustomers) return;
 
-   updateCustomer(pendingEditCustomer);
-   setCustomers(getAllCustomers());
+    updateCustomer(pendingEditCustomer);
+    setCustomers(getAllCustomers());
 
-   setShowEditConfirm(false);
-   setShowEditModal(false);
-   setSelectedCustomer(null);
-   setPendingEditCustomer(null);
+    setShowEditConfirm(false);
+    setShowEditModal(false);
+    setSelectedCustomer(null);
+    setPendingEditCustomer(null);
   };
 
   const cancelUpdateCustomer = () => {
@@ -204,9 +208,9 @@ const [customers, setCustomers] = useState(getAllCustomers());
 
       const matchesSearch =
         customer.id.toString().includes(searchTerm) ||
-        customer.name.toLowerCase().includes(search) ||
-        customer.email.toLowerCase().includes(search) ||
-        customer.phone.includes(searchTerm);
+        customer.name?.toLowerCase().includes(search) ||
+        customer.email?.toLowerCase().includes(search) ||
+        customer.phone?.includes(searchTerm);
 
       const matchesStatus =
         statusFilter === "All" || customer.status === statusFilter;
@@ -287,7 +291,6 @@ const [customers, setCustomers] = useState(getAllCustomers());
           customer={selectedCustomer}
           setShowEditModal={setShowEditModal}
           onUpdateCustomer={handleUpdateCustomer}
-          
         />
       )}
 
@@ -359,11 +362,13 @@ const [customers, setCustomers] = useState(getAllCustomers());
               darkMode ? "text-gray-300" : "text-gray-500"
             }`}
           >
-            Manage your customers and their information
+            {canManageCustomers
+              ? "Manage your customers and their information"
+              : "View customers related to your assigned projects"}{" "}
           </p>
         </div>
 
-        <div >
+        <div>
           {canManageCustomers && (
             <button
               onClick={() => setShowAddModal(true)}

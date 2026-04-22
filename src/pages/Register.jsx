@@ -11,7 +11,7 @@ import {
   FolderKanban,
   CheckSquare,
 } from "lucide-react";
-import ConfirmationModal from "../components/layout/ConfirmationModal";
+import { ConfirmationModal } from "../components/layout";
 
 const Register = () => {
   const navigate = useNavigate();

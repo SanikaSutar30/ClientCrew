@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useOutletContext, useLocation } from "react-router-dom";
 import { Search, Send, Plus, Pencil, Trash2 } from "lucide-react";
-import ConfirmationModal from "../../components/layout/ConfirmationModal";
+import { ConfirmationModal } from "../../components/layout";
 
 const initialChats = [
   {

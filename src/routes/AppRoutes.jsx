@@ -1,53 +1,43 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Layout from "../components/layout/Layout";
-import Landing from "../pages/Landing";
+import { Layout, ProtectedRoute } from "../components/layout";
+import {
+  Landing,
+  Login,
+  Register,
+  Dashboard,
+  Customers,
+  AddCustomer,
+  EditCustomer,
+  DeleteCustomer,
+  ViewCustomer,
+  Projects,
+  Tasks,
+  Employees,
+  Reports,
+  Notifications,
+  Settings,
+  MyProfile,
+  HelpSupport,
+  Messages,
+  UsersPage,
+} from "../pages";
 
-// Main Pages
-import Dashboard from "../pages/Dashboard";
-import Customers from "../pages/customers/Customers";
-import Projects from "../pages/projects/Projects";
-import Tasks from "../pages/tasks/Tasks";
-import Employees from "../pages/employees/Employees";
-import Reports from "../pages/reports/Reports";
-import Notifications from "../pages/Notifications";
-import Settings from "../pages/Settings";
-import Register from "../pages/Register";
-import Login from "../pages/Login";
-import MyProfile from "../pages/MyProfile";
-import HelpSupport from "../pages/HelpSupport";
-import Messages from "../pages/messages/Messages";
-import UsersPage from "../pages/users/UsersPage";
-
-// Customer Actions
-import AddCustomer from "../pages/customers/AddCustomer";
-import EditCustomer from "../pages/customers/EditCustomer";
-import DeleteCustomer from "../pages/customers/DeleteCustomer";
-import ViewCustomer from "../pages/customers/ViewCustomer";
-
-// Project Actions
-import AddProject from "../pages/projects/AddProject";
-import EditProject from "../pages/projects/EditProject";
-import ViewProject from "../pages/projects/ViewProject";
-import ProjectSettings from "../pages/projects/ProjectSettings";
-
-import ProtectedRoute from "../components/layout/ProtectedRoute";
 import { routeAccess } from "../utils/roleAccess";
 
 export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Landing Page */}
+        {/* Public Routes */}
         <Route path="/" element={<Landing />} />
         <Route path="/landing" element={<Landing />} />
-
-        {/* Auth */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Main Layout */}
+        {/* Protected App Routes */}
         <Route element={<Layout />}>
+          {/* Dashboard */}
           <Route
             path="/dashboard"
             element={
@@ -108,38 +98,6 @@ export default function AppRoutes() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/projects/settings"
-            element={
-              <ProtectedRoute allowedRoles={routeAccess.projects}>
-                <ProjectSettings />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/projects/add"
-            element={
-              <ProtectedRoute allowedRoles={routeAccess.projects}>
-                <AddProject />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/projects/edit/:id"
-            element={
-              <ProtectedRoute allowedRoles={routeAccess.projects}>
-                <EditProject />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/projects/view/:id"
-            element={
-              <ProtectedRoute allowedRoles={routeAccess.projects}>
-                <ViewProject />
-              </ProtectedRoute>
-            }
-          />
 
           {/* Tasks */}
           <Route
@@ -181,7 +139,7 @@ export default function AppRoutes() {
             }
           />
 
-          {/* Others */}
+          {/* Reports */}
           <Route
             path="/reports"
             element={
@@ -190,6 +148,8 @@ export default function AppRoutes() {
               </ProtectedRoute>
             }
           />
+
+          {/* Notifications */}
           <Route
             path="/notifications"
             element={
@@ -198,6 +158,8 @@ export default function AppRoutes() {
               </ProtectedRoute>
             }
           />
+
+          {/* Settings */}
           <Route
             path="/settings"
             element={
@@ -206,6 +168,8 @@ export default function AppRoutes() {
               </ProtectedRoute>
             }
           />
+
+          {/* My Profile */}
           <Route
             path="/my-profile"
             element={
@@ -214,6 +178,8 @@ export default function AppRoutes() {
               </ProtectedRoute>
             }
           />
+
+          {/* Help Support */}
           <Route
             path="/help-support"
             element={

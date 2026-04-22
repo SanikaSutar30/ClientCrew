@@ -1,8 +1,5 @@
-import React, { useState } from "react";
-import { useOutletContext } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
-import AddTask from "../tasks/AddTask";
-import ConfirmationModal from "../../components/layout/ConfirmationModal";
+import { useState } from "react";
+import { useOutletContext, useNavigate } from "react-router-dom";
 
 import {
   Users,
@@ -21,11 +18,21 @@ import {
   Settings,
   LayoutGrid,
 } from "lucide-react";
+
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-// Components
+
+// Project Components (modals/cards)
 import AddProject from "./AddProject";
 import EditProject from "./EditProject";
 import ViewProject from "./ViewProject";
+
+// Task Component (modal)
+import AddTask from "../tasks/AddTask";
+
+// Common Components
+import { ConfirmationModal } from "../../components/layout";
+
+// Services
 import {
   getAllProjects,
   addProject,
@@ -77,8 +84,7 @@ export default function Projects() {
     setShowSuccessModal(true);
   };
 
-
-const [projects, setProjects] = useState(getAllProjects());
+  const [projects, setProjects] = useState(getAllProjects());
   // Filters and pagination state
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -90,29 +96,29 @@ const [projects, setProjects] = useState(getAllProjects());
   const itemsPerPage = 6;
 
   // Handlers
-const handleAddProject = (newProject) => {
-  if (!canManageProjects) return;
+  const handleAddProject = (newProject) => {
+    if (!canManageProjects) return;
 
-  const projectToAdd = {
-    icon: newProject.icon || "P",
-    iconColor: newProject.iconColor || "bg-teal-500",
-    projectName: newProject.projectName,
-    clientName: newProject.clientName,
-    startDate: newProject.startDate,
-    dueDate: newProject.dueDate,
-    status: newProject.status,
-    progress: Number(newProject.progress || 0),
-    assignedEmployees: newProject.assignedEmployees || [],
+    const projectToAdd = {
+      icon: newProject.icon || "P",
+      iconColor: newProject.iconColor || "bg-teal-500",
+      projectName: newProject.projectName,
+      clientName: newProject.clientName,
+      startDate: newProject.startDate,
+      dueDate: newProject.dueDate,
+      status: newProject.status,
+      progress: Number(newProject.progress || 0),
+      assignedEmployees: newProject.assignedEmployees || [],
+    };
+
+    addProject(projectToAdd);
+    setProjects(getAllProjects());
+    setShowAdd(false);
+
+    setSuccessTitle("Project Created!");
+    setSuccessMessage("Your project has been created successfully.");
+    setShowSuccessModal(true);
   };
-
-  addProject(projectToAdd);
-  setProjects(getAllProjects());
-  setShowAdd(false);
-
-  setSuccessTitle("Project Created!");
-  setSuccessMessage("Your project has been created successfully.");
-  setShowSuccessModal(true);
-};
   //  Open edit modal
   const handleEditClick = (project) => {
     if (!canManageProjects) return;
@@ -131,29 +137,29 @@ const handleAddProject = (newProject) => {
   };
 
   // Update selected project
-const handleUpdateProject = (updatedProject) => {
-  if (!canManageProjects) return;
+  const handleUpdateProject = (updatedProject) => {
+    if (!canManageProjects) return;
 
-  updateProject(updatedProject);
-  setProjects(getAllProjects());
+    updateProject(updatedProject);
+    setProjects(getAllProjects());
 
-  setShowEdit(false);
-  setSelectedProject(null);
+    setShowEdit(false);
+    setSelectedProject(null);
 
-  setSuccessTitle("Project Updated!");
-  setSuccessMessage("Your project has been updated successfully.");
-  setShowSuccessModal(true);
-};
+    setSuccessTitle("Project Updated!");
+    setSuccessMessage("Your project has been updated successfully.");
+    setShowSuccessModal(true);
+  };
 
   // Delete selected project
-const handleDeleteProject = (projectId) => {
-  if (!canManageProjects) return;
+  const handleDeleteProject = (projectId) => {
+    if (!canManageProjects) return;
 
-  deleteProject(projectId);
-  setProjects(getAllProjects());
-  setShowDeleteConfirm(false);
-  setSelectedProject(null);
-};
+    deleteProject(projectId);
+    setProjects(getAllProjects());
+    setShowDeleteConfirm(false);
+    setSelectedProject(null);
+  };
 
   // Open view modal
   const handleViewClick = (project) => {
@@ -1140,7 +1146,7 @@ const handleDeleteProject = (projectId) => {
                   </div>
                   <p
                     className={`font-medium ${
-                      darkMode ? "text-white" : "text-black" 
+                      darkMode ? "text-white" : "text-black"
                     }`}
                   >
                     View Team

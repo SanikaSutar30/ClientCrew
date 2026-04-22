@@ -10,10 +10,12 @@ import {
   CheckSquare,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import ConfirmationModal from "../components/layout/ConfirmationModal";
+import { ConfirmationModal } from "../components/layout";
+import ForgotPassword from "./ForgotPassword";
 
 function Login() {
   const navigate = useNavigate();
+  const [showForgotModal, setShowForgotModal] = useState(false);
 
   const [role, setRole] = useState("");
   const [showLoginSuccess, setShowLoginSuccess] = useState(false);
@@ -104,6 +106,9 @@ function Login() {
 
   return (
     <div className="min-h-screen bg-[#eef2f7]">
+      {showForgotModal && (
+        <ForgotPassword setShowForgotModal={setShowForgotModal} />
+      )}
       <div className="h-screen grid lg:grid-cols-2 overflow-hidden">
         {" "}
         {/* Left Branding Section */}
@@ -271,12 +276,13 @@ function Login() {
                 </div>
 
                 {/* Forgot Password */}
-                <p
-                  onClick={() => navigate("/forgot-password")}
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(true)}
                   className="text-right text-sm text-gray-500 mb-3 cursor-pointer hover:text-[#0f766e] hover:underline transition"
                 >
                   Forgot password?
-                </p>
+                </button>
 
                 {/* Role */}
                 <div className="mb-3">

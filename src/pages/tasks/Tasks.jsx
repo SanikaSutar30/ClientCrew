@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
+
+// Task Components (modals/cards)
 import ViewTask from "./ViewTask";
 import AddTask from "./AddTask";
 import EditTask from "./EditTask";
-import DeleteTask from "./DeleteTask";
-import ConfirmationModal from "../../components/layout/ConfirmationModal";
+
+// Common Components
+import { ConfirmationModal } from "../../components/layout";
+
 // Icons
 import {
   Plus,
@@ -15,15 +19,17 @@ import {
   ShieldAlert,
   ClipboardCheck,
 } from "lucide-react";
-// DnD Kit
+
+// Drag & Drop
 import {
   DndContext,
   closestCorners,
   useDraggable,
   useDroppable,
 } from "@dnd-kit/core";
-// Utilities
 import { CSS } from "@dnd-kit/utilities";
+
+// Services
 import {
   getAllTasks,
   addTask,
@@ -31,24 +37,23 @@ import {
   deleteTask,
 } from "../../services/taskService";
 
-
 // TaskCard Component
 function TaskCard({ task, darkMode, getTagClasses, onDoubleClick, canDrag }) {
-const { attributes, listeners, setNodeRef, transform, isDragging } =
-  useDraggable({
-    id: task.id,
-    disabled: !canDrag,
-    data: {
-      type: "task",
-      task,
-    },
-  });
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: task.id,
+      disabled: !canDrag,
+      data: {
+        type: "task",
+        task,
+      },
+    });
 
-const style = {
-  transform: CSS.Translate.toString(transform),
-  opacity: isDragging ? 0.6 : 1,
-  cursor: canDrag ? "grab" : "default",
-};
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.6 : 1,
+    cursor: canDrag ? "grab" : "default",
+  };
 
   return (
     <div
@@ -269,14 +274,11 @@ function TaskColumn({
 
 export default function Tasks() {
   // Get dark mode state from context
-const { darkMode, userRole } = useOutletContext();
+  const { darkMode, userRole } = useOutletContext();
 
-  
-  
-const isAdmin = userRole === "Admin";
-const isManager = userRole === "Manager";
+  const isAdmin = userRole === "Admin";
+  const isManager = userRole === "Manager";
   const isEmployee = userRole === "Employee";
-  
 
   const canEditTask = (task) => {
     if (isAdmin) return true;
@@ -294,7 +296,7 @@ const isManager = userRole === "Manager";
 
     return false;
   };
-  
+
   const loggedInEmployeeName = "Amit Patil";
   const loggedInManagerName = "Priya Singh";
   const employeeProjects = [
@@ -320,88 +322,83 @@ const isManager = userRole === "Manager";
   const [showViewConfirm, setShowViewConfirm] = useState(false);
   const [pendingTask, setPendingTask] = useState(null);
 
- const handleViewTask = (task) => {
-   setPendingTask(task);
-   setShowViewConfirm(true);
- };
-
-const handleEditTask = (task) => {
-  if (!canEditTask(task)) return;
-
-  setSelectedTask(task);
-  setShowViewTask(false);
-  setShowEditTask(true);
-};
-  
-const handleDeleteClick = (task) => {
-  if (!canEditTask(task)) return;
-
-  setSelectedTask(task);
-  setShowDeleteTask(true);
-};
-  
-
-  
-const handleUpdateTask = (updatedTask) => {
-  if (!canEditTask(updatedTask)) return;
-
-  const taskToUpdate = {
-    ...updatedTask,
-    borderColor: getBorderColorByStatus(updatedTask.status),
+  const handleViewTask = (task) => {
+    setPendingTask(task);
+    setShowViewConfirm(true);
   };
 
-  updateTask(taskToUpdate);
-  setTasks(getAllTasks());
+  const handleEditTask = (task) => {
+    if (!canEditTask(task)) return;
 
-  setShowEditTask(false);
-  setSelectedTask(null);
+    setSelectedTask(task);
+    setShowViewTask(false);
+    setShowEditTask(true);
+  };
 
-  setSuccessTitle("Task Updated!");
-  setSuccessMessage("Your task has been updated successfully.");
-  setShowSuccessModal(true);
-};
+  const handleDeleteClick = (task) => {
+    if (!canEditTask(task)) return;
 
-  
- const handleDeleteTask = (taskId) => {
-   const taskToDelete = tasks.find((task) => task.id === taskId);
+    setSelectedTask(task);
+    setShowDeleteTask(true);
+  };
 
-   if (!taskToDelete || !canEditTask(taskToDelete)) return;
+  const handleUpdateTask = (updatedTask) => {
+    if (!canEditTask(updatedTask)) return;
 
-   deleteTask(taskId);
-   setTasks(getAllTasks());
-   setShowDeleteTask(false);
-   setSelectedTask(null);
- };
+    const taskToUpdate = {
+      ...updatedTask,
+      borderColor: getBorderColorByStatus(updatedTask.status),
+    };
 
+    updateTask(taskToUpdate);
+    setTasks(getAllTasks());
+
+    setShowEditTask(false);
+    setSelectedTask(null);
+
+    setSuccessTitle("Task Updated!");
+    setSuccessMessage("Your task has been updated successfully.");
+    setShowSuccessModal(true);
+  };
+
+  const handleDeleteTask = (taskId) => {
+    const taskToDelete = tasks.find((task) => task.id === taskId);
+
+    if (!taskToDelete || !canEditTask(taskToDelete)) return;
+
+    deleteTask(taskId);
+    setTasks(getAllTasks());
+    setShowDeleteTask(false);
+    setSelectedTask(null);
+  };
 
   // Initial tasks data
-const [tasks, setTasks] = useState(getAllTasks());
+  const [tasks, setTasks] = useState(getAllTasks());
 
   const managerTeam = [
     "Amit Patil",
     "Rahul Sharma",
     "John Doe",
     "Jennifer Brown",
-  
   ];
 
-const visibleTasks =
-  userRole === "Admin"
-    ? tasks
-    : userRole === "Manager"
-      ? tasks.filter(
-          (task) =>
-            task.assignee === loggedInManagerName ||
-            managerTeam.includes(task.assignee),
-        )
-      : userRole === "Employee"
+  const visibleTasks =
+    userRole === "Admin"
+      ? tasks
+      : userRole === "Manager"
         ? tasks.filter(
             (task) =>
-              task.assignee === loggedInEmployeeName &&
-              employeeProjects.includes(task.project),
+              task.assignee === loggedInManagerName ||
+              managerTeam.includes(task.assignee),
           )
-        : [];
-  
+        : userRole === "Employee"
+          ? tasks.filter(
+              (task) =>
+                task.assignee === loggedInEmployeeName &&
+                employeeProjects.includes(task.project),
+            )
+          : [];
+
   // Filter tasks based on selected project
   const filteredTasks =
     selectedProject === "All Projects"
@@ -473,40 +470,40 @@ const visibleTasks =
     }
   };
 
-const handleAddTask = (newTask) => {
-  const taskToAdd = {
-    ...newTask,
-    borderColor: getBorderColorByStatus(newTask.status),
+  const handleAddTask = (newTask) => {
+    const taskToAdd = {
+      ...newTask,
+      borderColor: getBorderColorByStatus(newTask.status),
+    };
+
+    addTask(taskToAdd);
+    setTasks(getAllTasks());
+
+    setSuccessTitle("Task Created!");
+    setSuccessMessage("Your task has been created successfully.");
+    setShowSuccessModal(true);
   };
-
-  addTask(taskToAdd);
-  setTasks(getAllTasks());
-
-  setSuccessTitle("Task Created!");
-  setSuccessMessage("Your task has been created successfully.");
-  setShowSuccessModal(true);
-};
   // Handle drag end event to update task status
-const handleDragEnd = (event) => {
-  const { active, over } = event;
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
 
-  if (!over) return;
+    if (!over) return;
 
-  const taskId = String(active.id);
-  const newStatus = String(over.id);
+    const taskId = String(active.id);
+    const newStatus = String(over.id);
 
-  const draggedTask = tasks.find((task) => String(task.id) === taskId);
-  if (!draggedTask || !canEditTask(draggedTask)) return;
+    const draggedTask = tasks.find((task) => String(task.id) === taskId);
+    if (!draggedTask || !canEditTask(draggedTask)) return;
 
-  const updatedTask = {
-    ...draggedTask,
-    status: newStatus,
-    borderColor: getBorderColorByStatus(newStatus),
+    const updatedTask = {
+      ...draggedTask,
+      status: newStatus,
+      borderColor: getBorderColorByStatus(newStatus),
+    };
+
+    updateTask(updatedTask);
+    setTasks(getAllTasks());
   };
-
-  updateTask(updatedTask);
-  setTasks(getAllTasks());
-};
 
   return (
     <div className="space-y-6">

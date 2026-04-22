@@ -1,8 +1,17 @@
 import { useState } from "react";
-import { useOutletContext } from "react-router-dom";
-import { Calendar, ChevronDown } from "lucide-react";
-import { Users, UserCheck, Folder, Activity } from "lucide-react";
+import { useNavigate, useOutletContext } from "react-router-dom";
+
+import {
+  Calendar,
+  ChevronDown,
+  Users,
+  UserCheck,
+  Folder,
+  Activity,
+} from "lucide-react";
+
 import AddCustomer from "./customers/AddCustomer";
+
 import {
   LineChart,
   Line,
@@ -11,141 +20,139 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
-import { PieChart, Pie, Cell } from "recharts";
-import { useNavigate } from "react-router-dom";
-
-const dashboardData = {
-  Today: {
-    customers: 5,
-    employees: 2,
-    projects: 1,
-    interactions: 8,
-  },
-  "This Week": {
-    customers: 12,
-    employees: 6,
-    projects: 4,
-    interactions: 25,
-  },
-  "This Month": {
-    customers: 24,
-    employees: 132,
-    projects: 18,
-    interactions: 120,
-  },
-  "This Year": {
-    customers: 120,
-    employees: 300,
-    projects: 80,
-    interactions: 600,
-  },
-};
-
-const customerGrowthData = [
-  { month: "Jan", customers: 70 },
-  { month: "Feb", customers: 120 },
-  { month: "Mar", customers: 140 },
-  { month: "Apr", customers: 160 },
-  { month: "May", customers: 210 },
-  { month: "Jun", customers: 250 },
-];
 
 export default function Dashboard() {
-const outletContext = useOutletContext() || {};
-const darkMode = outletContext.darkMode ?? false;
-    // Modal visibility state
-    const [showAddModal, setShowAddModal] = useState(false);
-
-const [selectedFilter, setSelectedFilter] = useState("This Month");
-const [open, setOpen] = useState(false);
-
-const [customers, setCustomers] = useState([
-  {
-    id: 1,
-    name: "Rahul Sharma",
-    email: "rahul@gmail.com",
-    phone: "+91 9876543210",
-    status: "Active",
-    joinedDate: "2024-01-12",
-    image: "../assets/Profile.jpg",
-  },
-  {
-    id: 2,
-    name: "Amit Patil",
-    email: "amit@gmail.com",
-    phone: "+91 9123456789",
-    status: "Active",
-    joinedDate: "2024-02-03",
-    image: "../assets/Profile2.jpg",
-
-  },
-  {
-    id: 3,
-    name: "Priya Singh",
-    email: "priya@gmail.com",
-    phone: "+91 9988776655",
-    status: "Pending",
-    joinedDate: "2024-03-18",
-    image: "../assets/Profile3.jpg",
-  },
-  {
-    id: 4,
-    name: "John Doe",
-    email: "john@gmail.com",
-    phone: "+91 8877655443",
-    status: "Inactive",
-    joinedDate: "2024-04-02",
-    image: "../assets/Profile4.jpg",
-  },
-  {
-    id: 5,
-    name: "Neha Verma",
-    email: "neha@gmail.com",
-    phone: "+91 9284711223",
-    status: "Active",
-    joinedDate: "2024-04-10",
-    image: "../assets/Profile5.jpg",
-  },
-  {
-    id: 6,
-    name: "Suresh Reddy",
-    email: "suresh@gmail.com",
-    phone: "+91 9032144556",
-    status: "Active",
-    joinedDate: "2024-05-22",
-    image: "../assets/Profile6.jpg",
-  },
-]);
-
-const options = ["Today", "This Week", "This Month", "This Year"];
-const currentData = dashboardData[selectedFilter];
-
-// initialize navigate for view all button
-const navigate = useNavigate();
-// state for chart filter (monthly/weekly)
-const [chartFilter, setChartFilter] = useState("Monthly");
-
-// dummy data for source distribution and top customers, replace with real data when API is ready
-const sourceData = [
-  { name: "Direct", value: 45, color: "#0f766e" },
-  { name: "Referral", value: 25, color: "#3b82f6" },
-  { name: "Organic", value: 20, color: "#f59e0b" },
-  { name: "Others", value: 10, color: "#6366f1" },
-];
-
-const handleAddCustomer = (newCustomer) => {
-  setCustomers((prev) => [
-    {
-      id: prev.length + 1,
-      ...newCustomer,
+  const dashboardData = {
+    Today: {
+      customers: 5,
+      employees: 2,
+      projects: 1,
+      interactions: 8,
     },
-    ...prev,
-  ]);
- setShowAddModal(false);
-};
-  
+    "This Week": {
+      customers: 12,
+      employees: 6,
+      projects: 4,
+      interactions: 25,
+    },
+    "This Month": {
+      customers: 24,
+      employees: 132,
+      projects: 18,
+      interactions: 120,
+    },
+    "This Year": {
+      customers: 120,
+      employees: 300,
+      projects: 80,
+      interactions: 600,
+    },
+  };
 
+  const customerGrowthData = [
+    { month: "Jan", customers: 70 },
+    { month: "Feb", customers: 120 },
+    { month: "Mar", customers: 140 },
+    { month: "Apr", customers: 160 },
+    { month: "May", customers: 210 },
+    { month: "Jun", customers: 250 },
+  ];
+
+  const outletContext = useOutletContext() || {};
+  const darkMode = outletContext.darkMode ?? false;
+  // Modal visibility state
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const [selectedFilter, setSelectedFilter] = useState("This Month");
+  const [open, setOpen] = useState(false);
+
+  const [customers, setCustomers] = useState([
+    {
+      id: 1,
+      name: "Rahul Sharma",
+      email: "rahul@gmail.com",
+      phone: "+91 9876543210",
+      status: "Active",
+      joinedDate: "2024-01-12",
+      image: "../assets/Profile.jpg",
+    },
+    {
+      id: 2,
+      name: "Amit Patil",
+      email: "amit@gmail.com",
+      phone: "+91 9123456789",
+      status: "Active",
+      joinedDate: "2024-02-03",
+      image: "../assets/Profile2.jpg",
+    },
+    {
+      id: 3,
+      name: "Priya Singh",
+      email: "priya@gmail.com",
+      phone: "+91 9988776655",
+      status: "Pending",
+      joinedDate: "2024-03-18",
+      image: "../assets/Profile3.jpg",
+    },
+    {
+      id: 4,
+      name: "John Doe",
+      email: "john@gmail.com",
+      phone: "+91 8877655443",
+      status: "Inactive",
+      joinedDate: "2024-04-02",
+      image: "../assets/Profile4.jpg",
+    },
+    {
+      id: 5,
+      name: "Neha Verma",
+      email: "neha@gmail.com",
+      phone: "+91 9284711223",
+      status: "Active",
+      joinedDate: "2024-04-10",
+      image: "../assets/Profile5.jpg",
+    },
+    {
+      id: 6,
+      name: "Suresh Reddy",
+      email: "suresh@gmail.com",
+      phone: "+91 9032144556",
+      status: "Active",
+      joinedDate: "2024-05-22",
+      image: "../assets/Profile6.jpg",
+    },
+  ]);
+
+  const options = ["Today", "This Week", "This Month", "This Year"];
+  const currentData = dashboardData[selectedFilter];
+
+  // initialize navigate for view all button
+  const navigate = useNavigate();
+  // state for chart filter (monthly/weekly)
+  const [chartFilter, setChartFilter] = useState("Monthly");
+
+  // dummy data for source distribution and top customers, replace with real data when API is ready
+  const sourceData = [
+    { name: "Direct", value: 45, color: "#0f766e" },
+    { name: "Referral", value: 25, color: "#3b82f6" },
+    { name: "Organic", value: 20, color: "#f59e0b" },
+    { name: "Others", value: 10, color: "#6366f1" },
+  ];
+
+  const handleAddCustomer = (newCustomer) => {
+    setCustomers((prev) => [
+      {
+        id: prev.length + 1,
+        ...newCustomer,
+      },
+      ...prev,
+    ]);
+    setShowAddModal(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -156,7 +163,7 @@ const handleAddCustomer = (newCustomer) => {
           onAddCustomer={handleAddCustomer}
         />
       )}
-    
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
