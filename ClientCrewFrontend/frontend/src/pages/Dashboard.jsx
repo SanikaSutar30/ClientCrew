@@ -222,141 +222,78 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+{/* cards */}
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  {[
+    {
+      title: "Total Customers",
+      value: currentData.customers,
+      icon: Users,
+      bg: "bg-[#0f766e]/10",
+      color: "text-[#0f766e]",
+    },
+    {
+      title: "Total Employees",
+      value: currentData.employees,
+      icon: UserCheck,
+      bg: "bg-blue-100",
+      color: "text-blue-600",
+    },
+    {
+      title: "Total Projects",
+      value: currentData.projects,
+      icon: Folder,
+      bg: "bg-purple-100",
+      color: "text-purple-600",
+    },
+    {
+      title: "Interactions",
+      value: currentData.interactions,
+      icon: Activity,
+      bg: "bg-orange-100",
+      color: "text-orange-600",
+    },
+  ].map((item) => {
+    const Icon = item.icon;
 
-      {/* cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Customers */}
-        <div
-          className={`p-5 rounded-2xl shadow-sm hover:shadow-md transition ${
-            darkMode
-              ? "bg-gray-700 border border-gray-600"
-              : "bg-white border border-gray-100"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <p
-              className={`text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-            >
-              Total Customers
-            </p>
+    return (
+      <div
+        key={item.title}
+        className={`p-5 rounded-2xl shadow-sm hover:shadow-md transition flex items-center justify-between ${
+          darkMode
+            ? "bg-gray-700 border border-gray-600"
+            : "bg-white border border-gray-100"
+        }`}
+      >
+        {/* LEFT: text */}
+        <div>
+          <p
+            className={`text-sm font-medium ${
+              darkMode ? "text-gray-300" : "text-gray-500"
+            }`}
+          >
+            {item.title}
+          </p>
 
-            <div className="p-2 bg-[#0f766e]/10 rounded-lg">
-              <Users size={18} className="text-[#0f766e]" />
-            </div>
-          </div>
-
-          <div className="flex items-end justify-between mt-4">
-            <h2
-              className={`text-2xl font-bold ${darkMode ? "text-white" : "text-black"}`}
-            >
-              {currentData.customers}
-            </h2>
-
-            <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-md">
-              +12%
-            </span>
-          </div>
+          <h2
+            className={`text-2xl font-bold mt-2 ${
+              darkMode ? "text-white" : "text-black"
+            }`}
+          >
+            {item.value}
+          </h2>
         </div>
 
-        {/* Employees */}
+        {/* RIGHT: centered icon box (like project cards) */}
         <div
-          className={`p-5 rounded-2xl shadow-sm hover:shadow-md transition ${
-            darkMode
-              ? "bg-gray-700 border border-gray-600"
-              : "bg-white border border-gray-100"
-          }`}
+          className={`w-12 h-12 flex items-center justify-center rounded-xl ${item.bg}`}
         >
-          <div className="flex items-center justify-between">
-            <p
-              className={`text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-            >
-              Total Employees
-            </p>
-
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <UserCheck size={18} className="text-blue-600" />
-            </div>
-          </div>
-
-          <div className="flex items-end justify-between mt-4">
-            <h2
-              className={`text-2xl font-bold ${darkMode ? "text-white" : "text-black"}`}
-            >
-              {currentData.employees}
-            </h2>
-
-            <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-md">
-              +8%
-            </span>
-          </div>
-        </div>
-
-        {/* Projects */}
-        <div
-          className={`p-5 rounded-2xl shadow-sm hover:shadow-md transition ${
-            darkMode
-              ? "bg-gray-700 border border-gray-600"
-              : "bg-white border border-gray-100"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <p
-              className={`text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-            >
-              Total Projects
-            </p>
-
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Folder size={18} className="text-purple-600" />
-            </div>
-          </div>
-
-          <div className="flex items-end justify-between mt-4">
-            <h2
-              className={`text-2xl font-bold ${darkMode ? "text-white" : "text-black"}`}
-            >
-              {currentData.projects}
-            </h2>
-
-            <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-md">
-              +5%
-            </span>
-          </div>
-        </div>
-
-        {/* Interactions */}
-        <div
-          className={`p-5 rounded-2xl shadow-sm hover:shadow-md transition ${
-            darkMode
-              ? "bg-gray-700 border border-gray-600"
-              : "bg-white border border-gray-100"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <p
-              className={`text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-            >
-              Interactions
-            </p>
-
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <Activity size={18} className="text-orange-600" />
-            </div>
-          </div>
-
-          <div className="flex items-end justify-between mt-4">
-            <h2
-              className={`text-2xl font-bold ${darkMode ? "text-white" : "text-black"}`}
-            >
-              {currentData.interactions}
-            </h2>
-
-            <span className="text-xs font-semibold text-red-600 bg-red-100 px-2 py-1 rounded-md">
-              -2%
-            </span>
-          </div>
+          <Icon size={22} className={item.color} />
         </div>
       </div>
+    );
+  })}
+</div>
 
       {/* Chart */}
       <div

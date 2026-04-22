@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Plus, Eye, Pencil, Trash2 } from "lucide-react";
+import { Search, Plus, Eye, Pencil, Trash2, Users, UserCheck, Clock,UserX } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
 
 import AddCustomer from "./AddCustomer";
@@ -381,38 +381,80 @@ export default function Customers() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { title: "Total Customers", value: totalCustomersCount },
-          { title: "Active Customers", value: activeCustomersCount },
-          { title: "Pending Customers", value: pendingCustomersCount },
-          { title: "Inactive", value: inactiveCustomersCount },
-        ].map((item) => (
-          <div
-            key={item.title}
-            className={`p-5 rounded-xl shadow-sm ${
-              darkMode
-                ? "bg-gray-700 border border-gray-600"
-                : "bg-white border border-gray-200 text-black"
+      {/* cards */}
+
+
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  {[
+    {
+      title: "Total Customers",
+      value: totalCustomersCount,
+      icon: Users,
+      bg: "bg-purple-100",
+      color: "text-purple-600",
+    },
+    {
+      title: "Active Customers",
+      value: activeCustomersCount,
+      icon: UserCheck,
+      bg: "bg-green-100",
+      color: "text-green-600",
+    },
+    {
+      title: "Pending Customers",
+      value: pendingCustomersCount,
+      icon: Clock,
+      bg: "bg-orange-100",
+      color: "text-orange-600",
+    },
+    {
+      title: "Inactive",
+      value: inactiveCustomersCount,
+      icon: UserX,
+      bg: "bg-red-100",
+      color: "text-red-600",
+    },
+  ].map((item) => {
+    const Icon = item.icon;
+
+    return (
+      <div
+        key={item.title}
+        className={`p-5 rounded-2xl shadow-sm hover:shadow-md transition flex items-center justify-between ${
+          darkMode
+            ? "bg-gray-700 border border-gray-600"
+            : "bg-white border border-gray-100"
+        }`}
+      >
+        {/* LEFT */}
+        <div>
+          <p
+            className={`text-sm font-medium ${
+              darkMode ? "text-gray-300" : "text-gray-500"
             }`}
           >
-            <p
-              className={`text-sm font-medium ${
-                darkMode ? "text-gray-300" : "text-gray-500"
-              }`}
-            >
-              {item.title}
-            </p>
-            <h2
-              className={`text-2xl font-bold mt-2 ${
-                darkMode ? "text-white" : "text-black"
-              }`}
-            >
-              {item.value}
-            </h2>
-          </div>
-        ))}
+            {item.title}
+          </p>
+
+          <h2
+            className={`text-2xl font-bold mt-2 ${
+              darkMode ? "text-white" : "text-black"
+            }`}
+          >
+            {item.value}
+          </h2>
+        </div>
+
+        {/* RIGHT ICON (centered like project cards) */}
+        <div
+          className={`w-12 h-12 flex items-center justify-center rounded-xl ${item.bg}`}
+        >
+          <Icon size={22} className={item.color} />
+        </div>
       </div>
+    );
+  })}
+</div>
 
       <div
         className={`rounded-xl shadow-sm overflow-hidden ${
