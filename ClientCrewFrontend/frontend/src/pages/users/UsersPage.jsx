@@ -90,13 +90,13 @@ export default function UsersPage() {
   //     image: "../assets/Profile6.jpg",
   //   },
   // ]);
-const [users, setUsers] = useState(getAllUsers());
+  const [users, setUsers] = useState(getAllUsers());
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
-const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-const [deleteTitle, setDeleteTitle] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTitle, setDeleteTitle] = useState("");
   const [deleteMessage, setDeleteMessage] = useState("");
   const [showAddConfirmModal, setShowAddConfirmModal] = useState(false);
   const [pendingUser, setPendingUser] = useState(null);
@@ -106,7 +106,6 @@ const [deleteTitle, setDeleteTitle] = useState("");
 
   const [showEditConfirm, setShowEditConfirm] = useState(false);
   const [pendingEditUser, setPendingEditUser] = useState(null);
-  
 
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("All Roles");
@@ -145,7 +144,6 @@ const [deleteTitle, setDeleteTitle] = useState("");
 
     return filtered;
   }, [users, searchTerm, roleFilter, statusFilter, sortOrder]);
-
 
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const safeCurrentPage = Math.min(currentPage, totalPages || 1);
@@ -191,53 +189,53 @@ const [deleteTitle, setDeleteTitle] = useState("");
       title: "Total Users",
       value: totalUsers,
       icon: UsersIcon,
-      bg: darkMode ? "bg-blue-900/20" : "bg-blue-50",
+      bg: "bg-blue-100",
       iconColor: "text-blue-600",
     },
     {
       title: "Admins",
       value: totalAdmins,
       icon: Shield,
-      bg: darkMode ? "bg-purple-900/20" : "bg-purple-50",
+      bg: "bg-purple-100",
       iconColor: "text-purple-600",
     },
     {
       title: "Managers",
       value: totalManagers,
       icon: Briefcase,
-      bg: darkMode ? "bg-orange-900/20" : "bg-orange-50",
+      bg: "bg-orange-100",
       iconColor: "text-orange-600",
     },
     {
       title: "Employees",
       value: totalEmployees,
       icon: UserCheck,
-      bg: darkMode ? "bg-green-900/20" : "bg-green-50",
+      bg: "bg-green-100",
       iconColor: "text-green-600",
     },
     {
       title: "Customers",
       value: totalCustomers,
       icon: UserRound,
-      bg: darkMode ? "bg-pink-900/20" : "bg-pink-50",
+      bg: "bg-pink-100",
       iconColor: "text-pink-600",
     },
   ];
 
-
   const handleAddUser = (newUser) => {
-   setPendingUser({
-     ...newUser,
-     id: users.length ? Math.max(...users.map((user) => user.id)) + 1 : 1,
-   });
+    setPendingUser({
+      ...newUser,
+      id: users.length ? Math.max(...users.map((user) => user.id)) + 1 : 1,
+    });
     setShowAddConfirmModal(true);
   };
 
   const confirmAddUser = () => {
     if (!pendingUser) return;
 
-addUser(pendingUser);
-setUsers(getAllUsers());    setCurrentPage(1);
+    addUser(pendingUser);
+    setUsers(getAllUsers());
+    setCurrentPage(1);
     setShowAddConfirmModal(false);
     setShowAddModal(false);
     setPendingUser(null);
@@ -280,8 +278,8 @@ setUsers(getAllUsers());    setCurrentPage(1);
   const confirmUpdateUser = () => {
     if (!pendingEditUser) return;
 
-updateUser(pendingEditUser);
-setUsers(getAllUsers());
+    updateUser(pendingEditUser);
+    setUsers(getAllUsers());
 
     setShowEditConfirm(false);
     setShowEditModal(false);
@@ -303,13 +301,13 @@ setUsers(getAllUsers());
     setShowDeleteConfirm(true);
   };
 
-const handleDeleteUser = (userId) => {
-  deleteUser(userId);
-  setUsers(getAllUsers());
-  setCurrentPage(1);
-  setShowDeleteConfirm(false);
-  setSelectedUser(null);
-};
+  const handleDeleteUser = (userId) => {
+    deleteUser(userId);
+    setUsers(getAllUsers());
+    setCurrentPage(1);
+    setShowDeleteConfirm(false);
+    setSelectedUser(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -393,7 +391,7 @@ const handleDeleteUser = (userId) => {
             darkMode ? "text-white" : "text-gray-900"
           }`}
         >
-          Users Management
+          Users
         </h1>
         <p
           className={`text-sm mt-1 ${
@@ -404,38 +402,42 @@ const handleDeleteUser = (userId) => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
-        {statCards.map((card, index) => {
+      {/* cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
+        {statCards.map((card) => {
           const Icon = card.icon;
+
           return (
             <div
-              key={index}
-              className={`rounded-2xl p-4 shadow-sm border ${
+              key={card.title}
+              className={`p-5 rounded-2xl shadow-sm hover:shadow-md transition flex items-center justify-between ${
                 darkMode
-                  ? "bg-gray-800 border-gray-700"
-                  : "bg-white border-gray-200"
+                  ? "bg-gray-700 border border-gray-600"
+                  : "bg-white border border-gray-100"
               }`}
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p
-                    className={`text-sm font-medium ${
-                      darkMode ? "text-gray-400" : "text-gray-500"
-                    }`}
-                  >
-                    {card.title}
-                  </p>
-                  <h2
-                    className={`text-2xl font-bold mt-2 ${
-                      darkMode ? "text-white" : "text-gray-900"
-                    }`}
-                  >
-                    {card.value}
-                  </h2>
-                </div>
-                <div className={`p-3 rounded-xl ${card.bg}`}>
-                  <Icon className={card.iconColor} size={22} />
-                </div>
+              <div>
+                <p
+                  className={`text-sm font-medium ${
+                    darkMode ? "text-gray-300" : "text-gray-500"
+                  }`}
+                >
+                  {card.title}
+                </p>
+
+                <h2
+                  className={`text-2xl font-bold mt-2 ${
+                    darkMode ? "text-white" : "text-black"
+                  }`}
+                >
+                  {card.value}
+                </h2>
+              </div>
+
+              <div
+                className={`w-12 h-12 flex items-center justify-center rounded-xl ${card.bg}`}
+              >
+                <Icon size={22} className={card.iconColor} />
               </div>
             </div>
           );
