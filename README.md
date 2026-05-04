@@ -1,55 +1,50 @@
-# 🚀 ClientCrew – CRM & Project Management System
+🚀 ClientCrew – CRM & Project Management System
 
-ClientCrew is a full-stack web application that combines **Customer Relationship Management (CRM)**, **Project Management**, and **Team Collaboration** in one platform.
+ClientCrew is a full-stack web application designed to manage customers, projects, tasks, and team communication in a single platform with role-based access control.
 
----
+🎥 Demo Video  
+▶️ [Watch Demo](https://drive.google.com/file/d/14dKvjmt8vj4th-2cXLoi-CFs_jaJU5jy/view?usp=sharing)
 
-## 🎥 Demo Video
+🚀 Tech Stack
+Frontend: React (Vite), Tailwind CSS
+Backend: Spring Boot, Hibernate (JPA)
+Database: MySQL
 
-[▶️ Click to Watch Demo](https://drive.google.com/file/d/14dKvjmt8vj4th-2cXLoi-CFs_jaJU5jy/view?usp=sharing)
+✨ Key Features
 
----
+🔐 Role-Based Access Control
 
-## 🚀 Tech Stack
+* Admin: Full system access (users, projects, reports)
+* Manager: Manage projects, assign tasks, view team
+* Employee: View assigned tasks and projects
+* Customer: View project progress and reports
 
-### 🔹 Frontend
+👥 Customer Management
 
-* React (Vite)
-* Tailwind CSS
+* Add, edit, delete, and view customers
+* Link customers with projects
 
-### 🔹 Backend
+📁 Project & Task Management
 
-* Spring Boot
-* Hibernate (JPA)
+* Create projects and assign team members
+* Task tracking with status (To Do, In Progress, Done)
+* Role-based visibility of projects and tasks
 
-### 🔹 Database
+💬 Team Communication
 
-* MySQL
+* Messaging system for team collaboration
 
----
+📊 Dashboard & Reports
 
-## ✨ Features
+* Dynamic dashboard with project and customer insights
+* Role-based reports
 
-* 👥 Customer Management
-* 📁 Project & Task Tracking
-* 💬 Team Collaboration (Messaging)
-* 🔐 Role-Based Access (Admin, Manager, Employee, Customer)
-* 📊 Dashboard & Reports
+📌 Status
+Frontend Completed ✅
+Backend Integration In Progress 🚧
 
----
+📂 Project Overview
+ClientCrew simulates a real-world business system where different roles interact with data based on permissions, helping organizations manage workflows efficiently.
 
-## 📌 Status
-
-🚧 In Development
-
----
-
-## 📂 Project Overview
-
-ClientCrew is designed to streamline business operations by combining CRM and project management functionalities into a single platform. It helps teams manage clients, track tasks, and collaborate efficiently with a structured and scalable system.
-
----
-
-## 👩‍💻 Author
-
-**Sanika Sutar**
+👩‍💻 Author
+Sanika Sutar
