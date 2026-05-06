@@ -84,6 +84,21 @@ public class SecurityConfig {
                  // Users (dropdowns etc.)
                     .requestMatchers(HttpMethod.GET, "/api/users", "/api/users/**")
                         .hasAnyRole("ADMIN", "MANAGER")
+                        
+                        
+                        
+                     // CUSTOMERS PAGE
+                        .requestMatchers(HttpMethod.GET, "/api/customers/**")
+                            .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
+
+                        .requestMatchers(HttpMethod.POST, "/api/customers/**")
+                            .hasAnyRole("ADMIN", "MANAGER")
+
+                        .requestMatchers(HttpMethod.PUT, "/api/customers/**")
+                            .hasAnyRole("ADMIN", "MANAGER")
+
+                        .requestMatchers(HttpMethod.DELETE, "/api/customers/**")
+                            .hasRole("ADMIN")
 
                 // Everything else
                 .anyRequest().authenticated()

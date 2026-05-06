@@ -34,8 +34,7 @@ public class User {
     @Column(nullable = false)
     private Role userRole;
     
-    
-    @Column(name = "user_image")
+    @Column(name = "user_image", columnDefinition = "LONGTEXT")
     private String userImage;
 
     public User() {
