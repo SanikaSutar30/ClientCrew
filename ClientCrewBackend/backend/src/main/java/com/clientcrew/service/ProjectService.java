@@ -41,6 +41,7 @@ public class ProjectService {
         project.setStatus(request.getStatus());
         project.setProgress(request.getProgress());
         project.setCustomerEmail(request.getCustomerEmail());
+        project.setProjectImage(request.getProjectImage());
 
         if (role.equals("MANAGER")) {
             project.setManagerEmail(loggedInEmail);
@@ -105,6 +106,7 @@ public class ProjectService {
         existing.setDueDate(request.getDueDate());
         existing.setProgress(request.getProgress());
         existing.setCustomerEmail(request.getCustomerEmail());
+        existing.setProjectImage(request.getProjectImage());
 
         List<User> requestedUsers = userRepository.findAllById(
         	    request.getEmployeeIds() == null ? List.of() : request.getEmployeeIds()

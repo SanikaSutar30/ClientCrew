@@ -34,6 +34,8 @@ public class Project {
     private String managerEmail;
 
     private String customerEmail;
+    @Column(columnDefinition = "LONGTEXT")
+    private String projectImage;
     
     
     @ManyToMany
@@ -137,6 +139,14 @@ public class Project {
 
 	public void setAssignedEmployees(List<User> assignedEmployees) {
 	    this.assignedEmployees = assignedEmployees;
+	}
+	
+	public String getProjectImage() {
+	    return projectImage;
+	}
+
+	public void setProjectImage(String projectImage) {
+	    this.projectImage = projectImage;
 	}
 
 	

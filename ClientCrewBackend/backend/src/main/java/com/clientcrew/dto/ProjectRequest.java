@@ -11,6 +11,7 @@ public class ProjectRequest {
     private String status;
     private int progress;
     private String customerEmail;
+    private String projectImage;
     private List<Long> employeeIds;
 	public String getProjectName() {
 		return projectName;
@@ -59,6 +60,14 @@ public class ProjectRequest {
 	}
 	public void setEmployeeIds(List<Long> employeeIds) {
 		this.employeeIds = employeeIds;
+	}
+	
+	public String getProjectImage() {
+	    return projectImage;
+	}
+
+	public void setProjectImage(String projectImage) {
+	    this.projectImage = projectImage;
 	}
 
    
