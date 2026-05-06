@@ -1,24 +1,15 @@
 import { useState } from "react";
 import { Search } from "lucide-react";
-import AddProject from "../projects/AddProject";
-
+// import AddProject from "../projects/AddProject";
 export default function AddCustomer({
   darkMode,
   setShowAddModal,
   onAddCustomer,
-  userRole,
+  projects = [],
 }) {
-  const canAddProject = ["Admin", "Manager"].includes(userRole);
+  // const canAddProject = ["Admin", "Manager"].includes(userRole);
   const [projectSearch, setProjectSearch] = useState("");
-  const [showAddProjectModal, setShowAddProjectModal] = useState(false);
-
-
-  const [projectOptions, setProjectOptions] = useState([
-    { id: "p1", name: "E-commerce Website" },
-    { id: "p2", name: "CRM Platform Enhancement" },
-    { id: "p3", name: "Healthcare Management System" },
-    { id: "p4", name: "Mobile App Development" },
-  ]);
+  // const [showAddProjectModal, setShowAddProjectModal] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -32,10 +23,9 @@ export default function AddCustomer({
 
   const [errors, setErrors] = useState({});
 
-
-    const filteredProjects = projectOptions.filter((project) =>
-      project.name.toLowerCase().includes(projectSearch.toLowerCase()),
-    );
+  const filteredProjects = projects.filter((project) =>
+    project.projectName?.toLowerCase().includes(projectSearch.toLowerCase()),
+  );
 
   const inputClass = `w-full px-4 py-3 rounded-xl border outline-none ${
     darkMode
@@ -57,37 +47,37 @@ export default function AddCustomer({
     }));
   };
 
-const handleImageChange = (e) => {
-  const file = e.target.files[0];
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
 
-  if (!file) return;
+    if (!file) return;
 
-  const validTypes = ["image/png", "image/jpeg", "image/jpg"];
+    const validTypes = ["image/png", "image/jpeg", "image/jpg"];
 
-  if (!validTypes.includes(file.type)) {
-    setErrors((prev) => ({
-      ...prev,
-      image: "Only PNG, JPG and JPEG images are allowed",
-    }));
-    return;
-  }
+    if (!validTypes.includes(file.type)) {
+      setErrors((prev) => ({
+        ...prev,
+        image: "Only PNG, JPG and JPEG images are allowed",
+      }));
+      return;
+    }
 
-  const reader = new FileReader();
+    const reader = new FileReader();
 
-  reader.onloadend = () => {
-    setFormData((prev) => ({
-      ...prev,
-      image: reader.result,
-    }));
+    reader.onloadend = () => {
+      setFormData((prev) => ({
+        ...prev,
+        image: reader.result,
+      }));
 
-    setErrors((prev) => ({
-      ...prev,
-      image: "",
-    }));
+      setErrors((prev) => ({
+        ...prev,
+        image: "",
+      }));
+    };
+
+    reader.readAsDataURL(file);
   };
-
-  reader.readAsDataURL(file);
-};
 
   const validateForm = () => {
     const newErrors = {};
@@ -114,10 +104,6 @@ const handleImageChange = (e) => {
       newErrors.projectId = "Please select a project";
     }
 
-    if (!formData.image) {
-      newErrors.image = "Profile image is required";
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -132,36 +118,22 @@ const handleImageChange = (e) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px] px-4">
-      {showAddProjectModal && (
+      {/* {showAddProjectModal && (
         <AddProject
           darkMode={darkMode}
           setShowAdd={setShowAddProjectModal}
           userRole={userRole}
           onAddProject={(newProject) => {
-            const newProjectOption = {
-              id: `p${Date.now()}`,
-              name: newProject.projectName,
-            };
-
-     setProjectOptions((prev) => {
-       const alreadyExists = prev.some(
-         (project) =>
-           project.name.toLowerCase() === newProject.projectName.toLowerCase(),
-       );
-
-       if (alreadyExists) return prev;
-       return [...prev, newProjectOption];
-     });
-
             setFormData((prev) => ({
               ...prev,
-              projectId: newProjectOption.id,
+              projectId: newProject.id || "",
             }));
 
             setShowAddProjectModal(false);
           }}
         />
-      )}
+      )} */}
+
       <div
         className={`w-full max-w-4xl rounded-2xl p-8 shadow-xl ${
           darkMode
@@ -269,11 +241,12 @@ const handleImageChange = (e) => {
               )}
             </div>
 
+            {/* Project selection section */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium">Project</label>
 
-                {canAddProject && (
+                {/* {canAddProject && (
                   <button
                     type="button"
                     onClick={() => setShowAddProjectModal(true)}
@@ -281,7 +254,7 @@ const handleImageChange = (e) => {
                   >
                     + Add Project
                   </button>
-                )}
+                )} */}
               </div>
 
               <div
@@ -312,9 +285,10 @@ const handleImageChange = (e) => {
                 className={`${inputClass} cursor-pointer`}
               >
                 <option value="">Select project</option>
+
                 {filteredProjects.map((project) => (
                   <option key={project.id} value={project.id}>
-                    {project.name}
+                    {project.projectName} - {project.clientName}
                   </option>
                 ))}
               </select>
@@ -324,6 +298,7 @@ const handleImageChange = (e) => {
               )}
             </div>
 
+            {/* // Image upload section */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-2">
                 Profile Image

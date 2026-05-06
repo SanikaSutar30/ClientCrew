@@ -1,15 +1,26 @@
-import { useState } from "react";
-import { Search, Plus, Eye, Pencil, Trash2, Users, UserCheck, Clock,UserX } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Search,
+  Plus,
+  Eye,
+  Pencil,
+  Trash2,
+  Users,
+  UserCheck,
+  Clock,
+  UserX,
+} from "lucide-react";
 import { useOutletContext } from "react-router-dom";
 
 import AddCustomer from "./AddCustomer";
 import EditCustomer from "./EditCustomer";
 import ViewCustomer from "./ViewCustomer";
+import api from "../../services/api";
 
 import { ConfirmationModal } from "../../components/layout";
 
 import {
-  getAllCustomers,
+  getCustomers,
   addCustomer,
   updateCustomer,
   deleteCustomer,
@@ -18,47 +29,14 @@ import {
 export default function Customers() {
   const { darkMode, userRole } = useOutletContext();
 
-  const canManageCustomers = ["Admin", "Manager"].includes(userRole);
+  const canAddCustomer = ["Admin", "Manager"].includes(userRole);
+
+  const canEditCustomer = ["Admin", "Manager"].includes(userRole);
+
+  const canDeleteCustomer = userRole === "Admin";
   const canViewCustomers = ["Admin", "Manager", "Employee"].includes(userRole);
 
-  // Temporary logged-in employee id for frontend role testing
-  const loggedInEmployeeId = "emp1";
-
-  const [customers, setCustomers] = useState(getAllCustomers());
-
-  // Temporary project data for role-based filtering
-  const projects = [
-    {
-      id: "p1",
-      projectName: "CRM Dashboard",
-      customerId: 1,
-      assignedEmployees: ["emp1", "emp2"],
-    },
-    {
-      id: "p2",
-      projectName: "Billing System",
-      customerId: 3,
-      assignedEmployees: ["emp1"],
-    },
-    {
-      id: "p3",
-      projectName: "Mobile App",
-      customerId: 5,
-      assignedEmployees: ["emp1", "emp3"],
-    },
-    {
-      id: "p4",
-      projectName: "Support Portal",
-      customerId: 2,
-      assignedEmployees: ["emp2"],
-    },
-    {
-      id: "p5",
-      projectName: "HR Management",
-      customerId: 4,
-      assignedEmployees: ["emp3"],
-    },
-  ];
+  const [customers, setCustomers] = useState([]);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -86,25 +64,68 @@ export default function Customers() {
 
   const itemsPerPage = 5;
 
+  const [projects, setProjects] = useState([]);
+
+  const fetchProjects = async () => {
+    try {
+      const response = await api.get("/api/projects");
+      setProjects(response.data);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    }
+  };
+
+  const fetchCustomers = async () => {
+    try {
+      const data = await getCustomers();
+      setCustomers(data);
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+    }
+  };
+
+  useEffect(() => {
+    const loadCustomers = async () => {
+      await fetchCustomers();
+      await fetchProjects();
+    };
+
+    loadCustomers();
+  }, []);
+
   const handleAddCustomer = (newCustomer) => {
-    if (!canManageCustomers) return;
+    if (!canAddCustomer) return;
 
     setPendingCustomer({
-      id: Math.max(...customers.map((c) => c.id), 0) + 1,
-      ...newCustomer,
+      userFullName: newCustomer.userFullName || newCustomer.name,
+      userEmail: newCustomer.userEmail || newCustomer.email,
+      userPhone: newCustomer.phone,
+      status: newCustomer.status,
+      joinedDate: newCustomer.joinedDate,
+      userImage: newCustomer.image || "",
     });
+
     setShowAddConfirmModal(true);
   };
 
-  const confirmAddCustomer = () => {
-    if (!pendingCustomer || !canManageCustomers) return;
+  const confirmAddCustomer = async () => {
+    if (!pendingCustomer || !canAddCustomer) return;
 
-    addCustomer(pendingCustomer);
-    setCustomers(getAllCustomers());
-    setCurrentPage(1);
-    setShowAddConfirmModal(false);
-    setShowAddModal(false);
-    setPendingCustomer(null);
+    try {
+      console.log("Customer payload:", pendingCustomer);
+
+      await addCustomer(pendingCustomer);
+
+      await fetchCustomers();
+
+      setCurrentPage(1);
+      setShowAddConfirmModal(false);
+      setShowAddModal(false);
+      setPendingCustomer(null);
+    } catch (error) {
+      console.error("Add customer error:", error);
+      alert("Customer not added. Please check backend logs.");
+    }
   };
 
   const cancelAddCustomer = () => {
@@ -113,18 +134,18 @@ export default function Customers() {
   };
 
   const handleEditClick = (customer) => {
-    if (!canManageCustomers) return;
+    if (!canEditCustomer) return;
     setSelectedCustomer(customer);
     setShowEditModal(true);
   };
 
   const handleDeleteClick = (customer) => {
-    if (!canManageCustomers) return;
+    if (!canDeleteCustomer) return;
 
     setSelectedCustomer(customer);
     setDeleteTitle("Delete Customer");
     setDeleteMessage(
-      `Are you sure you want to delete ${customer.name || "this customer"}?`,
+      `Are you sure you want to delete ${customer.userFullName || "this customer"}?`,
     );
     setShowDeleteConfirm(true);
   };
@@ -151,17 +172,17 @@ export default function Customers() {
   };
 
   const handleUpdateCustomer = (updatedCustomer) => {
-    if (!canManageCustomers) return;
+    if (!canEditCustomer) return;
 
     setPendingEditCustomer(updatedCustomer);
     setShowEditConfirm(true);
   };
 
-  const confirmUpdateCustomer = () => {
-    if (!pendingEditCustomer || !canManageCustomers) return;
+  const confirmUpdateCustomer = async () => {
+    if (!pendingEditCustomer || !canEditCustomer) return;
 
-    updateCustomer(pendingEditCustomer);
-    setCustomers(getAllCustomers());
+    await updateCustomer(pendingEditCustomer.userId, pendingEditCustomer);
+    await fetchCustomers();
 
     setShowEditConfirm(false);
     setShowEditModal(false);
@@ -174,46 +195,30 @@ export default function Customers() {
     setPendingEditCustomer(null);
   };
 
-  const handleDeleteCustomer = (customerId) => {
-    if (!canManageCustomers) return;
+  const handleDeleteCustomer = async (customerId) => {
+    if (!canDeleteCustomer) return;
 
-    deleteCustomer(customerId);
-    setCustomers(getAllCustomers());
+    await deleteCustomer(customerId);
+    await fetchCustomers();
+
     setShowDeleteConfirm(false);
     setSelectedCustomer(null);
   };
 
-  // Employee should only see customers related to assigned projects
-  const employeeProjects =
-    userRole === "Employee"
-      ? projects.filter((project) =>
-          project.assignedEmployees.includes(loggedInEmployeeId),
-        )
-      : projects;
-
-  const employeeCustomerIds = employeeProjects.map(
-    (project) => project.customerId,
-  );
-
-  const visibleCustomers =
-    userRole === "Employee"
-      ? customers.filter((customer) =>
-          employeeCustomerIds.includes(customer.id),
-        )
-      : customers;
-
-  const filteredCustomers = visibleCustomers
+  const filteredCustomers = customers
     .filter((customer) => {
       const search = searchTerm.toLowerCase();
 
       const matchesSearch =
-        customer.id.toString().includes(searchTerm) ||
-        customer.name?.toLowerCase().includes(search) ||
-        customer.email?.toLowerCase().includes(search) ||
-        customer.phone?.includes(searchTerm);
+        customer.userId.toString().includes(searchTerm) ||
+        customer.userFullName?.toLowerCase().includes(search) ||
+        customer.userEmail?.toLowerCase().includes(search) ||
+        customer.userPhone?.includes(searchTerm);
+
+      const customerStatus = customer.status || "Active";
 
       const matchesStatus =
-        statusFilter === "All" || customer.status === statusFilter;
+        statusFilter === "All" || customerStatus === statusFilter;
 
       return matchesSearch && matchesStatus;
     })
@@ -225,6 +230,7 @@ export default function Customers() {
     });
 
   const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
+
   const safeCurrentPage =
     totalPages === 0 ? 1 : Math.min(currentPage, totalPages);
 
@@ -233,16 +239,12 @@ export default function Customers() {
     safeCurrentPage * itemsPerPage,
   );
 
-  const totalCustomersCount = visibleCustomers.length;
-  const activeCustomersCount = visibleCustomers.filter(
-    (customer) => customer.status === "Active",
-  ).length;
-  const pendingCustomersCount = visibleCustomers.filter(
-    (customer) => customer.status === "Pending",
-  ).length;
-  const inactiveCustomersCount = visibleCustomers.filter(
-    (customer) => customer.status === "Inactive",
-  ).length;
+  const totalCustomersCount = customers.length;
+
+  const activeCustomersCount = customers.length;
+
+  const pendingCustomersCount = 0;
+  const inactiveCustomersCount = 0;
 
   const getStatusClasses = (status) => {
     switch (status) {
@@ -276,16 +278,16 @@ export default function Customers() {
 
   return (
     <div className="space-y-6">
-      {showAddModal && canManageCustomers && (
+      {showAddModal && canAddCustomer && (
         <AddCustomer
           darkMode={darkMode}
           setShowAddModal={setShowAddModal}
           onAddCustomer={handleAddCustomer}
-          userRole={userRole}
+          projects={projects}
         />
       )}
 
-      {showEditModal && selectedCustomer && canManageCustomers && (
+      {showEditModal && selectedCustomer && canEditCustomer && (
         <EditCustomer
           darkMode={darkMode}
           customer={selectedCustomer}
@@ -306,7 +308,7 @@ export default function Customers() {
         isOpen={showAddConfirmModal}
         type="success"
         title="Add Customer"
-        message={`Are you sure you want to add ${pendingCustomer?.name || "this customer"}?`}
+        message={`Are you sure you want to add ${pendingCustomer?.userFullName || "this customer"}?`}
         confirmText="Add"
         cancelText="Cancel"
         onConfirm={confirmAddCustomer}
@@ -318,7 +320,7 @@ export default function Customers() {
         isOpen={showViewConfirm}
         type="success"
         title="Open Customer"
-        message={`Do you want to view ${pendingViewCustomer?.name || "this customer"}?`}
+        message={`Do you want to view ${pendingViewCustomer?.userFullName || "this customer"}?`}
         confirmText="Yes, Open"
         cancelText="Cancel"
         onConfirm={confirmViewCustomer}
@@ -330,7 +332,7 @@ export default function Customers() {
         isOpen={showEditConfirm}
         type="success"
         title="Update Customer"
-        message={`Are you sure you want to update ${pendingEditCustomer?.name || "this customer"}?`}
+        message={`Are you sure you want to update ${pendingEditCustomer?.userFullName || "this customer"}?`}
         confirmText="Update"
         cancelText="Cancel"
         onConfirm={confirmUpdateCustomer}
@@ -346,7 +348,7 @@ export default function Customers() {
         confirmText="Delete"
         cancelText="Cancel"
         onConfirm={() =>
-          selectedCustomer && handleDeleteCustomer(selectedCustomer.id)
+          selectedCustomer && handleDeleteCustomer(selectedCustomer.userId)
         }
         onCancel={() => {
           setShowDeleteConfirm(false);
@@ -362,14 +364,14 @@ export default function Customers() {
               darkMode ? "text-gray-300" : "text-gray-500"
             }`}
           >
-            {canManageCustomers
+            {canAddCustomer
               ? "Manage your customers and their information"
               : "View customers related to your assigned projects"}{" "}
           </p>
         </div>
 
         <div>
-          {canManageCustomers && (
+          {canAddCustomer && (
             <button
               onClick={() => setShowAddModal(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-[#0f766e] text-white hover:opacity-90 cursor-pointer"
@@ -383,78 +385,77 @@ export default function Customers() {
 
       {/* cards */}
 
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          {
+            title: "Total Customers",
+            value: totalCustomersCount,
+            icon: Users,
+            bg: "bg-purple-100",
+            color: "text-purple-600",
+          },
+          {
+            title: "Active Customers",
+            value: activeCustomersCount,
+            icon: UserCheck,
+            bg: "bg-green-100",
+            color: "text-green-600",
+          },
+          {
+            title: "Pending Customers",
+            value: pendingCustomersCount,
+            icon: Clock,
+            bg: "bg-orange-100",
+            color: "text-orange-600",
+          },
+          {
+            title: "Inactive",
+            value: inactiveCustomersCount,
+            icon: UserX,
+            bg: "bg-red-100",
+            color: "text-red-600",
+          },
+        ].map((item) => {
+          const Icon = item.icon;
 
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-  {[
-    {
-      title: "Total Customers",
-      value: totalCustomersCount,
-      icon: Users,
-      bg: "bg-purple-100",
-      color: "text-purple-600",
-    },
-    {
-      title: "Active Customers",
-      value: activeCustomersCount,
-      icon: UserCheck,
-      bg: "bg-green-100",
-      color: "text-green-600",
-    },
-    {
-      title: "Pending Customers",
-      value: pendingCustomersCount,
-      icon: Clock,
-      bg: "bg-orange-100",
-      color: "text-orange-600",
-    },
-    {
-      title: "Inactive",
-      value: inactiveCustomersCount,
-      icon: UserX,
-      bg: "bg-red-100",
-      color: "text-red-600",
-    },
-  ].map((item) => {
-    const Icon = item.icon;
+          return (
+            <div
+              key={item.title}
+              className={`p-5 rounded-2xl shadow-sm hover:shadow-md transition flex items-center justify-between ${
+                darkMode
+                  ? "bg-gray-700 border border-gray-600"
+                  : "bg-white border border-gray-100"
+              }`}
+            >
+              {/* LEFT */}
+              <div>
+                <p
+                  className={`text-sm font-medium ${
+                    darkMode ? "text-gray-300" : "text-gray-500"
+                  }`}
+                >
+                  {item.title}
+                </p>
 
-    return (
-      <div
-        key={item.title}
-        className={`p-5 rounded-2xl shadow-sm hover:shadow-md transition flex items-center justify-between ${
-          darkMode
-            ? "bg-gray-700 border border-gray-600"
-            : "bg-white border border-gray-100"
-        }`}
-      >
-        {/* LEFT */}
-        <div>
-          <p
-            className={`text-sm font-medium ${
-              darkMode ? "text-gray-300" : "text-gray-500"
-            }`}
-          >
-            {item.title}
-          </p>
+                <h2
+                  className={`text-2xl font-bold mt-2 ${
+                    darkMode ? "text-white" : "text-black"
+                  }`}
+                >
+                  {item.value}
+                </h2>
+              </div>
 
-          <h2
-            className={`text-2xl font-bold mt-2 ${
-              darkMode ? "text-white" : "text-black"
-            }`}
-          >
-            {item.value}
-          </h2>
-        </div>
-
-        {/* RIGHT ICON (centered like project cards) */}
-        <div
-          className={`w-12 h-12 flex items-center justify-center rounded-xl ${item.bg}`}
-        >
-          <Icon size={22} className={item.color} />
-        </div>
+              {/* RIGHT ICON (centered like project cards) */}
+              <div
+                className={`w-12 h-12 flex items-center justify-center rounded-xl ${item.bg}`}
+              >
+                <Icon size={22} className={item.color} />
+              </div>
+            </div>
+          );
+        })}
       </div>
-    );
-  })}
-</div>
 
       <div
         className={`rounded-xl shadow-sm overflow-hidden ${
@@ -553,7 +554,7 @@ export default function Customers() {
           ) : (
             paginatedCustomers.map((customer) => (
               <div
-                key={customer.id}
+                key={customer.userId}
                 className={`grid grid-cols-[60px_2.2fr_2fr_1.6fr_1fr_1.4fr_1.2fr] items-center px-3 py-2 border-b last:border-b-0 hover:bg-gray-100 rounded-xl transition ${
                   darkMode
                     ? "border-gray-600 hover:bg-gray-500"
@@ -561,23 +562,29 @@ export default function Customers() {
                 }`}
               >
                 <span className={darkMode ? "text-white" : "text-black"}>
-                  {customer.id}
+                  {customer.userId}
                 </span>
 
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300 shrink-0">
-                    <img
-                      src={customer.image}
-                      alt={customer.name}
-                      className="w-full h-full object-cover object-top"
-                    />
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300 shrink-0 flex items-center justify-center">
+                    {customer.userImage ? (
+                      <img
+                        src={customer.userImage}
+                        alt={customer.userFullName}
+                        className="w-full h-full object-cover object-top"
+                      />
+                    ) : (
+                      <span className="text-sm font-semibold text-gray-700">
+                        {customer.userFullName?.charAt(0).toUpperCase()}
+                      </span>
+                    )}
                   </div>
                   <span
                     className={`font-medium truncate ${
                       darkMode ? "text-white" : "text-black"
                     }`}
                   >
-                    {customer.name}
+                    {customer.userFullName}
                   </span>
                 </div>
 
@@ -586,11 +593,11 @@ export default function Customers() {
                     darkMode ? "text-gray-300" : "text-gray-500"
                   }`}
                 >
-                  {customer.email}
+                  {customer.userEmail}
                 </span>
 
                 <span className={darkMode ? "text-gray-300" : "text-gray-500"}>
-                  {customer.phone}
+                  {customer.userPhone || "N/A"}
                 </span>
 
                 <span
@@ -598,30 +605,32 @@ export default function Customers() {
                     customer.status,
                   )}`}
                 >
-                  {customer.status}
+                  {customer.status || "Active"}
                 </span>
 
                 <span className={darkMode ? "text-gray-300" : "text-gray-500"}>
-                  {new Date(customer.joinedDate).toLocaleDateString()}
+                  {customer.joinedDate
+                    ? new Date(customer.joinedDate).toLocaleDateString()
+                    : "N/A"}
                 </span>
 
                 <div className="flex items-center gap-2 justify-start">
-                  {canManageCustomers && (
-                    <>
-                      <button
-                        onClick={() => handleEditClick(customer)}
-                        className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 cursor-pointer"
-                      >
-                        <Pencil size={16} />
-                      </button>
+                  {canEditCustomer && (
+                    <button
+                      onClick={() => handleEditClick(customer)}
+                      className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 cursor-pointer"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                  )}
 
-                      <button
-                        onClick={() => handleDeleteClick(customer)}
-                        className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </>
+                  {canDeleteCustomer && (
+                    <button
+                      onClick={() => handleDeleteClick(customer)}
+                      className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   )}
 
                   {canViewCustomers && (
