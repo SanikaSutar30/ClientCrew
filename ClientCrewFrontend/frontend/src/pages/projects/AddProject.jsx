@@ -1,14 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Folder, Search } from "lucide-react";
-// import { useNavigate } from "react-router-dom";
 import AddCustomer from "../customers/AddCustomer";
 import AddEmployee from "../employees/AddEmployee";
 
-export default function AddProject({ darkMode, setShowAdd, onAddProject , userRole}) {
+export default function AddProject({
+  darkMode,
+  setShowAdd,
+  onAddProject,
+  userRole,
+}) {
   // const navigate = useNavigate();
 
   const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
+
   const [showAddEmployeeModal, setShowAddEmployeeModal] = useState(false);
+
   const canManageEmployees = ["Admin", "Manager"].includes(userRole);
 
   const [formData, setFormData] = useState({
@@ -25,8 +31,46 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject , userRo
 
   const [errors, setErrors] = useState({});
 
+  const validateStatusProgress = (status, progress) => {
+    const progressValue = Number(progress);
+
+    if (status === "Planning" && progressValue !== 0) {
+      return "Planning project progress must be 0";
+    }
+
+    if (status === "In Progress" && (progressValue < 1 || progressValue > 99)) {
+      return "In Progress project progress must be between 1 and 99";
+    }
+
+    if (status === "Completed" && progressValue !== 100) {
+      return "Completed project progress must be 100";
+    }
+
+    if (status === "On Hold" && (progressValue < 1 || progressValue > 99)) {
+      return "On Hold project progress must be between 1 and 99";
+    }
+
+    return "";
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === "status") {
+      setFormData((prev) => ({
+        ...prev,
+        status: value,
+        progress:
+          value === "Planning"
+            ? 0
+            : value === "Completed"
+              ? 100
+              : value === "In Progress"
+                ? 1
+                : prev.progress,
+      }));
+      return;
+    }
 
     setFormData((prev) => ({
       ...prev,
@@ -61,6 +105,15 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject , userRo
     else if (formData.progress < 0 || formData.progress > 100)
       newErrors.progress = "Progress must be between 0 and 100";
 
+    const progressStatusError = validateStatusProgress(
+      formData.status,
+      formData.progress,
+    );
+
+    if (progressStatusError) {
+      newErrors.progress = progressStatusError;
+    }
+
     if (!formData.icon.trim()) newErrors.icon = "Project icon is required";
     else if (formData.icon.length > 1) newErrors.icon = "Use only one letter";
 
@@ -93,10 +146,14 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject , userRo
     if (!validateForm()) return;
 
     onAddProject({
-      ...formData,
-      clientName: selectedCustomer?.name || "",
+      projectName: formData.projectName,
+      clientName: selectedCustomer?.userFullName || "",
+      startDate: formData.startDate,
+      dueDate: formData.dueDate,
+      status: formData.status,
       progress: Number(formData.progress),
-      icon: formData.icon.toUpperCase(),
+      employeeIds: formData.assignedEmployees.map((emp) => emp.userId),
+      customerEmail: selectedCustomer?.userEmail || "",
     });
     resetForm();
     // setShowAdd(false);
@@ -110,60 +167,23 @@ export default function AddProject({ darkMode, setShowAdd, onAddProject , userRo
 
   const labelClass = "block text-sm font-medium mb-2";
 
-const [employeeOptions, setEmployeeOptions] = useState([
-  {
-    id: "emp1",
-    name: "Priya Singh",
-    role: "Manager",
-    image: "../assets/Profile.jpg",
-  },
-  {
-    id: "emp2",
-    name: "Rahul Sharma",
-    role: "Employee",
-    image: "../assets/Profile2.jpg",
-  },
-  {
-    id: "emp3",
-    name: "John Doe",
-    role: "Employee",
-    image: "../assets/Profile3.jpg",
-  },
-  {
-    id: "emp4",
-    name: "Jennifer Brown",
-    role: "Employee",
-    image: "../assets/Profile4.jpg",
-  },
-  {
-    id: "emp5",
-    name: "Amit Patil",
-    role: "Employee",
-    image: "../assets/Profile5.jpg",
-  },
-]);
-  const [customerOptions, setCustomerOptions] = useState([
-    { id: "c1", name: "ABC Tech Solutions", image: "../assets/Profile.jpg" },
-    { id: "c2", name: "XYZ Innovations", image: "../assets/Profile2.jpg" },
-    { id: "c3", name: "Acme Corp", image: "../assets/Profile3.jpg" },
-    { id: "c4", name: "Global Ventures", image: "../assets/Profile4.jpg" },
-    { id: "c5", name: "MediCare Inc", image: "../assets/Profile5.jpg" },
-  ]);
+  const [employeeOptions, setEmployeeOptions] = useState([]);
+  const [customerOptions, setCustomerOptions] = useState([]);
 
   const selectedCustomer = customerOptions.find(
-    (customer) => customer.id === formData.customerId,
+    (customer) => customer.userId === formData.customerId,
   );
 
   const handleEmployeeSelect = (employee) => {
     const alreadySelected = formData.assignedEmployees.some(
-      (member) => member.id === employee.id,
+      (member) => member.userId === employee.userId,
     );
 
     if (alreadySelected) {
       setFormData((prev) => ({
         ...prev,
         assignedEmployees: prev.assignedEmployees.filter(
-          (member) => member.id !== employee.id,
+          (member) => member.userId !== employee.userId,
         ),
       }));
     } else {
@@ -182,7 +202,7 @@ const [employeeOptions, setEmployeeOptions] = useState([
   const handleCustomerSelect = (customer) => {
     setFormData((prev) => ({
       ...prev,
-      customerId: customer.id,
+      customerId: customer.userId,
     }));
 
     setErrors((prev) => ({
@@ -193,28 +213,30 @@ const [employeeOptions, setEmployeeOptions] = useState([
 
   const handleAddCustomer = (newCustomer) => {
     const newCustomerWithId = {
-      id: `c${Date.now()}`,
-      name: newCustomer.name,
-      image: newCustomer.image || "",
+      userId: `c${Date.now()}`, // temporary (until DB save)
+      userFullName: newCustomer.userFullName,
+      userEmail: newCustomer.userEmail,
+      userImage: newCustomer.userImage || "",
+      userRole: "CUSTOMER",
     };
 
     setCustomerOptions((prev) => [...prev, newCustomerWithId]);
 
     setFormData((prev) => ({
       ...prev,
-      customerId: newCustomerWithId.id,
+      customerId: newCustomerWithId.userId,
     }));
 
     setShowAddCustomerModal(false);
   };
 
-
   const handleAddEmployee = (newEmployee) => {
     const newEmployeeWithId = {
-      id: `emp${Date.now()}`,
-      name: newEmployee.name,
-      role: newEmployee.role || "Employee",
-      image: newEmployee.image || "../assets/Profile.jpg",
+      userId: `emp${Date.now()}`, // temporary (until DB response)
+      userFullName: newEmployee.userFullName,
+      userEmail: newEmployee.userEmail,
+      userRole: newEmployee.userRole || "EMPLOYEE",
+      userImage: newEmployee.userImage || "",
     };
 
     setEmployeeOptions((prev) => [...prev, newEmployeeWithId]);
@@ -226,23 +248,80 @@ const [employeeOptions, setEmployeeOptions] = useState([
 
     setShowAddEmployeeModal(false);
   };
+
   const [employeeSearch, setEmployeeSearch] = useState("");
 
+  const [customerSearch, setCustomerSearch] = useState("");
 
-
-const [customerSearch, setCustomerSearch] = useState("");
-
-const filteredCustomers = customerOptions.filter((customer) =>
-  customer.name.toLowerCase().includes(customerSearch.trim().toLowerCase()),
-);
-  
-  const filteredEmployees = employeeOptions.filter(
-    (employee) =>
-      employee.name.toLowerCase().includes(employeeSearch.toLowerCase()) ||
-      employee.role.toLowerCase().includes(employeeSearch.toLowerCase()),
+  const filteredCustomers = customerOptions.filter((customer) =>
+    customer.userFullName
+      ?.toLowerCase()
+      .includes(customerSearch.trim().toLowerCase()),
   );
+
+  const filteredEmployees = employeeOptions.filter((employee) => {
+    const role = employee.userRole?.toUpperCase();
+
+    const isAllowedRole =
+      userRole === "Admin"
+        ? role === "EMPLOYEE" || role === "MANAGER"
+        : role === "EMPLOYEE";
+
+    const matchesSearch = employee.userFullName
+      ?.toLowerCase()
+      .includes(employeeSearch.toLowerCase());
+
+    return isAllowedRole && matchesSearch;
+  });
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const usersUrl = "http://localhost:8080/api/users";
+
+        const [employeesRes, customersRes] = await Promise.all([
+          fetch(usersUrl, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch("http://localhost:8080/api/users/customers", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        // 👇 ADD HERE
+        if (!employeesRes.ok || !customersRes.ok) {
+          throw new Error("Failed to fetch users");
+        }
+
+        // 👇 KEEP THIS SAME
+        const employees = await employeesRes.json();
+        const customers = await customersRes.json();
+
+        setEmployeeOptions(employees);
+        setCustomerOptions(customers);
+      } catch (error) {
+        console.error("Fetch users error:", error);
+      }
+    };
+
+    fetchUsers();
+  }, [userRole]);
+  const getColor = (name) => {
+    const colors = [
+      "bg-red-500",
+      "bg-blue-500",
+      "bg-green-500",
+      "bg-purple-500",
+    ];
+    const index = name.charCodeAt(0) % colors.length;
+    return colors[index];
+  };
+
   return (
+    // Overlay
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur px-4">
+      {/* add customer */}
       {showAddCustomerModal && (
         <AddCustomer
           darkMode={darkMode}
@@ -250,6 +329,8 @@ const filteredCustomers = customerOptions.filter((customer) =>
           onAddCustomer={handleAddCustomer}
         />
       )}
+
+      {/* // add employee */}
       {showAddEmployeeModal && (
         <AddEmployee
           darkMode={darkMode}
@@ -257,6 +338,8 @@ const filteredCustomers = customerOptions.filter((customer) =>
           onAddCustomer={handleAddEmployee}
         />
       )}
+
+      {/* // Modal content */}
       <div
         className={`w-full max-w-5xl rounded-2xl p-8 shadow-xl max-h-[90vh] overflow-y-auto ${
           darkMode
@@ -345,12 +428,12 @@ const filteredCustomers = customerOptions.filter((customer) =>
               >
                 {filteredCustomers.length > 0 ? (
                   filteredCustomers.map((customer) => {
-                    const isSelected = formData.customerId === customer.id;
+                    const isSelected = formData.customerId === customer.userId;
 
                     return (
                       <button
                         type="button"
-                        key={customer.id}
+                        key={customer.userId}
                         onClick={() => handleCustomerSelect(customer)}
                         className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition cursor-pointer ${
                           isSelected
@@ -360,15 +443,17 @@ const filteredCustomers = customerOptions.filter((customer) =>
                               : "border-gray-200 bg-white hover:bg-gray-100"
                         }`}
                       >
-                        {customer.image ? (
+                        {customer.userImage ? (
                           <img
-                            src={customer.image}
-                            alt={customer.name}
+                            src={customer.userImage}
+                            alt={customer.userFullName}
                             className="w-10 h-10 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white flex items-center justify-center font-semibold">
-                            {customer.name.charAt(0).toUpperCase()}
+                          <div
+                            className={`w-10 h-10 rounded-full ${getColor(customer.userFullName)} text-white flex items-center justify-center font-semibold`}
+                          >
+                            {customer.userFullName?.charAt(0).toUpperCase()}
                           </div>
                         )}
 
@@ -378,7 +463,7 @@ const filteredCustomers = customerOptions.filter((customer) =>
                               darkMode ? "text-white" : "text-black"
                             }`}
                           >
-                            {customer.name}
+                            {customer.userFullName}
                           </p>
                           <p
                             className={`text-sm ${
@@ -485,7 +570,8 @@ const filteredCustomers = customerOptions.filter((customer) =>
             <div className="md:col-span-2">
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium">
-                  Assign To ({formData.assignedEmployees.length} person
+                  Assign Team Members ({formData.assignedEmployees.length}{" "}
+                  person
                   {formData.assignedEmployees.length !== 1 ? "s" : ""})
                 </label>
 
@@ -495,7 +581,7 @@ const filteredCustomers = customerOptions.filter((customer) =>
                     onClick={() => setShowAddEmployeeModal(true)}
                     className="text-sm font-medium text-[#0f766e] hover:underline cursor-pointer"
                   >
-                    + Add Employee
+                    + Add Team Member
                   </button>
                 )}
               </div>
@@ -532,13 +618,13 @@ const filteredCustomers = customerOptions.filter((customer) =>
                 {filteredEmployees.length > 0 ? (
                   filteredEmployees.map((employee) => {
                     const isSelected = formData.assignedEmployees.some(
-                      (member) => member.id === employee.id,
+                      (member) => member.userId === employee.userId,
                     );
 
                     return (
                       <button
                         type="button"
-                        key={employee.id}
+                        key={employee.userId}
                         onClick={() => handleEmployeeSelect(employee)}
                         className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition cursor-pointer ${
                           isSelected
@@ -548,27 +634,40 @@ const filteredCustomers = customerOptions.filter((customer) =>
                               : "border-gray-200 bg-white hover:bg-gray-100"
                         }`}
                       >
-                        <img
-                          src={employee.image}
-                          alt={employee.name}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-
+                        {employee.userImage ? (
+                          <img
+                            src={employee.userImage}
+                            alt={employee.userFullName}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div
+                            className={`w-10 h-10 rounded-full ${getColor(employee.userFullName)} text-white flex items-center justify-center font-semibold`}
+                          >
+                            {employee.userFullName?.charAt(0).toUpperCase()}
+                          </div>
+                        )}
                         <div className="text-left">
                           <p
                             className={`font-medium ${
                               darkMode ? "text-white" : "text-black"
                             }`}
                           >
-                            {employee.name}
+                            {employee.userFullName}
                           </p>
-                          <p
-                            className={`text-sm ${
-                              darkMode ? "text-gray-300" : "text-gray-500"
+                          <p className="text-xs text-gray-500">
+                            {employee.userEmail}
+                          </p>
+
+                          <span
+                            className={`text-[10px] px-2 py-0.5 rounded-full ${
+                              employee.userRole === "MANAGER"
+                                ? "bg-blue-100 text-blue-600"
+                                : "bg-green-100 text-green-600"
                             }`}
                           >
-                            {employee.role}
-                          </p>
+                            {employee.userRole}
+                          </span>
                         </div>
                       </button>
                     );

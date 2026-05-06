@@ -169,16 +169,13 @@ export default function CustomerReports({ darkMode }) {
                   {item.title}
                 </p>
 
-                <div className="flex items-center gap-3 mt-2">
-                  <h2
-                    className={`text-2xl font-bold ${
-                      darkMode ? "text-white" : "text-black"
-                    }`}
-                  >
-                    {item.value}
-                  </h2>
-
-                </div>
+                <h2
+                  className={`text-2xl font-bold mt-2 ${
+                    darkMode ? "text-white" : "text-black"
+                  }`}
+                >
+                  {item.value}
+                </h2>
               </div>
 
               {/* RIGHT ICON */}
@@ -191,7 +188,6 @@ export default function CustomerReports({ darkMode }) {
           );
         })}
       </div>
-      
 
       <div
         className={`p-5 rounded-xl shadow-sm min-w-0 ${
@@ -301,7 +297,8 @@ export default function CustomerReports({ darkMode }) {
           </h2>
 
           <div className="flex items-center justify-between gap-4 min-w-0">
-            <div className="w-[170px] h-[170px] min-w-0">
+            <div className="w-[170px] h-[170px] shrink-0">
+              {" "}
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie

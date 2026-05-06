@@ -121,7 +121,17 @@ export const routeAccess = {
   helpSupport: ["Admin", "Manager", "Employee", "Customer"],
   users: ["Admin"],
 };
+export const normalizeRole = (role) => {
+  const roleMap = {
+    ADMIN: "Admin",
+    MANAGER: "Manager",
+    EMPLOYEE: "Employee",
+    CUSTOMER: "Customer",
+  };
+
+  return roleMap[role] || role;
+};
 
 export const getUserRole = () => {
-  return localStorage.getItem("userRole");
+  return normalizeRole(localStorage.getItem("userRole"));
 };

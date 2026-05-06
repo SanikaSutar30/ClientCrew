@@ -4,7 +4,7 @@ export { default as Login } from "./Login";
 export { default as Register } from "./Register";
 
 // Main Pages
-export { default as Dashboard } from "./Dashboard";
+export { default as Dashboard } from "./dashboard/Dashboard";
 export { default as Notifications } from "./Notifications";
 export { default as Settings } from "./Settings";
 export { default as MyProfile } from "./MyProfile";

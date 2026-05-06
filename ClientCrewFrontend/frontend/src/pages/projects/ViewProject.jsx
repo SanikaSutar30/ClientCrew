@@ -42,6 +42,8 @@ export default function ViewProject({ darkMode, project, setShowView }) {
     }
   };
 
+  const loggedInEmail = localStorage.getItem("userEmail");
+
   return createPortal(
     <div
       className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm flex items-center justify-center px-4"
@@ -77,9 +79,13 @@ export default function ViewProject({ darkMode, project, setShowView }) {
             {/* Left side */}
             <div className="lg:w-1/3 flex flex-col items-center lg:items-start">
               <div
-                className={`w-24 h-24 rounded-2xl ${project.iconColor} text-white flex items-center justify-center text-3xl font-bold shadow-md`}
+                className={`w-24 h-24 rounded-2xl flex items-center justify-center text-3xl font-bold shadow-md ${
+                  project.iconColor && project.iconColor !== ""
+                    ? project.iconColor
+                    : "bg-gradient-to-r from-teal-500 to-cyan-500"
+                } text-white`}
               >
-                {project.icon}
+                {project.projectName?.charAt(0).toUpperCase()}
               </div>
 
               <div className="mt-4 text-center lg:text-left">
@@ -124,6 +130,7 @@ export default function ViewProject({ darkMode, project, setShowView }) {
                     <User size={16} className="text-green-500" />
                     <span className="text-sm font-medium">Client Name</span>
                   </div>
+
                   <p className="text-sm">{project.clientName}</p>
                 </div>
 
@@ -173,24 +180,22 @@ export default function ViewProject({ darkMode, project, setShowView }) {
                   </span>
                 </div>
 
-                
                 <div
                   className={`p-4 rounded-xl ${
                     darkMode ? "bg-gray-800" : "bg-white"
                   }`}
                 >
-
                   <div className="flex items-center gap-2 mb-1">
                     <Users size={16} className="text-pink-500" />
                     <span className="text-sm font-medium">
                       Assigned Members
                     </span>
                   </div>
-                  <p className="text-sm">
+
+                  <p className="text-sm font-semibold">
                     {project.assignedEmployees?.length || 0}
                   </p>
                 </div>
-                
               </div>
 
               <div
@@ -228,34 +233,55 @@ export default function ViewProject({ darkMode, project, setShowView }) {
                   <span className="text-sm font-medium">Team Members</span>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  {project.assignedEmployees?.map((member) => (
-                    <div
-                      key={member.id}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-xl ${
-                        darkMode ? "bg-gray-700" : "bg-gray-100"
-                      }`}
-                    >
-                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300">
-                        <img
-                          src={member.image}
-                          alt={member.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
+                  {project.assignedEmployees?.length > 0 ? (
+                    project.assignedEmployees.map((member) => (
+                      <div
+                        key={member.userId}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-xl ${
+                          darkMode ? "bg-gray-700" : "bg-gray-100"
+                        }`}
+                      >
+                        {/* Avatar */}
+                        {member.userImage ? (
+                          <img
+                            src={member.userImage}
+                            alt={member.userFullName}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-[#0f766e] text-white flex items-center justify-center font-semibold">
+                            {member.userFullName?.charAt(0).toUpperCase()}
+                          </div>
+                        )}
 
-                      <div>
-                        <p className="text-sm font-medium">{member.name}</p>
-                        <p
-                          className={`text-xs ${
-                            darkMode ? "text-gray-300" : "text-gray-500"
-                          }`}
-                        >
-                          {member.role}
-                        </p>
+                        {/* Info */}
+                        <div>
+                          <p className="text-sm font-medium">
+                            {member.userEmail === loggedInEmail
+                              ? "You"
+                              : member.userFullName}{" "}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {member.userEmail}
+                          </p>
+                          <p
+                            className={`text-xs ${
+                              darkMode ? "text-gray-300" : "text-gray-500"
+                            }`}
+                          >
+                            {member.userRole}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>{" "}
+                    ))
+                  ) : (
+                    <p
+                      className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                    >
+                      No team members assigned
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="flex justify-end">

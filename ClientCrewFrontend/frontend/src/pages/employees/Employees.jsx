@@ -24,12 +24,13 @@ export default function Employees() {
   const savedUser = JSON.parse(localStorage.getItem("user")) || {};
 
   const currentUserTeamId = savedUser.teamId ?? 101;
-  
+
   const isAdmin = userRole === "Admin";
   const isManager = userRole === "Manager";
   const isEmployee = userRole === "Employee";
+  const isCustomer = userRole === "Customer";
 
-  const canViewEmployees = isAdmin || isManager || isEmployee;
+  const canViewEmployees = isAdmin || isManager || isEmployee || isCustomer;
   const canAddEmployees = isAdmin || isManager;
   const canEditEmployees = isAdmin || isManager;
 
@@ -274,7 +275,7 @@ export default function Employees() {
         return false;
       }
 
-      if (userRole === "Employee") {
+      if (userRole === "Employee" || userRole === "Customer") {
         if (employee.teamId !== currentUserTeamId) {
           return false;
         }
@@ -310,9 +311,9 @@ export default function Employees() {
     (emp) => emp.role === "Manager",
   ).length;
   const admins = filteredEmployees.filter((emp) => emp.role === "Admin").length;
- const teamEmployees = filteredEmployees.filter(
-   (emp) => emp.role === "Employee",
- ).length;
+  const teamEmployees = filteredEmployees.filter(
+    (emp) => emp.role === "Employee",
+  ).length;
 
   const getStatusClasses = (status) => {
     if (status === "Active") {
@@ -417,19 +418,20 @@ export default function Employees() {
       />
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        
         <div>
           <h1
             className={`text-2xl font-bold ${
               darkMode ? "text-white" : "text-gray-900"
             }`}
           >
-            {isEmployee ? "My Team" : "Employee Team"}
+            {isEmployee || isCustomer ? "Project Team" : "Employee Team"}{" "}
           </h1>
           <p className={`mt-1 text-sm ${subTextClass}`}>
             {isEmployee
               ? "View your manager and teammates in ClientCrew."
-              : "Manage your ClientCrew team members, roles, and activity."}
+              : isCustomer
+                ? "View the team members working on your projects."
+                : "Manage your ClientCrew team members, roles, and activity."}
           </p>
         </div>
 
@@ -444,10 +446,8 @@ export default function Employees() {
         )}
       </div>
 
-      
       {/* start cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
-
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className={`rounded-2xl p-4 shadow-sm ${cardClass}`}>
           <div className="flex items-center justify-between">
             <div>
@@ -501,7 +501,6 @@ export default function Employees() {
         </div>
       </div>
 
-      
       {/* search  */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4">
         <div
@@ -556,7 +555,6 @@ export default function Employees() {
             <option>Inactive</option>
           </select>
         </div>
-
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -566,9 +564,7 @@ export default function Employees() {
             className={`rounded-2xl p-5 shadow-sm hover:shadow-md transition ${cardClass}`}
           >
             <div className="flex items-start justify-between gap-4">
-              
               <div className="flex items-center gap-4">
-
                 {/* employee image*/}
                 <img
                   src={employee.image}
@@ -595,7 +591,6 @@ export default function Employees() {
               </span>
             </div>
 
-            
             {/* employee mail */}
             <div className="mt-5 space-y-3">
               <div
@@ -605,7 +600,6 @@ export default function Employees() {
                 <span>{employee.email}</span>
               </div>
 
-              
               {/* employee phone */}
               <div
                 className={`flex items-center gap-3 text-sm ${subTextClass}`}

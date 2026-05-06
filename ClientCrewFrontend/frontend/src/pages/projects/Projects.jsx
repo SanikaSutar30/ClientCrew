@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 
 import {
@@ -32,30 +32,12 @@ import AddTask from "../tasks/AddTask";
 // Common Components
 import { ConfirmationModal } from "../../components/layout";
 
-// Services
-import {
-  getAllProjects,
-  addProject,
-  updateProject,
-  deleteProject,
-} from "../../services/projectService";
-
 export default function Projects() {
   // State
   const { darkMode, userRole } = useOutletContext();
-
-  const canManageProjects = ["Admin", "Manager"].includes(userRole);
-  // const canViewProjects = ["Admin", "Manager", "Employee", "Customer"].includes(
-  //   userRole,
-  // );
-
-  // Temporary logged-in employee id for frontend testing
-  const loggedInEmployeeId = "emp1";
-  const loggedInCustomerName = "ABC Tech Solutions";
-
-  // to test employee role
-  // const loggedInEmployeeId = "emp5";
-
+  const canCreateProject = ["Admin", "Manager"].includes(userRole);
+  const canEditProject = ["Admin", "Manager"].includes(userRole);
+  const canDeleteProject = userRole === "Admin";
   // Modal state
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -75,6 +57,7 @@ export default function Projects() {
   const [showViewConfirm, setShowViewConfirm] = useState(false);
   const [pendingProject, setPendingProject] = useState(null);
 
+  const topRef = useRef(null);
   const handleQuickAddTask = (newTask) => {
     console.log("New Task:", newTask);
 
@@ -84,7 +67,7 @@ export default function Projects() {
     setShowSuccessModal(true);
   };
 
-  const [projects, setProjects] = useState(getAllProjects());
+  const [projects, setProjects] = useState([]);
   // Filters and pagination state
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -92,42 +75,78 @@ export default function Projects() {
   const [sortOrder, setSortOrder] = useState("Newest");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const fetchProjects = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch("http://localhost:8080/api/projects", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch projects");
+      }
+
+      const data = await response.json();
+      setProjects(data);
+    } catch (error) {
+      console.error("Fetch projects error:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
   // Pagination logic
   const itemsPerPage = 6;
 
   // Handlers
-  const handleAddProject = (newProject) => {
-    if (!canManageProjects) return;
+  const handleAddProject = async (newProject) => {
+    if (!canCreateProject) return;
 
-    const projectToAdd = {
-      icon: newProject.icon || "P",
-      iconColor: newProject.iconColor || "bg-teal-500",
-      projectName: newProject.projectName,
-      clientName: newProject.clientName,
-      startDate: newProject.startDate,
-      dueDate: newProject.dueDate,
-      status: newProject.status,
-      progress: Number(newProject.progress || 0),
-      assignedEmployees: newProject.assignedEmployees || [],
-    };
+    try {
+      const token = localStorage.getItem("token");
 
-    addProject(projectToAdd);
-    setProjects(getAllProjects());
-    setShowAdd(false);
+      const response = await fetch("http://localhost:8080/api/projects", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newProject),
+      });
 
-    setSuccessTitle("Project Created!");
-    setSuccessMessage("Your project has been created successfully.");
-    setShowSuccessModal(true);
+      if (!response.ok) {
+        throw new Error("Failed to add project");
+      }
+
+      const savedProject = await response.json();
+
+      setProjects((prev) => [...prev, savedProject]);
+      setShowAdd(false);
+
+      setSuccessTitle("Project Created!");
+      setSuccessMessage("Your project has been created successfully.");
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error("Add project error:", error);
+      alert("Project not saved. Please try again.");
+    }
   };
+
   //  Open edit modal
   const handleEditClick = (project) => {
-    if (!canManageProjects) return;
+    if (!canEditProject) return;
     setSelectedProject(project);
     setShowEdit(true);
   };
 
   const handleDeleteClick = (project) => {
-    if (!canManageProjects) return;
+    if (!canDeleteProject) return;
     setSelectedProject(project);
     setDeleteTitle("Delete Project");
     setDeleteMessage(
@@ -137,28 +156,77 @@ export default function Projects() {
   };
 
   // Update selected project
-  const handleUpdateProject = (updatedProject) => {
-    if (!canManageProjects) return;
+  const handleUpdateProject = async (updatedProject) => {
+    if (!canEditProject) return;
 
-    updateProject(updatedProject);
-    setProjects(getAllProjects());
+    try {
+      const token = localStorage.getItem("token");
 
-    setShowEdit(false);
-    setSelectedProject(null);
+      const response = await fetch(
+        `http://localhost:8080/api/projects/${updatedProject.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updatedProject),
+        },
+      );
 
-    setSuccessTitle("Project Updated!");
-    setSuccessMessage("Your project has been updated successfully.");
-    setShowSuccessModal(true);
+      if (!response.ok) {
+        throw new Error("Failed to update project");
+      }
+
+      await response.json();
+
+      await fetchProjects();
+
+      setShowEdit(false);
+      setSelectedProject(null);
+
+      setSuccessTitle("Project Updated!");
+      setSuccessMessage("Your project has been updated successfully.");
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error("Update project error:", error);
+      alert("Project not updated. Please try again.");
+    }
   };
 
   // Delete selected project
-  const handleDeleteProject = (projectId) => {
-    if (!canManageProjects) return;
+  const handleDeleteProject = async (projectId) => {
+    if (!canDeleteProject) return;
 
-    deleteProject(projectId);
-    setProjects(getAllProjects());
-    setShowDeleteConfirm(false);
-    setSelectedProject(null);
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        `http://localhost:8080/api/projects/${projectId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete project");
+      }
+
+      setProjects((prev) => prev.filter((project) => project.id !== projectId));
+
+      setShowDeleteConfirm(false);
+      setSelectedProject(null);
+
+      setSuccessTitle("Project Deleted!");
+      setSuccessMessage("Project has been deleted successfully.");
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error("Delete project error:", error);
+      alert("Project not deleted. Please try again.");
+    }
   };
 
   // Open view modal
@@ -196,18 +264,7 @@ export default function Projects() {
     }
   };
 
-  const visibleProjects =
-    userRole === "Employee"
-      ? projects.filter((project) =>
-          project.assignedEmployees?.some(
-            (member) => member.id === loggedInEmployeeId,
-          ),
-        )
-      : userRole === "Customer"
-        ? projects.filter(
-            (project) => project.clientName === loggedInCustomerName,
-          )
-        : projects;
+  const visibleProjects = projects;
 
   const uniqueClients = [
     "All Clients",
@@ -240,6 +297,7 @@ export default function Projects() {
     totalPages === 0 ? 1 : Math.min(currentPage, totalPages);
 
   const startIndex = (safeCurrentPage - 1) * itemsPerPage;
+
   const paginatedProjects = filteredProjects.slice(
     startIndex,
     startIndex + itemsPerPage,
@@ -273,8 +331,9 @@ export default function Projects() {
     .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
     .slice(0, 5);
   const navigate = useNavigate();
+
   return (
-    <div className="space-y-6">
+    <div ref={topRef} className="space-y-6">
       {/* Add project modal */}
       {showAdd && (
         <AddProject
@@ -292,6 +351,7 @@ export default function Projects() {
           project={selectedProject}
           setShowEdit={setShowEdit}
           onUpdateProject={handleUpdateProject}
+          userRole={userRole}
         />
       )}
 
@@ -370,11 +430,13 @@ export default function Projects() {
           <p
             className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-500"}`}
           >
-            Manage all project records here.
+            {userRole === "Customer"
+              ? "View your project records and progress."
+              : "Manage all project records here."}
           </p>
         </div>
 
-        {canManageProjects && (
+        {canCreateProject && (
           <button
             onClick={() => setShowAdd(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-[#0f766e] text-white hover:opacity-90 cursor-pointer"
@@ -521,24 +583,26 @@ export default function Projects() {
               <option>Planning</option>
             </select>
 
-            <select
-              value={clientFilter}
-              onChange={(e) => {
-                setClientFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className={`px-4 py-2 rounded-xl text-sm border cursor-pointer ${
-                darkMode
-                  ? "bg-gray-600 border-gray-500 text-white"
-                  : "bg-white border-gray-200 text-gray-700"
-              }`}
-            >
-              {uniqueClients.map((client) => (
-                <option key={client} value={client}>
-                  {client}
-                </option>
-              ))}
-            </select>
+            {userRole !== "Customer" && (
+              <select
+                value={clientFilter}
+                onChange={(e) => {
+                  setClientFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className={`px-4 py-2 rounded-xl text-sm border cursor-pointer ${
+                  darkMode
+                    ? "bg-gray-600 border-gray-500 text-white"
+                    : "bg-white border-gray-200 text-gray-700"
+                }`}
+              >
+                {uniqueClients.map((client) => (
+                  <option key={client} value={client}>
+                    {client}
+                  </option>
+                ))}
+              </select>
+            )}
 
             <select
               value={sortOrder}
@@ -663,21 +727,37 @@ export default function Projects() {
 
                 {/* Team */}
                 <div className="flex items-center">
-                  {project.assignedEmployees?.map((member, index) => (
+                  {project.assignedEmployees
+                    ?.slice(0, 3)
+                    .map((member, index) => (
+                      <div
+                        key={member.userId}
+                        className={`w-8 h-8 rounded-full bg-[#0f766e] text-white flex items-center justify-center text-xs font-semibold border-2 ${
+                          darkMode ? "border-gray-700" : "border-white"
+                        } ${index !== 0 ? "-ml-2" : ""}`}
+                        title={`${member.userEmail === localStorage.getItem("userEmail") ? "You" : member.userFullName} | ${member.userRole} | ${member.userEmail}`}
+                      >
+                        {member.userImage ? (
+                          <img
+                            src={member.userImage}
+                            alt={member.userFullName}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          member.userFullName?.charAt(0).toUpperCase()
+                        )}
+                      </div>
+                    ))}
+
+                  {project.assignedEmployees?.length > 3 && (
                     <div
-                      key={member.id}
-                      className={`w-8 h-8 rounded-full overflow-hidden border-2 ${
+                      className={`w-8 h-8 rounded-full bg-gray-500 text-white flex items-center justify-center text-xs font-semibold border-2 ${
                         darkMode ? "border-gray-700" : "border-white"
-                      } ${index !== 0 ? "-ml-2" : ""}`}
-                      title={`${member.name} - ${member.role}`}
+                      } -ml-2`}
                     >
-                      <img
-                        src={member.image}
-                        alt={member.name}
-                        className="w-full h-full object-cover"
-                      />
+                      +{project.assignedEmployees.length - 3}
                     </div>
-                  ))}
+                  )}
                 </div>
 
                 {/* Actions */}
@@ -689,25 +769,24 @@ export default function Projects() {
                   >
                     <Eye size={16} />
                   </button>
+                  {canEditProject && (
+                    <button
+                      onClick={() => handleEditClick(project)}
+                      title="Edit Project"
+                      className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 cursor-pointer"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                  )}
 
-                  {canManageProjects && (
-                    <>
-                      <button
-                        onClick={() => handleEditClick(project)}
-                        title="Edit Project"
-                        className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 cursor-pointer"
-                      >
-                        <Pencil size={16} />
-                      </button>
-
-                      <button
-                        onClick={() => handleDeleteClick(project)}
-                        title="Delete Project"
-                        className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </>
+                  {canDeleteProject && (
+                    <button
+                      onClick={() => handleDeleteClick(project)}
+                      title="Delete Project"
+                      className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   )}
                 </div>
               </div>
@@ -904,8 +983,15 @@ export default function Projects() {
             >
               Upcoming Deadlines
             </h2>
-
-            <button className="text-sm cursor-pointer font-medium text-[#0f766e] hover:underline hover:text-[#115e59] transition">
+            <button
+              onClick={() =>
+                topRef.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                })
+              }
+              className="text-sm cursor-pointer font-medium text-[#0f766e] hover:underline hover:text-[#115e59] transition"
+            >
               View All
             </button>
           </div>
@@ -987,7 +1073,7 @@ export default function Projects() {
 
           <div className="grid grid-cols-2 gap-3">
             {/* Admin / Manager */}
-            {canManageProjects ? (
+            {canCreateProject ? (
               <>
                 <button
                   onClick={() => setShowAdd(true)}
@@ -1108,26 +1194,6 @@ export default function Projects() {
                     }`}
                   >
                     View Tasks
-                  </p>
-                </button>
-
-                <button
-                  onClick={() => navigate("/projects/settings")}
-                  className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
-                    darkMode
-                      ? "bg-gray-600 border-gray-500 hover:bg-gray-500"
-                      : "bg-white border-gray-200 hover:bg-gray-50"
-                  }`}
-                >
-                  <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-red-500 text-white flex items-center justify-center">
-                    <Settings size={18} />
-                  </div>
-                  <p
-                    className={`font-medium ${
-                      darkMode ? "text-white" : "text-black"
-                    }`}
-                  >
-                    Settings
                   </p>
                 </button>
               </>

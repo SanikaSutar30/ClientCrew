@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { loginUser } from "../services/authService";
 import {
   Mail,
   Lock,
@@ -91,17 +92,47 @@ function Login() {
     }));
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) return;
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const response = await loginUser({
+        userEmail: formData.email,
+        userPassword: formData.password,
+      });
+
+      const data = response.data;
+
+      if (!role) {
+        alert("Please select your role");
+        return;
+      }
+
+      if (data.userRole !== role.toUpperCase()) {
+        alert(
+          `This account is registered as ${data.userRole}. Please select correct role.`,
+        );
+        return;
+      }
+
+      localStorage.setItem("userRole", data.userRole);
+
+      localStorage.setItem("token", data.token);
+
+      localStorage.setItem("userName", data.userFullName);
+      localStorage.setItem("userEmail", data.userEmail);
+
       setShowLoginSuccess(true);
-    }, 800);
+    } catch (error) {
+      console.error(error);
+      alert("Invalid email or password");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -361,17 +392,6 @@ function Login() {
         confirmText="OK"
         onConfirm={() => {
           setShowLoginSuccess(false);
-
-          localStorage.setItem("token", "demo-token");
-          localStorage.setItem("userRole", role);
-          localStorage.setItem(
-            "user",
-            JSON.stringify({
-              email: formData.email,
-              role: role,
-            }),
-          );
-
           navigate("/dashboard");
         }}
       />

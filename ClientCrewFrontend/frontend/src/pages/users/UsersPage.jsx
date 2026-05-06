@@ -403,7 +403,7 @@ export default function UsersPage() {
       </div>
 
       {/* cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {statCards.map((card) => {
           const Icon = card.icon;
 
@@ -450,7 +450,7 @@ export default function UsersPage() {
         }`}
       >
         <div className="p-4 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
-          <div className="flex flex-col md:flex-row gap-3 w-full xl:w-auto">
+          <div className="flex flex-col md:flex-row flex-wrap gap-3 w-full lg:w-auto">
             <div
               className={`flex items-center px-3 py-2 rounded-xl border w-full md:w-72 ${
                 darkMode
@@ -539,33 +539,33 @@ export default function UsersPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <div className="min-w-[1100px]">
+          <div className="min-w-[950px] lg:min-w-0">
             <div
-              className={`grid grid-cols-12 px-6 py-4 text-sm font-semibold border-y ${
+              className={`grid grid-cols-[2.2fr_1.2fr_1.3fr_1.4fr_1fr_1.4fr] px-6 py-4 text-sm font-semibold border-y ${
                 darkMode
                   ? "bg-gray-900/40 border-gray-700 text-gray-300"
                   : "bg-gray-50 border-gray-200 text-gray-600"
               }`}
             >
-              <div className="col-span-3">User</div>
-              <div className="col-span-2">Role</div>
-              <div className="col-span-2">Phone</div>
-              <div className="col-span-2">Joined Date</div>
-              <div className="col-span-1">Status</div>
-              <div className="col-span-2 text-center">Actions</div>
+              <div>User</div>
+              <div>Role</div>
+              <div>Phone</div>
+              <div>Joined Date</div>
+              <div>Status</div>
+              <div className="text-center">Actions</div>
             </div>
 
             {paginatedUsers.length > 0 ? (
               paginatedUsers.map((user) => (
                 <div
                   key={user.id}
-                  className={`grid grid-cols-12 items-center px-6 py-4 text-sm border-b ${
+                  className={`grid grid-cols-[2.2fr_1.2fr_1.3fr_1.4fr_1fr_1.4fr] items-center px-6 py-4 text-sm border-b ${
                     darkMode
                       ? "border-gray-700 text-gray-200"
                       : "border-gray-100 text-gray-700"
                   }`}
                 >
-                  <div className="col-span-3 flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <img
                       src={user.image}
                       alt={user.name}
@@ -573,14 +573,14 @@ export default function UsersPage() {
                     />
                     <div>
                       <h3
-                        className={`font-semibold ${
+                        className={`font-semibold truncate ${
                           darkMode ? "text-white" : "text-gray-900"
                         }`}
                       >
                         {user.name}
                       </h3>
                       <p
-                        className={`text-xs ${
+                        className={`text-xs truncate ${
                           darkMode ? "text-gray-400" : "text-gray-500"
                         }`}
                       >
@@ -588,14 +588,11 @@ export default function UsersPage() {
                       </p>
                     </div>
                   </div>
+                  <div>{user.role}</div>
+                  <div>{user.phone}</div>
+                  <div>{new Date(user.joinedDate).toLocaleDateString()}</div>
 
-                  <div className="col-span-2">{user.role}</div>
-                  <div className="col-span-2">{user.phone}</div>
-                  <div className="col-span-2">
-                    {new Date(user.joinedDate).toLocaleDateString()}
-                  </div>
-
-                  <div className="col-span-1">
+                  <div>
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusClasses(
                         user.status,
@@ -605,7 +602,7 @@ export default function UsersPage() {
                     </span>
                   </div>
 
-                  <div className="col-span-2 flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-2">
                     <button
                       onClick={() => {
                         handleViewClick(user);

@@ -8,7 +8,9 @@ import {
   HelpCircle,
   LogOut,
   ChevronDown,
-  ShieldCheck, FileText,Key
+  ShieldCheck,
+  FileText,
+  Key,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -22,9 +24,8 @@ function Topbar({
   userRole,
 }) {
   const navigate = useNavigate();
-
-  const savedUser = JSON.parse(localStorage.getItem("user")) || {};
-
+  const userName = localStorage.getItem("userName");
+  const userEmail = localStorage.getItem("userEmail");
   const roleLabelMap = {
     Admin: "Administrator",
     Manager: "Manager",
@@ -32,10 +33,8 @@ function Topbar({
     Customer: "Customer",
   };
 
-  const displayName =
-    savedUser.fullName || savedUser.email?.split("@")[0] || userRole || "User";
-
-  const displayEmail = savedUser.email || "user@clientcrew.com";
+  const displayName = userName || userRole || "User";
+  const displayEmail = userEmail || "user@clientcrew.com";
   const displayRole = roleLabelMap[userRole] || userRole || "User";
 
   const isAdmin = userRole === "Admin";
@@ -124,15 +123,14 @@ function Topbar({
     navigate("/messages", { state: { selectedChat: msg } });
   };
 
+  const typeIcons = {
+    security: <ShieldCheck size={16} />,
+    report: <FileText size={16} />,
+    login: <Key size={16} />,
+    customer: <User size={16} />,
+  };
 
-const typeIcons = {
-  security: <ShieldCheck size={16} />,
-  report: <FileText size={16} />,
-  login: <Key size={16} />,
-  customer: <User size={16} />,
-};
-
-const renderTypeIcon = (type) => typeIcons[type] || <Bell size={16} />;
+  const renderTypeIcon = (type) => typeIcons[type] || <Bell size={16} />;
 
   const handleProfileOptionClick = (path) => {
     setShowProfileMenu(false);
@@ -144,13 +142,15 @@ const renderTypeIcon = (type) => typeIcons[type] || <Bell size={16} />;
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("userRole");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userEmail");
     sessionStorage.clear();
     navigate("/login");
   };
 
   return (
     <div
-      className={`h-16 flex items-center justify-between px-6 ${
+      className={`h-16 w-full shrink-0 flex items-center justify-between px-6 ${
         darkMode ? "bg-gray-800 text-black" : "bg-gray-100 text-black"
       }`}
     >

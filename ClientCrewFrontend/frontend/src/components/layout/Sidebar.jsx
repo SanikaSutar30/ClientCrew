@@ -137,12 +137,6 @@
 
 // export default Sidebar;
 
-
-
-
-
-
-
 import { useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
@@ -162,8 +156,11 @@ function Sidebar({ darkMode }) {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("userRole");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userEmail");
     sessionStorage.clear();
-navigate("/login");  };
+    navigate("/login");
+  };
 
   return (
     <div

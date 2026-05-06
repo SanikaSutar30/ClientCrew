@@ -5,9 +5,15 @@ import Topbar from "./Topbar";
 
 function Layout() {
   const [darkMode, setDarkMode] = useState(false);
-  // const userRole = localStorage.getItem("userRole") || "Employee";
-  const userRole = localStorage.getItem("userRole") ?? "Employee";
+const roleMap = {
+  ADMIN: "Admin",
+  MANAGER: "Manager",
+  EMPLOYEE: "Employee",
+  CUSTOMER: "Customer",
+};
 
+const rawRole = localStorage.getItem("userRole") ?? "Employee";
+const userRole = roleMap[rawRole] || rawRole;
   const [notifications, setNotifications] = useState([
     {
       id: 1,

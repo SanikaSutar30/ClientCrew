@@ -1,8 +1,12 @@
-import { useState } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
   Calendar,
+  UserPlus,
+  FileText,
+  ShieldCheck,
+  Settings,
   ChevronDown,
   Users,
   UserCheck,
@@ -10,8 +14,9 @@ import {
   Activity,
 } from "lucide-react";
 
-import AddCustomer from "./customers/AddCustomer";
+import AddCustomer from "../customers/AddCustomer";
 
+import { getAllProjects } from "../../services/projectService";
 import {
   LineChart,
   Line,
@@ -25,7 +30,8 @@ import {
   Cell,
 } from "recharts";
 
-export default function Dashboard() {
+export default function AdminDashboard({ darkMode }) {
+
   const dashboardData = {
     Today: {
       customers: 5,
@@ -62,12 +68,13 @@ export default function Dashboard() {
     { month: "Jun", customers: 250 },
   ];
 
-  const outletContext = useOutletContext() || {};
-  const darkMode = outletContext.darkMode ?? false;
   // Modal visibility state
   const [showAddModal, setShowAddModal] = useState(false);
 
+  const [projects, setProjects] = useState([]);
+
   const [selectedFilter, setSelectedFilter] = useState("This Month");
+
   const [open, setOpen] = useState(false);
 
   const [customers, setCustomers] = useState([
@@ -128,10 +135,12 @@ export default function Dashboard() {
   ]);
 
   const options = ["Today", "This Week", "This Month", "This Year"];
+
   const currentData = dashboardData[selectedFilter];
 
   // initialize navigate for view all button
   const navigate = useNavigate();
+
   // state for chart filter (monthly/weekly)
   const [chartFilter, setChartFilter] = useState("Monthly");
 
@@ -154,8 +163,22 @@ export default function Dashboard() {
     setShowAddModal(false);
   };
 
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        const res = await getAllProjects();
+        setProjects(res.data);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
+    };
+
+    loadProjects();
+  }, []);
+
   return (
     <div className="space-y-6">
+
       {showAddModal && (
         <AddCustomer
           darkMode={darkMode}
@@ -221,79 +244,81 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+
       </div>
-{/* cards */}
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-  {[
-    {
-      title: "Total Customers",
-      value: currentData.customers,
-      icon: Users,
-      bg: "bg-[#0f766e]/10",
-      color: "text-[#0f766e]",
-    },
-    {
-      title: "Total Employees",
-      value: currentData.employees,
-      icon: UserCheck,
-      bg: "bg-blue-100",
-      color: "text-blue-600",
-    },
-    {
-      title: "Total Projects",
-      value: currentData.projects,
-      icon: Folder,
-      bg: "bg-purple-100",
-      color: "text-purple-600",
-    },
-    {
-      title: "Interactions",
-      value: currentData.interactions,
-      icon: Activity,
-      bg: "bg-orange-100",
-      color: "text-orange-600",
-    },
-  ].map((item) => {
-    const Icon = item.icon;
 
-    return (
-      <div
-        key={item.title}
-        className={`p-5 rounded-2xl shadow-sm hover:shadow-md transition flex items-center justify-between ${
-          darkMode
-            ? "bg-gray-700 border border-gray-600"
-            : "bg-white border border-gray-100"
-        }`}
-      >
-        {/* LEFT: text */}
-        <div>
-          <p
-            className={`text-sm font-medium ${
-              darkMode ? "text-gray-300" : "text-gray-500"
-            }`}
-          >
-            {item.title}
-          </p>
+      {/* cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          {
+            title: "Total Customers",
+            value: currentData.customers,
+            icon: Users,
+            bg: "bg-[#0f766e]/10",
+            color: "text-[#0f766e]",
+          },
+          {
+            title: "Total Employees",
+            value: currentData.employees,
+            icon: UserCheck,
+            bg: "bg-blue-100",
+            color: "text-blue-600",
+          },
+          {
+            title: "Total Projects",
+            value: projects.length,
+            icon: Folder,
+            bg: "bg-purple-100",
+            color: "text-purple-600",
+          },
+          {
+            title: "Interactions",
+            value: currentData.interactions,
+            icon: Activity,
+            bg: "bg-orange-100",
+            color: "text-orange-600",
+          },
+        ].map((item) => {
+          const Icon = item.icon;
 
-          <h2
-            className={`text-2xl font-bold mt-2 ${
-              darkMode ? "text-white" : "text-black"
-            }`}
-          >
-            {item.value}
-          </h2>
-        </div>
+          return (
+            <div
+              key={item.title}
+              className={`p-5 rounded-2xl shadow-sm hover:shadow-md transition flex items-center justify-between ${
+                darkMode
+                  ? "bg-gray-700 border border-gray-600"
+                  : "bg-white border border-gray-100"
+              }`}
+            >
+              {/* LEFT: text */}
+              <div>
+                <p
+                  className={`text-sm font-medium ${
+                    darkMode ? "text-gray-300" : "text-gray-500"
+                  }`}
+                >
+                  {item.title}
+                </p>
 
-        {/* RIGHT: centered icon box (like project cards) */}
-        <div
-          className={`w-12 h-12 flex items-center justify-center rounded-xl ${item.bg}`}
-        >
-          <Icon size={22} className={item.color} />
-        </div>
+                <h2
+                  className={`text-2xl font-bold mt-2 ${
+                    darkMode ? "text-white" : "text-black"
+                  }`}
+                >
+                  {item.value}
+                </h2>
+              </div>
+
+              {/* RIGHT: centered icon box (like project cards) */}
+              <div
+                className={`w-12 h-12 flex items-center justify-center rounded-xl ${item.bg}`}
+              >
+                <Icon size={22} className={item.color} />
+              </div>
+            </div>
+          );
+        })}
       </div>
-    );
-  })}
-</div>
 
       {/* Chart */}
       <div
@@ -622,22 +647,25 @@ export default function Dashboard() {
           }`}
         >
           <h2
-            className={`text-xl font-semibold mb-4 ${darkMode ? "text-white" : "text-black"}`}
+            className={`text-xl font-semibold mb-4 ${
+              darkMode ? "text-white" : "text-black"
+            }`}
           >
             Quick Actions
           </h2>
 
           <div className="grid grid-cols-2 gap-2">
+            {/* Add Customer */}
             <button
               onClick={() => setShowAddModal(true)}
-              className={`p-2 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
+              className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
                 darkMode
                   ? "bg-gray-600 border-gray-500 hover:bg-gray-500"
                   : "bg-white border-gray-200 hover:bg-gray-50"
               }`}
             >
               <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-[#0f766e] text-white flex items-center justify-center">
-                👤
+                <UserPlus size={18} />
               </div>
               <p
                 className={`font-medium ${darkMode ? "text-white" : "text-black"}`}
@@ -646,6 +674,7 @@ export default function Dashboard() {
               </p>
             </button>
 
+            {/* View Reports */}
             <button
               onClick={() => navigate("/reports")}
               className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
@@ -655,7 +684,7 @@ export default function Dashboard() {
               }`}
             >
               <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-blue-500 text-white flex items-center justify-center">
-                📄
+                <FileText size={18} />
               </div>
               <p
                 className={`font-medium ${darkMode ? "text-white" : "text-black"}`}
@@ -664,6 +693,7 @@ export default function Dashboard() {
               </p>
             </button>
 
+            {/* Manage Users */}
             <button
               onClick={() => navigate("/users")}
               className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
@@ -673,7 +703,7 @@ export default function Dashboard() {
               }`}
             >
               <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-yellow-500 text-white flex items-center justify-center">
-                👥
+                <ShieldCheck size={18} />
               </div>
               <p
                 className={`font-medium ${darkMode ? "text-white" : "text-black"}`}
@@ -682,6 +712,7 @@ export default function Dashboard() {
               </p>
             </button>
 
+            {/* Settings */}
             <button
               onClick={() => navigate("/settings")}
               className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
@@ -691,7 +722,7 @@ export default function Dashboard() {
               }`}
             >
               <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-red-500 text-white flex items-center justify-center">
-                ⚙️
+                <Settings size={18} />
               </div>
               <p
                 className={`font-medium ${darkMode ? "text-white" : "text-black"}`}
@@ -702,6 +733,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      
     </div>
   );
 }
