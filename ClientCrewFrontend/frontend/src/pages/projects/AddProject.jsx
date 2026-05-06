@@ -25,8 +25,7 @@ export default function AddProject({
     status: "Planning",
     progress: "",
     assignedEmployees: [],
-    icon: "",
-    iconColor: "bg-teal-500",
+    projectImage: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -114,9 +113,6 @@ export default function AddProject({
       newErrors.progress = progressStatusError;
     }
 
-    if (!formData.icon.trim()) newErrors.icon = "Project icon is required";
-    else if (formData.icon.length > 1) newErrors.icon = "Use only one letter";
-
     if (formData.assignedEmployees.length === 0) {
       newErrors.assignedEmployees = "Select at least one team member";
     }
@@ -134,8 +130,7 @@ export default function AddProject({
       status: "Planning",
       progress: "",
       assignedEmployees: [],
-      icon: "",
-      iconColor: "bg-teal-500",
+      projectImage: "",
     });
     setErrors({});
   };
@@ -154,6 +149,7 @@ export default function AddProject({
       progress: Number(formData.progress),
       employeeIds: formData.assignedEmployees.map((emp) => emp.userId),
       customerEmail: selectedCustomer?.userEmail || "",
+      projectImage: formData.projectImage,
     });
     resetForm();
     // setShowAdd(false);
@@ -367,21 +363,98 @@ export default function AddProject({
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid md:grid-cols-2 gap-5">
-            {/* Project Name */}
-            <div>
-              <label className={labelClass}>Project Name</label>
-              <div className="flex gap-2">
-                <Folder size={18} />
-                <input
-                  name="projectName"
-                  value={formData.projectName}
-                  onChange={handleChange}
-                  className={inputClass}
-                />
+            {/* Project Name + Project Image */}
+            <div className="md:col-span-2">
+              <div className="flex flex-col md:flex-row gap-4">
+                {/* Project Icon */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Folder size={18} className="text-[#0f766e]" />
+                    <label className={labelClass}>Project Icon</label>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center font-bold text-white text-xl shrink-0 ${
+                        darkMode ? "bg-gray-600" : "bg-gray-300"
+                      }`}
+                    >
+                      {formData.projectImage ? (
+                        <img
+                          src={formData.projectImage}
+                          alt="Project"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        formData.projectName?.charAt(0).toUpperCase() || "P"
+                      )}
+                    </div>
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+
+                        if (file) {
+                          const reader = new FileReader();
+
+                          reader.onloadend = () => {
+                            setFormData({
+                              ...formData,
+                              projectImage: reader.result,
+                            });
+                          };
+
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className={`max-w-[220px] text-sm cursor-pointer
+    file:mr-4
+    file:px-4
+    file:py-2
+    file:rounded-xl
+    file:border-0
+    file:font-medium
+    file:bg-gray-500
+    file:text-white
+    hover:file:bg-gray-600
+    ${darkMode ? "text-gray-300" : "text-gray-600"}`}
+                    />
+                  </div>
+                </div>
+
+                {/* Project Name */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Folder size={18} className="text-[#0f766e]" />
+                    <label className={labelClass}>Project Name</label>
+                  </div>
+
+                  <input
+                    name="projectName"
+                    placeholder="Enter project name"
+                    value={formData.projectName}
+                    onChange={handleChange}
+                    className={inputClass}
+                  />
+
+                  {errors.projectName && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.projectName}
+                    </p>
+                  )}
+
+                  <p
+                    className={`text-xs mt-2 ${
+                      darkMode ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    Optional image — otherwise first letter of project name will
+                    be used.
+                  </p>
+                </div>
               </div>
-              {errors.projectName && (
-                <p className="text-red-500 text-xs">{errors.projectName}</p>
-              )}
             </div>
 
             {/* Client */}
@@ -397,6 +470,7 @@ export default function AddProject({
                   + Add Customer
                 </button>
               </div>
+
               {/* Search */}
               <div
                 className={`flex items-center px-4 py-3 rounded-xl w-full lg:w-96 border mb-4 ${
@@ -548,21 +622,6 @@ export default function AddProject({
               />
               {errors.progress && (
                 <p className="text-red-500 text-xs">{errors.progress}</p>
-              )}
-            </div>
-
-            {/* Icon */}
-            <div>
-              <label className={labelClass}>Icon</label>
-              <input
-                name="icon"
-                maxLength={1}
-                value={formData.icon}
-                onChange={handleChange}
-                className={inputClass}
-              />
-              {errors.icon && (
-                <p className="text-red-500 text-xs">{errors.icon}</p>
               )}
             </div>
 

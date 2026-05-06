@@ -249,7 +249,9 @@ export default function EditProject({
               <div
                 className={`w-12 h-12 rounded-xl ${formData.iconColor} text-white flex items-center justify-center font-bold`}
               >
-                {formData.icon}
+                {formData.icon ||
+                  formData.projectName?.charAt(0).toUpperCase() ||
+                  "P"}
               </div>
 
               <div>

@@ -669,15 +669,26 @@ export default function Projects() {
                 {/* Project */}
                 <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className={`w-10 h-10 rounded-xl ${project.iconColor} text-white flex items-center justify-center font-semibold shrink-0`}
-                  >
-                    {project.icon}
-                  </div>
-                  <span
-                    className={`font-medium truncate ${
-                      darkMode ? "text-white" : "text-black"
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center font-semibold shrink-0 overflow-hidden ${
+                      darkMode
+                        ? "bg-blue-900/40 text-blue-200"
+                        : "bg-blue-100 text-blue-700"
                     }`}
                   >
+                    {project.projectImage ? (
+                      <img
+                        src={project.projectImage}
+                        alt={project.projectName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xs font-bold">
+                        {project.projectName?.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+
+                  <span className="truncate font-medium">
                     {project.projectName}
                   </span>
                 </div>
@@ -1002,29 +1013,22 @@ export default function Projects() {
                 key={project.id}
                 className="flex items-center justify-between gap-3"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    className={`w-11 h-11 rounded-xl ${project.iconColor} text-white flex items-center justify-center font-semibold shrink-0`}
-                  >
-                    {project.icon}
-                  </div>
-
-                  <div className="min-w-0">
-                    <h3
-                      className={`text-base font-semibold truncate ${
-                        darkMode ? "text-white" : "text-black"
-                      }`}
-                    >
-                      {project.projectName}
-                    </h3>
-                    <p
-                      className={`text-sm truncate ${
-                        darkMode ? "text-gray-300" : "text-gray-500"
-                      }`}
-                    >
-                      {project.clientName}
-                    </p>
-                  </div>
+                <div
+                  className={`w-11 h-11 rounded-xl ${
+                    project.iconColor || "bg-[#0f766e]"
+                  } text-white flex items-center justify-center font-semibold shrink-0 overflow-hidden`}
+                >
+                  {project.projectImage ? (
+                    <img
+                      src={project.projectImage}
+                      alt={project.projectName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-sm font-bold">
+                      {project.projectName?.charAt(0).toUpperCase()}
+                    </span>
+                  )}
                 </div>
 
                 <div className="text-right shrink-0">
