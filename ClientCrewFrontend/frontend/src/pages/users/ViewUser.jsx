@@ -42,16 +42,16 @@ export default function ViewUser({ darkMode, user, setShowViewModal }) {
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
             <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-300 shrink-0 border border-gray-400">
               <img
-                src={user.image}
-                alt={user.name}
+                src={user.userImage}
+                alt={user.userFullName}
                 className="w-full h-full object-cover object-top"
               />
             </div>
 
             <div className="flex-1 space-y-4 w-full">
               <div className="text-center md:text-left">
-                <h3 className="text-2xl font-bold">{user.name}</h3>
-                <p className="text-sm text-gray-500">User ID: {user.id}</p>
+                <h3 className="text-2xl font-bold">{user.userFullName}</h3>
+                <p className="text-sm text-gray-500">User ID: {user.userId}</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -64,7 +64,7 @@ export default function ViewUser({ darkMode, user, setShowViewModal }) {
                     <Mail size={16} className="text-blue-500" />
                     <span className="text-sm font-medium">Email</span>
                   </div>
-                  <p className="text-sm">{user.email}</p>
+                  <p className="text-sm">{user.userEmail}</p>
                 </div>
 
                 <div
@@ -76,7 +76,7 @@ export default function ViewUser({ darkMode, user, setShowViewModal }) {
                     <Phone size={16} className="text-green-500" />
                     <span className="text-sm font-medium">Phone</span>
                   </div>
-                  <p className="text-sm">{user.phone}</p>
+                  <p className="text-sm">{user.userPhone}</p>
                 </div>
 
                 <div
@@ -88,7 +88,7 @@ export default function ViewUser({ darkMode, user, setShowViewModal }) {
                     <Shield size={16} className="text-indigo-500" />
                     <span className="text-sm font-medium">Role</span>
                   </div>
-                  <p className="text-sm">{user.role}</p>
+                  <p className="text-sm">{user.userRole}</p>
                 </div>
 
                 <div

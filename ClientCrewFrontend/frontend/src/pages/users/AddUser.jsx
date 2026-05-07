@@ -2,13 +2,13 @@ import { useState } from "react";
 
 export default function AddUser({ darkMode, setShowAddModal, onAddUser }) {
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    role: "Employee",
+    userFullName: "",
+    userEmail: "",
+    userPhone: "",
+    userRole: "EMPLOYEE",
     status: "Active",
     joinedDate: "",
-    image: "",
+    userImage: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -33,61 +33,57 @@ export default function AddUser({ darkMode, setShowAddModal, onAddUser }) {
     }));
   };
 
-const handleImageChange = (e) => {
-  const file = e.target.files[0];
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
 
-  if (!file) return;
+    if (!file) return;
 
-  const validTypes = ["image/png", "image/jpeg", "image/jpg"];
+    const validTypes = ["image/png", "image/jpeg", "image/jpg"];
 
-  if (!validTypes.includes(file.type)) {
-    setErrors((prev) => ({
-      ...prev,
-      image: "Only PNG, JPG and JPEG images are allowed",
-    }));
-    return;
-  }
+    if (!validTypes.includes(file.type)) {
+      setErrors((prev) => ({
+        ...prev,
+        userImage: "Only PNG, JPG and JPEG images are allowed",
+      }));
+      return;
+    }
 
-  const reader = new FileReader();
+    const reader = new FileReader();
 
-  reader.onloadend = () => {
-    setFormData((prev) => ({
-      ...prev,
-      image: reader.result,
-    }));
+    reader.onloadend = () => {
+      setFormData((prev) => ({
+        ...prev,
+        userImage: reader.result,
+      }));
 
-    setErrors((prev) => ({
-      ...prev,
-      image: "",
-    }));
+      setErrors((prev) => ({
+        ...prev,
+        userImage: "",
+      }));
+    };
+
+    reader.readAsDataURL(file);
   };
-
-  reader.readAsDataURL(file);
-};
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
+    if (!formData.userFullName.trim()) {
+      newErrors.userFullName = "Name is required";
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Invalid email format";
+    if (!formData.userEmail.trim()) {
+      newErrors.userEmail = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.userEmail)) {
+      newErrors.userEmail = "Invalid email format";
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
+    if (!formData.userPhone.trim()) {
+      newErrors.userPhone = "Phone number is required";
     }
 
     if (!formData.joinedDate) {
       newErrors.joinedDate = "Joined date is required";
-    }
-
-    if (!formData.image) {
-      newErrors.image = "Profile image is required";
     }
 
     setErrors(newErrors);
@@ -136,14 +132,16 @@ const handleImageChange = (e) => {
               </label>
               <input
                 type="text"
-                name="name"
-                value={formData.name}
+                name="userFullName"
+                value={formData.userFullName}
                 onChange={handleChange}
                 placeholder="Enter full name"
                 className={inputClass}
               />
-              {errors.name && (
-                <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+              {errors.userFullName && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.userFullName}
+                </p>
               )}
             </div>
 
@@ -153,14 +151,14 @@ const handleImageChange = (e) => {
               </label>
               <input
                 type="email"
-                name="email"
-                value={formData.email}
+                name="userEmail"
+                value={formData.userEmail}
                 onChange={handleChange}
                 placeholder="Enter email address"
                 className={inputClass}
               />
-              {errors.email && (
-                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+              {errors.userEmail && (
+                <p className="text-red-500 text-xs mt-1">{errors.userEmail}</p>
               )}
             </div>
 
@@ -170,29 +168,28 @@ const handleImageChange = (e) => {
               </label>
               <input
                 type="text"
-                name="phone"
-                value={formData.phone}
+                name="userPhone"
+                value={formData.userPhone}
                 onChange={handleChange}
                 placeholder="Enter phone number"
                 className={inputClass}
               />
-              {errors.phone && (
-                <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+              {errors.userPhone && (
+                <p className="text-red-500 text-xs mt-1">{errors.userPhone}</p>
               )}
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-2">Role</label>
               <select
-                name="role"
-                value={formData.role}
+                name="userRole"
+                value={formData.userRole}
                 onChange={handleChange}
                 className={`${inputClass} cursor-pointer`}
               >
-                <option value="Admin">Admin</option>
-                <option value="Manager">Manager</option>
-                <option value="Employee">Employee</option>
-                <option value="Customer">Customer</option>
+                <option value="MANAGER">Manager</option>
+                <option value="EMPLOYEE">Employee</option>
+                <option value="CUSTOMER">Customer</option>
               </select>
             </div>
 
@@ -240,8 +237,8 @@ const handleImageChange = (e) => {
                     : "bg-gray-50 border-gray-200 text-black file:bg-gray-200 file:text-black"
                 }`}
               />
-              {errors.image && (
-                <p className="text-red-500 text-xs mt-1">{errors.image}</p>
+              {errors.userImage && (
+                <p className="text-red-500 text-xs mt-1">{errors.userImage}</p>
               )}
             </div>
           </div>

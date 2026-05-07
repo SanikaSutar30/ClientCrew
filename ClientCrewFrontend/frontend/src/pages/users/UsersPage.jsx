@@ -1,11 +1,11 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
+
 import {
-  Search,
   Plus,
-  Download,
+  Edit,
+  Search,
   Eye,
-  Pencil,
   Trash2,
   Users as UsersIcon,
   Shield,
@@ -13,99 +13,26 @@ import {
   UserCheck,
   UserRound,
 } from "lucide-react";
+
 import AddUser from "./AddUser";
-import ViewUser from "./ViewUser";
 import EditUser from "./EditUser";
-import ConfirmationModal from "../../components/layout/ConfirmationModal";
+import ViewUser from "./ViewUser";
+
 import {
   getAllUsers,
+  deleteUser,
   addUser,
   updateUser,
-  deleteUser,
 } from "../../services/userService";
+import ConfirmationModal from "../../components/layout/ConfirmationModal";
 
 export default function UsersPage() {
   const context = useOutletContext() || {};
   const darkMode = context.darkMode ?? false;
 
-  // const [users, setUsers] = useState([
-  //   {
-  //     id: 1,
-  //     name: "Rahul Sharma",
-  //     email: "rahul@gmail.com",
-  //     phone: "+91 9876543210",
-  //     role: "Admin",
-  //     status: "Active",
-  //     joinedDate: "2026-01-12",
-  //     image: "../assets/Profile.jpg",
-  //   },
-  //   {
-  //     id: 2,
-  //     name: "Priya Singh",
-  //     email: "priya@gmail.com",
-  //     phone: "+91 9123456780",
-  //     role: "Manager",
-  //     status: "Active",
-  //     joinedDate: "2026-02-04",
-  //     image: "../assets/Profile2.jpg",
-  //   },
-  //   {
-  //     id: 3,
-  //     name: "Amit Patil",
-  //     email: "amit@gmail.com",
-  //     phone: "+91 9988776655",
-  //     role: "Employee",
-  //     status: "Active",
-  //     joinedDate: "2026-02-20",
-  //     image: "../assets/Profile3.jpg",
-  //   },
-  //   {
-  //     id: 4,
-  //     name: "Neha Verma",
-  //     email: "neha@gmail.com",
-  //     phone: "+91 9090909090",
-  //     role: "Customer",
-  //     status: "Inactive",
-  //     joinedDate: "2026-03-01",
-  //     image: "../assets/Profile4.jpg",
-  //   },
-  //   {
-  //     id: 5,
-  //     name: "John Doe",
-  //     email: "john@gmail.com",
-  //     phone: "+91 9876501234",
-  //     role: "Employee",
-  //     status: "Active",
-  //     joinedDate: "2026-03-12",
-  //     image: "../assets/Profile5.jpg",
-  //   },
-  //   {
-  //     id: 6,
-  //     name: "Sneha Kulkarni",
-  //     email: "sneha@gmail.com",
-  //     phone: "+91 9012345678",
-  //     role: "Manager",
-  //     status: "Pending",
-  //     joinedDate: "2026-03-18",
-  //     image: "../assets/Profile6.jpg",
-  //   },
-  // ]);
-  const [users, setUsers] = useState(getAllUsers());
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [users, setUsers] = useState([]);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteTitle, setDeleteTitle] = useState("");
-  const [deleteMessage, setDeleteMessage] = useState("");
-  const [showAddConfirmModal, setShowAddConfirmModal] = useState(false);
-  const [pendingUser, setPendingUser] = useState(null);
-
-  const [showViewConfirm, setShowViewConfirm] = useState(false);
-  const [pendingViewUser, setPendingViewUser] = useState(null);
-
-  const [showEditConfirm, setShowEditConfirm] = useState(false);
-  const [pendingEditUser, setPendingEditUser] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("All Roles");
@@ -113,22 +40,51 @@ export default function UsersPage() {
   const [sortOrder, setSortOrder] = useState("Newest");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const itemsPerPage = 5;
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteUserId, setDeleteUserId] = useState(null);
+  const [deleteUserName, setDeleteUserName] = useState("");
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const canAddUsers = true;
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getAllUsers();
+      setUsers(data);
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
+      setError("Failed to load users. Please check backend or admin token.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredUsers = useMemo(() => {
     let filtered = [...users];
 
     if (searchTerm.trim()) {
-      filtered = filtered.filter(
-        (user) =>
-          user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.phone.toLowerCase().includes(searchTerm.toLowerCase()),
+      filtered = filtered.filter((user) =>
+        `${user.userFullName || ""} ${user.userEmail || ""} ${
+          user.userPhone || ""
+        }`
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()),
       );
     }
 
     if (roleFilter !== "All Roles") {
-      filtered = filtered.filter((user) => user.role === roleFilter);
+      filtered = filtered.filter((user) => user.userRole === roleFilter);
     }
 
     if (statusFilter !== "All Status") {
@@ -136,10 +92,10 @@ export default function UsersPage() {
     }
 
     filtered.sort((a, b) => {
-      if (sortOrder === "Newest") {
-        return new Date(b.joinedDate) - new Date(a.joinedDate);
-      }
-      return new Date(a.joinedDate) - new Date(b.joinedDate);
+      const dateA = new Date(a.joinedDate || 0);
+      const dateB = new Date(b.joinedDate || 0);
+
+      return sortOrder === "Newest" ? dateB - dateA : dateA - dateB;
     });
 
     return filtered;
@@ -154,15 +110,20 @@ export default function UsersPage() {
   );
 
   const totalUsers = users.length;
-  const totalAdmins = users.filter((user) => user.role === "Admin").length;
-  const totalManagers = users.filter((user) => user.role === "Manager").length;
-  const totalEmployees = users.filter(
-    (user) => user.role === "Employee",
-  ).length;
-  const totalCustomers = users.filter(
-    (user) => user.role === "Customer",
+
+  const totalAdmins = users.filter((user) => user.userRole === "ADMIN").length;
+
+  const totalManagers = users.filter(
+    (user) => user.userRole === "MANAGER",
   ).length;
 
+  const totalEmployees = users.filter(
+    (user) => user.userRole === "EMPLOYEE",
+  ).length;
+
+  const totalCustomers = users.filter(
+    (user) => user.userRole === "CUSTOMER",
+  ).length;
   const getStatusClasses = (status) => {
     switch (status) {
       case "Active":
@@ -222,91 +183,33 @@ export default function UsersPage() {
     },
   ];
 
-  const handleAddUser = (newUser) => {
-    setPendingUser({
-      ...newUser,
-      id: users.length ? Math.max(...users.map((user) => user.id)) + 1 : 1,
-    });
-    setShowAddConfirmModal(true);
-  };
-
-  const confirmAddUser = () => {
-    if (!pendingUser) return;
-
-    addUser(pendingUser);
-    setUsers(getAllUsers());
-    setCurrentPage(1);
-    setShowAddConfirmModal(false);
-    setShowAddModal(false);
-    setPendingUser(null);
-  };
-
-  const cancelAddUser = () => {
-    setShowAddConfirmModal(false);
-    setPendingUser(null);
-  };
-
   const handleViewClick = (user) => {
-    setPendingViewUser(user);
-    setShowViewConfirm(true);
-  };
-
-  const confirmViewUser = () => {
-    if (!pendingViewUser) return;
-
-    setSelectedUser(pendingViewUser);
+    setSelectedUser(user);
     setShowViewModal(true);
-    setShowViewConfirm(false);
-    setPendingViewUser(null);
-  };
-
-  const cancelViewUser = () => {
-    setShowViewConfirm(false);
-    setPendingViewUser(null);
   };
 
   const handleEditClick = (user) => {
     setSelectedUser(user);
     setShowEditModal(true);
   };
-
-  const handleUpdateUser = (updatedUser) => {
-    setPendingEditUser(updatedUser);
-    setShowEditConfirm(true);
-  };
-
-  const confirmUpdateUser = () => {
-    if (!pendingEditUser) return;
-
-    updateUser(pendingEditUser);
-    setUsers(getAllUsers());
-
-    setShowEditConfirm(false);
-    setShowEditModal(false);
-    setSelectedUser(null);
-    setPendingEditUser(null);
-  };
-
-  const cancelUpdateUser = () => {
-    setShowEditConfirm(false);
-    setPendingEditUser(null);
-  };
-
   const handleDeleteClick = (user) => {
-    setSelectedUser(user);
-    setDeleteTitle("Delete User");
-    setDeleteMessage(
-      `Are you sure you want to delete ${user.name || "this user"}?`,
-    );
+    if (user.userRole === "ADMIN" || user.userRole === "Admin") return;
+
+    setDeleteUserId(user.userId);
+    setDeleteUserName(user.userFullName);
     setShowDeleteConfirm(true);
   };
 
-  const handleDeleteUser = (userId) => {
-    deleteUser(userId);
-    setUsers(getAllUsers());
-    setCurrentPage(1);
-    setShowDeleteConfirm(false);
-    setSelectedUser(null);
+  const confirmDeleteUser = async () => {
+    try {
+      await deleteUser(deleteUserId);
+      setUsers((prev) => prev.filter((user) => user.userId !== deleteUserId));
+      setShowDeleteConfirm(false);
+      setDeleteUserId(null);
+      setDeleteUserName("");
+    } catch (error) {
+      console.error("Failed to delete user:", error);
+    }
   };
 
   return (
@@ -315,7 +218,19 @@ export default function UsersPage() {
         <AddUser
           darkMode={darkMode}
           setShowAddModal={setShowAddModal}
-          onAddUser={handleAddUser}
+          onAddUser={async (newUser) => {
+            const savedUser = await addUser(newUser);
+            setUsers((prev) => [savedUser, ...prev]);
+            setShowAddModal(false);
+            setCurrentPage(1);
+          }}
+        />
+      )}
+      {showViewModal && selectedUser && (
+        <ViewUser
+          darkMode={darkMode}
+          user={selectedUser}
+          setShowViewModal={setShowViewModal}
         />
       )}
 
@@ -324,85 +239,58 @@ export default function UsersPage() {
           darkMode={darkMode}
           user={selectedUser}
           setShowEditModal={setShowEditModal}
-          onUpdateUser={handleUpdateUser}
+          onUpdateUser={async (updatedUser) => {
+            const savedUser = await updateUser(updatedUser.userId, updatedUser);
+
+            setUsers((prev) =>
+              prev.map((user) =>
+                user.userId === savedUser.userId ? savedUser : user,
+              ),
+            );
+
+            setShowEditModal(false);
+          }}
         />
       )}
-
-      {showViewModal && selectedUser && (
-        <ViewUser
-          darkMode={darkMode}
-          user={selectedUser}
-          setShowViewModal={setShowViewModal}
-        />
-      )}
-      <ConfirmationModal
-        darkMode={darkMode}
-        isOpen={showAddConfirmModal}
-        type="success"
-        title="Add User"
-        message={`Are you sure you want to add ${pendingUser?.name || "this user"}?`}
-        confirmText="Add"
-        cancelText="Cancel"
-        onConfirm={confirmAddUser}
-        onCancel={cancelAddUser}
-      />
-
-      <ConfirmationModal
-        darkMode={darkMode}
-        isOpen={showViewConfirm}
-        type="success"
-        title="Open User"
-        message={`Do you want to view ${pendingViewUser?.name || "this user"}?`}
-        confirmText="Yes, Open"
-        cancelText="Cancel"
-        onConfirm={confirmViewUser}
-        onCancel={cancelViewUser}
-      />
-
-      <ConfirmationModal
-        darkMode={darkMode}
-        isOpen={showEditConfirm}
-        type="success"
-        title="Update User"
-        message={`Are you sure you want to update ${pendingEditUser?.name || "this user"}?`}
-        confirmText="Update"
-        cancelText="Cancel"
-        onConfirm={confirmUpdateUser}
-        onCancel={cancelUpdateUser}
-      />
-
       <ConfirmationModal
         darkMode={darkMode}
         isOpen={showDeleteConfirm}
         type="error"
-        title={deleteTitle}
-        message={deleteMessage}
+        title="Delete User"
+        message={`Are you sure you want to delete ${deleteUserName}?`}
         confirmText="Delete"
         cancelText="Cancel"
-        onConfirm={() => selectedUser && handleDeleteUser(selectedUser.id)}
-        onCancel={() => {
-          setShowDeleteConfirm(false);
-          setSelectedUser(null);
-        }}
+        onConfirm={confirmDeleteUser}
+        onCancel={() => setShowDeleteConfirm(false)}
       />
-      <div>
-        <h1
-          className={`text-2xl font-bold ${
-            darkMode ? "text-white" : "text-gray-900"
-          }`}
-        >
-          Users
-        </h1>
-        <p
-          className={`text-sm mt-1 ${
-            darkMode ? "text-gray-400" : "text-gray-500"
-          }`}
-        >
-          Manage admins, managers, employees, and customers.
-        </p>
-      </div>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div>
+          <h1
+            className={`text-2xl font-bold ${
+              darkMode ? "text-white" : "text-gray-900"
+            }`}
+          >
+            Users
+          </h1>
+          <p
+            className={`text-sm mt-1 ${
+              darkMode ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
+            View all admins, managers, employees, and customers.
+          </p>
+        </div>
 
-      {/* cards */}
+        {canAddUsers && (
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-[#0f766e] text-white hover:opacity-90 cursor-pointer"
+          >
+            <Plus size={18} />
+            Add User
+          </button>
+        )}
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {statCards.map((card) => {
           const Icon = card.icon;
@@ -450,7 +338,7 @@ export default function UsersPage() {
         }`}
       >
         <div className="p-4 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
-          <div className="flex flex-col md:flex-row flex-wrap gap-3 w-full lg:w-auto">
+          <div className="flex flex-col md:flex-row flex-wrap gap-3 w-full">
             <div
               className={`flex items-center px-3 py-2 rounded-xl border w-full md:w-72 ${
                 darkMode
@@ -485,11 +373,11 @@ export default function UsersPage() {
                   : "bg-gray-50 border-gray-200 text-gray-800"
               }`}
             >
-              <option>All Roles</option>
-              <option>Admin</option>
-              <option>Manager</option>
-              <option>Employee</option>
-              <option>Customer</option>
+              <option value="All Roles">All Roles</option>
+              <option value="ADMIN">Admin</option>
+              <option value="MANAGER">Manager</option>
+              <option value="EMPLOYEE">Employee</option>
+              <option value="CUSTOMER">Customer</option>
             </select>
 
             <select
@@ -526,119 +414,136 @@ export default function UsersPage() {
               <option>Oldest</option>
             </select>
           </div>
-
-          <div>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-white bg-[#0f766e] hover:opacity-90 cursor-pointer"
-            >
-              <Plus size={16} />
-              Add User
-            </button>
-          </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <div className="min-w-[950px] lg:min-w-0">
-            <div
-              className={`grid grid-cols-[2.2fr_1.2fr_1.3fr_1.4fr_1fr_1.4fr] px-6 py-4 text-sm font-semibold border-y ${
-                darkMode
-                  ? "bg-gray-900/40 border-gray-700 text-gray-300"
-                  : "bg-gray-50 border-gray-200 text-gray-600"
-              }`}
-            >
-              <div>User</div>
-              <div>Role</div>
-              <div>Phone</div>
-              <div>Joined Date</div>
-              <div>Status</div>
-              <div className="text-center">Actions</div>
-            </div>
+        {loading && (
+          <div className="px-6 py-10 text-center text-sm text-gray-500">
+            Loading users...
+          </div>
+        )}
 
-            {paginatedUsers.length > 0 ? (
-              paginatedUsers.map((user) => (
-                <div
-                  key={user.id}
-                  className={`grid grid-cols-[2.2fr_1.2fr_1.3fr_1.4fr_1fr_1.4fr] items-center px-6 py-4 text-sm border-b ${
-                    darkMode
-                      ? "border-gray-700 text-gray-200"
-                      : "border-gray-100 text-gray-700"
-                  }`}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <img
-                      src={user.image}
-                      alt={user.name}
-                      className="w-11 h-11 rounded-full object-cover"
-                    />
-                    <div>
-                      <h3
-                        className={`font-semibold truncate ${
-                          darkMode ? "text-white" : "text-gray-900"
-                        }`}
-                      >
-                        {user.name}
-                      </h3>
-                      <p
-                        className={`text-xs truncate ${
-                          darkMode ? "text-gray-400" : "text-gray-500"
-                        }`}
-                      >
-                        {user.email}
-                      </p>
-                    </div>
-                  </div>
-                  <div>{user.role}</div>
-                  <div>{user.phone}</div>
-                  <div>{new Date(user.joinedDate).toLocaleDateString()}</div>
+        {error && !loading && (
+          <div className="px-6 py-10 text-center text-sm text-red-500">
+            {error}
+          </div>
+        )}
 
-                  <div>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusClasses(
-                        user.status,
-                      )}`}
-                    >
-                      {user.status}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-center gap-2">
-                    <button
-                      onClick={() => {
-                        handleViewClick(user);
-                      }}
-                      className="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 cursor-pointer"
-                    >
-                      <Eye size={16} />
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleEditClick(user);
-                      }}
-                      className="p-2 rounded-lg bg-green-100 text-green-600 hover:bg-green-200 cursor-pointer"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(user)}
-                      className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 cursor-pointer"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
+        {!loading && !error && (
+          <div className="overflow-x-auto">
+            <div className="min-w-[950px] lg:min-w-0">
               <div
-                className={`px-6 py-12 text-center text-sm ${
-                  darkMode ? "text-gray-400" : "text-gray-500"
+                className={`grid grid-cols-[2.2fr_1.2fr_1.3fr_1.4fr_1fr_1fr] px-6 py-4 text-sm font-semibold border-y ${
+                  darkMode
+                    ? "bg-gray-900/40 border-gray-700 text-gray-300"
+                    : "bg-gray-50 border-gray-200 text-gray-600"
                 }`}
               >
-                No users found.
+                <div>User</div>
+                <div>Role</div>
+                <div>Phone</div>
+                <div>Joined Date</div>
+                <div>Status</div>
+                <div className="text-center">Actions</div>
               </div>
-            )}
+
+              {paginatedUsers.length > 0 ? (
+                paginatedUsers.map((user) => (
+                  <div
+                    key={user.userId}
+                    className={`grid grid-cols-[2.2fr_1.2fr_1.3fr_1.4fr_1fr_1fr] items-center px-6 py-4 text-sm border-b ${
+                      darkMode
+                        ? "border-gray-700 text-gray-200"
+                        : "border-gray-100 text-gray-700"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img
+                        src={user.userImage || "/default-user.png"}
+                        alt={user.userFullName}
+                        className="w-11 h-11 rounded-full object-cover"
+                      />
+
+                      <div>
+                        <h3
+                          className={`font-semibold truncate ${
+                            darkMode ? "text-white" : "text-gray-900"
+                          }`}
+                        >
+                          {user.userFullName}
+                        </h3>
+
+                        <p
+                          className={`text-xs truncate ${
+                            darkMode ? "text-gray-400" : "text-gray-500"
+                          }`}
+                        >
+                          {user.userEmail}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>{user.userRole}</div>
+                    <div>{user.userPhone || "-"}</div>
+                    <div>
+                      {user.joinedDate
+                        ? new Date(user.joinedDate).toLocaleDateString()
+                        : "-"}
+                    </div>
+
+                    <div>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusClasses(
+                          user.status,
+                        )}`}
+                      >
+                        {user.status || "Active"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-center gap-2">
+                      {/* View */}
+                      <button
+                        onClick={() => handleViewClick(user)}
+                        className="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 cursor-pointer"
+                      >
+                        <Eye size={16} />
+                      </button>
+
+                      {/* Edit */}
+                      {user.userRole !== "ADMIN" &&
+                        user.userRole !== "Admin" && (
+                          <button
+                            onClick={() => handleEditClick(user)}
+                            className="p-2 rounded-lg bg-green-100 text-green-600 hover:bg-green-200 cursor-pointer"
+                          >
+                            <Edit size={16} />
+                          </button>
+                        )}
+
+                      {/* Delete */}
+                      {user.userRole !== "ADMIN" && (
+                        <button
+                          onClick={() => handleDeleteClick(user)}
+                          className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 cursor-pointer"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div
+                  className={`px-6 py-12 text-center text-sm ${
+                    darkMode ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  No users found.
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         <div
           className={`flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 ${
