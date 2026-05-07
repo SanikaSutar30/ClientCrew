@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import {
   Search,
@@ -14,25 +14,36 @@ import {
   MapPin,
   Plus,
 } from "lucide-react";
+
 import AddEmployee from "./AddEmployee";
 import ViewEmployee from "./ViewEmployee";
 import EditEmployee from "./EditEmployee";
 import { ConfirmationModal } from "../../components/layout";
+
+import {
+  getEmployees,
+  addEmployee,
+  updateEmployee,
+  deleteEmployee,
+} from "../../services/employeeService";
+
 export default function Employees() {
   const { darkMode, userRole } = useOutletContext();
 
-  const savedUser = JSON.parse(localStorage.getItem("user")) || {};
+  const normalizedRole = userRole?.toUpperCase();
 
-  const currentUserTeamId = savedUser.teamId ?? 101;
-
-  const isAdmin = userRole === "Admin";
-  const isManager = userRole === "Manager";
-  const isEmployee = userRole === "Employee";
-  const isCustomer = userRole === "Customer";
+  const isAdmin = normalizedRole === "ADMIN";
+  const isManager = normalizedRole === "MANAGER";
+  const isEmployee = normalizedRole === "EMPLOYEE";
+  const isCustomer = normalizedRole === "CUSTOMER";
 
   const canViewEmployees = isAdmin || isManager || isEmployee || isCustomer;
   const canAddEmployees = isAdmin || isManager;
   const canEditEmployees = isAdmin || isManager;
+
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState("All Roles");
@@ -56,96 +67,55 @@ export default function Employees() {
   const [deleteTitle, setDeleteTitle] = useState("");
   const [deleteMessage, setDeleteMessage] = useState("");
 
-  const [employees, setEmployees] = useState([
-    {
-      id: 1,
-      name: "Aarav Patil",
-      role: "Admin",
-      department: "Management",
-      email: "aarav@clientcrew.com",
-      phone: "+91 9876543210",
-      location: "Nashik",
-      status: "Active",
-      projects: 8,
-      joinedDate: "2024-01-12",
-      image: "../assets/Profile.jpg",
-      teamId: 100,
-    },
-    {
-      id: 2,
-      name: "Priya Sharma",
-      role: "Manager",
-      department: "Project Management",
-      email: "priya@clientcrew.com",
-      phone: "+91 9823456712",
-      location: "Pune",
-      status: "Active",
-      projects: 6,
-      joinedDate: "2024-02-08",
-      image: "../assets/Profile2.jpg",
-      teamId: 101,
-    },
-    {
-      id: 3,
-      name: "Rohan Deshmukh",
-      role: "Employee",
-      department: "Development",
-      email: "rohan@clientcrew.com",
-      phone: "+91 9988776655",
-      location: "Mumbai",
-      status: "On Leave",
-      projects: 4,
-      joinedDate: "2024-03-15",
-      image: "../assets/Profile3.jpg",
-      teamId: 101,
-    },
-    {
-      id: 4,
-      name: "Sneha Kulkarni",
-      role: "Employee",
-      department: "UI/UX Design",
-      email: "sneha@clientcrew.com",
-      phone: "+91 9765432189",
-      location: "Nashik",
-      status: "Active",
-      projects: 5,
-      joinedDate: "2024-04-22",
-      image: "../assets/Profile4.jpg",
-      teamId: 101,
-    },
-    {
-      id: 5,
-      name: "Aditya Joshi",
-      role: "Manager",
-      department: "Sales",
-      email: "aditya@clientcrew.com",
-      phone: "+91 9898989898",
-      location: "Aurangabad",
-      status: "Inactive",
-      projects: 2,
-      joinedDate: "2024-05-10",
-      image: "../assets/Profile5.jpg",
-      teamId: 102,
-    },
-    {
-      id: 6,
-      name: "Neha Jadhav",
-      role: "Employee",
-      department: "Testing",
-      email: "neha@clientcrew.com",
-      phone: "+91 9012345678",
-      location: "Nagpur",
-      status: "Active",
-      projects: 3,
-      joinedDate: "2024-06-05",
-      image: "../assets/Profile6.jpg",
-      teamId: 102,
-    },
-  ]);
+  const mapEmployeeFromBackend = (user) => ({
+    id: user.userId,
+    name: user.displayName || user.userFullName,
+    isCurrentUser: user.currentUser,
+    role:
+      user.userRole === "ADMIN"
+        ? "Admin"
+        : user.userRole === "MANAGER"
+          ? "Manager"
+          : user.userRole === "EMPLOYEE"
+            ? "Employee"
+            : "Customer",
+    email: user.userEmail,
+    phone: user.userPhone || "Not added",
+    status: user.status || "Active",
+    joinedDate: user.joinedDate || "",
+    image: user.userImage || "../assets/Profile.jpg",
+    department:
+      user.userRole === "ADMIN"
+        ? "Administration"
+        : user.userRole === "MANAGER"
+          ? "Project Management"
+          : "Development",
+    location: "Not added",
+  });
+
+  const fetchEmployees = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getEmployees();
+
+      setEmployees(data.map(mapEmployeeFromBackend));
+    } catch (error) {
+      console.error("Failed to fetch employees:", error);
+      setError("Failed to load employees. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEmployees();
+  }, [fetchEmployees]);
 
   const canEditEmployee = (employee) => {
     if (userRole === "Admin") {
-      return employee.role !== "Admin";
+      return employee.role !== "Admin" && employee.role !== "Customer";
     }
 
     if (userRole === "Manager") {
@@ -157,11 +127,7 @@ export default function Employees() {
 
   const canDeleteEmployee = (employee) => {
     if (userRole === "Admin") {
-      return employee.role !== "Admin";
-    }
-
-    if (userRole === "Manager") {
-      return employee.role === "Employee";
+      return employee.role !== "Admin" && employee.role !== "Customer";
     }
 
     return false;
@@ -173,13 +139,32 @@ export default function Employees() {
     setShowAddConfirmModal(true);
   };
 
-  const confirmAddEmployee = () => {
+  const confirmAddEmployee = async () => {
     if (!pendingEmployee || !canAddEmployees) return;
 
-    setEmployees((prev) => [pendingEmployee, ...prev]);
-    setShowAddConfirmModal(false);
-    setShowAddModal(false);
-    setPendingEmployee(null);
+    try {
+      const payload = {
+        userFullName: pendingEmployee.name,
+        userEmail: pendingEmployee.email,
+        userPhone: pendingEmployee.phone,
+        userRole: pendingEmployee.role === "Manager" ? "MANAGER" : "EMPLOYEE",
+        status: pendingEmployee.status,
+        joinedDate: pendingEmployee.joinedDate,
+        userImage: pendingEmployee.image,
+        password: pendingEmployee.password || "123456",
+      };
+
+      const savedEmployee = await addEmployee(payload);
+
+      setEmployees((prev) => [mapEmployeeFromBackend(savedEmployee), ...prev]);
+
+      setShowAddConfirmModal(false);
+      setShowAddModal(false);
+      setPendingEmployee(null);
+    } catch (error) {
+      console.error("Failed to add employee:", error);
+      alert(error.response?.data || "Failed to add employee");
+    }
   };
 
   const cancelAddEmployee = () => {
@@ -189,11 +174,6 @@ export default function Employees() {
 
   const handleViewClick = (employee) => {
     if (!canViewEmployees) return;
-
-    if (userRole === "Manager" && employee.role === "Admin") return;
-
-    if (userRole === "Employee" && employee.teamId !== currentUserTeamId)
-      return;
 
     setPendingViewEmployee(employee);
     setShowViewConfirm(true);
@@ -223,23 +203,46 @@ export default function Employees() {
 
   const handleUpdateEmployee = (updatedEmployee) => {
     if (!canEditEmployees) return;
+
     setPendingEditEmployee(updatedEmployee);
     setShowEditConfirm(true);
   };
 
-  const confirmUpdateEmployee = () => {
+  const confirmUpdateEmployee = async () => {
     if (!pendingEditEmployee) return;
 
-    setEmployees((prev) =>
-      prev.map((employee) =>
-        employee.id === pendingEditEmployee.id ? pendingEditEmployee : employee,
-      ),
-    );
+    try {
+      const payload = {
+        userFullName: pendingEditEmployee.name,
+        userPhone: pendingEditEmployee.phone,
+        userRole:
+          pendingEditEmployee.role === "Manager" ? "MANAGER" : "EMPLOYEE",
+        status: pendingEditEmployee.status,
+        joinedDate: pendingEditEmployee.joinedDate,
+        userImage: pendingEditEmployee.image,
+      };
 
-    setShowEditConfirm(false);
-    setShowEditModal(false);
-    setSelectedEmployee(null);
-    setPendingEditEmployee(null);
+      const updatedEmployee = await updateEmployee(
+        pendingEditEmployee.id,
+        payload,
+      );
+
+      setEmployees((prev) =>
+        prev.map((employee) =>
+          employee.id === updatedEmployee.userId
+            ? mapEmployeeFromBackend(updatedEmployee)
+            : employee,
+        ),
+      );
+
+      setShowEditConfirm(false);
+      setShowEditModal(false);
+      setSelectedEmployee(null);
+      setPendingEditEmployee(null);
+    } catch (error) {
+      console.error("Failed to update employee:", error);
+      alert(error.response?.data || "Failed to update employee");
+    }
   };
 
   const cancelUpdateEmployee = () => {
@@ -258,59 +261,59 @@ export default function Employees() {
     setShowDeleteConfirm(true);
   };
 
-  const handleDeleteEmployee = (employeeId) => {
+  const handleDeleteEmployee = async (employeeId) => {
     if (!selectedEmployee) return;
     if (!canDeleteEmployee(selectedEmployee)) return;
 
-    setEmployees((prev) =>
-      prev.filter((employee) => employee.id !== employeeId),
-    );
-    setShowDeleteConfirm(false);
-    setSelectedEmployee(null);
+    try {
+      await deleteEmployee(employeeId);
+
+      setEmployees((prev) =>
+        prev.filter((employee) => employee.id !== employeeId),
+      );
+
+      setShowDeleteConfirm(false);
+      setSelectedEmployee(null);
+    } catch (error) {
+      console.error("Failed to delete employee:", error);
+      alert(error.response?.data || "Failed to delete employee");
+    }
   };
 
   const filteredEmployees = useMemo(() => {
     return employees.filter((employee) => {
-      if (userRole === "Manager" && employee.role === "Admin") {
-        return false;
-      }
-
-      if (userRole === "Employee" || userRole === "Customer") {
-        if (employee.teamId !== currentUserTeamId) {
-          return false;
-        }
-      }
+      const search = searchTerm.toLowerCase();
 
       const matchesSearch =
-        employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        employee.department.toLowerCase().includes(searchTerm.toLowerCase());
+        (employee.name || "").toLowerCase().includes(search) ||
+        (employee.email || "").toLowerCase().includes(search) ||
+        (employee.department || "").toLowerCase().includes(search);
 
-      const matchesRole =
-        selectedRole === "All Roles" || employee.role === selectedRole;
+   const matchesRole =
+     selectedRole === "All Roles" ||
+     employee.role?.trim().toLowerCase() === selectedRole.trim().toLowerCase();
 
-      const matchesStatus =
-        selectedStatus === "All Status" || employee.status === selectedStatus;
+   const matchesStatus =
+     selectedStatus === "All Status" ||
+     employee.status?.trim().toLowerCase() ===
+       selectedStatus.trim().toLowerCase();
 
       return matchesSearch && matchesRole && matchesStatus;
     });
-  }, [
-    employees,
-    searchTerm,
-    selectedRole,
-    selectedStatus,
-    userRole,
-    currentUserTeamId,
-  ]);
+  }, [employees, searchTerm, selectedRole, selectedStatus]);
 
   const totalEmployees = filteredEmployees.length;
+
   const activeEmployees = filteredEmployees.filter(
     (emp) => emp.status === "Active",
   ).length;
+
   const managers = filteredEmployees.filter(
     (emp) => emp.role === "Manager",
   ).length;
+
   const admins = filteredEmployees.filter((emp) => emp.role === "Admin").length;
+
   const teamEmployees = filteredEmployees.filter(
     (emp) => emp.role === "Employee",
   ).length;
@@ -321,11 +324,13 @@ export default function Employees() {
         ? "bg-green-900/40 text-green-400 border border-green-700"
         : "bg-green-100 text-green-700 border border-green-200";
     }
+
     if (status === "On Leave") {
       return darkMode
         ? "bg-yellow-900/40 text-yellow-400 border border-yellow-700"
         : "bg-yellow-100 text-yellow-700 border border-yellow-200";
     }
+
     return darkMode
       ? "bg-red-900/40 text-red-400 border border-red-700"
       : "bg-red-100 text-red-700 border border-red-200";
@@ -344,6 +349,7 @@ export default function Employees() {
           darkMode={darkMode}
           setShowAddModal={setShowAddModal}
           onAddEmployee={handleAddEmployee}
+          userRole={userRole}
         />
       )}
 
@@ -361,6 +367,7 @@ export default function Employees() {
           employee={selectedEmployee}
           setShowEditModal={setShowEditModal}
           onUpdateEmployee={handleUpdateEmployee}
+          userRole={userRole}
         />
       )}
 
@@ -369,7 +376,9 @@ export default function Employees() {
         isOpen={showAddConfirmModal}
         type="success"
         title="Add Employee"
-        message={`Are you sure you want to add ${pendingEmployee?.name || "this employee"}?`}
+        message={`Are you sure you want to add ${
+          pendingEmployee?.name || "this employee"
+        }?`}
         confirmText="Add"
         cancelText="Cancel"
         onConfirm={confirmAddEmployee}
@@ -381,7 +390,9 @@ export default function Employees() {
         isOpen={showViewConfirm}
         type="success"
         title="Open Employee"
-        message={`Do you want to view ${pendingViewEmployee?.name || "this employee"}?`}
+        message={`Do you want to view ${
+          pendingViewEmployee?.name || "this employee"
+        }?`}
         confirmText="Yes, Open"
         cancelText="Cancel"
         onConfirm={confirmViewEmployee}
@@ -393,7 +404,9 @@ export default function Employees() {
         isOpen={showEditConfirm}
         type="success"
         title="Update Employee"
-        message={`Are you sure you want to update ${pendingEditEmployee?.name || "this employee"}?`}
+        message={`Are you sure you want to update ${
+          pendingEditEmployee?.name || "this employee"
+        }?`}
         confirmText="Update"
         cancelText="Cancel"
         onConfirm={confirmUpdateEmployee}
@@ -424,8 +437,9 @@ export default function Employees() {
               darkMode ? "text-white" : "text-gray-900"
             }`}
           >
-            {isEmployee || isCustomer ? "Project Team" : "Employee Team"}{" "}
+            {isEmployee || isCustomer ? "Project Team" : "Employee Team"}
           </h1>
+
           <p className={`mt-1 text-sm ${subTextClass}`}>
             {isEmployee
               ? "View your manager and teammates in ClientCrew."
@@ -446,12 +460,11 @@ export default function Employees() {
         )}
       </div>
 
-      {/* start cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className={`rounded-2xl p-4 shadow-sm ${cardClass}`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className={`text-sm ${subTextClass}`}>Total Employees</p>
+              <p className={`text-sm ${subTextClass}`}>Total Members</p>
               <h2 className="text-2xl font-bold mt-2">{totalEmployees}</h2>
             </div>
             <div className="p-3 rounded-xl bg-blue-100 text-blue-600">
@@ -488,10 +501,10 @@ export default function Employees() {
           <div className="flex items-center justify-between">
             <div>
               <p className={`text-sm ${subTextClass}`}>
-                {isEmployee ? "Teammates" : "Admins"}
+                {isEmployee || isCustomer ? "Teammates" : "Admins"}
               </p>
               <h2 className="text-2xl font-bold mt-2">
-                {isEmployee ? teamEmployees : admins}
+                {isEmployee || isCustomer ? teamEmployees : admins}
               </h2>
             </div>
             <div className="p-3 rounded-xl bg-orange-100 text-orange-600">
@@ -501,8 +514,7 @@ export default function Employees() {
         </div>
       </div>
 
-      {/* search  */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 mt-4">
         <div
           className={`flex items-center px-3 py-2 rounded-lg w-full md:w-80 border ${
             darkMode
@@ -534,10 +546,10 @@ export default function Employees() {
                 : "bg-gray-50 border-gray-200 text-gray-700"
             }`}
           >
-            <option>All Roles</option>
-            <option>Admin</option>
-            <option>Manager</option>
-            <option>Employee</option>
+            <option value="All Roles">All Roles</option>
+            <option value="Admin">Admin</option>
+            <option value="Manager">Manager</option>
+            <option value="Employee">Employee</option>
           </select>
 
           <select
@@ -557,113 +569,127 @@ export default function Employees() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredEmployees.map((employee) => (
-          <div
-            key={employee.id}
-            className={`rounded-2xl p-5 shadow-sm hover:shadow-md transition ${cardClass}`}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-4">
-                {/* employee image*/}
-                <img
-                  src={employee.image}
-                  alt={employee.name}
-                  className="w-14 h-14 rounded-full object-cover border border-gray-300"
-                />
+      {loading && (
+        <div
+          className={`mt-6 rounded-2xl p-6 text-center shadow-sm ${cardClass}`}
+        >
+          <p className={`text-sm ${subTextClass}`}>Loading employees...</p>
+        </div>
+      )}
 
-                {/* employee name, role and department */}
-                <div>
-                  <h3 className="text-lg font-semibold">{employee.name}</h3>
-                  <p className={`text-sm ${subTextClass}`}>
-                    {employee.role} • {employee.department}
-                  </p>
+      {error && (
+        <div
+          className={`mt-6 rounded-2xl p-6 text-center shadow-sm ${cardClass}`}
+        >
+          <p className="text-sm text-red-500">{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredEmployees.map((employee) => (
+            <div
+              key={employee.id}
+              className={`rounded-2xl p-5 shadow-sm hover:shadow-md transition ${cardClass}`}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <img
+                    src={employee.image}
+                    alt={employee.name}
+                    className="w-14 h-14 rounded-full object-cover border border-gray-300"
+                  />
+
+                  <div>
+                    <h3 className="text-lg font-semibold">{employee.name}</h3>
+
+                    <p className={`text-sm ${subTextClass}`}>
+                      {employee.role} • {employee.department}
+                    </p>
+                  </div>
+                </div>
+
+                <span
+                  className={`text-xs font-medium px-3 py-1 rounded-full ${getStatusClasses(
+                    employee.status,
+                  )}`}
+                >
+                  {employee.status}
+                </span>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                <div
+                  className={`flex items-center gap-3 text-sm ${subTextClass}`}
+                >
+                  <Mail size={16} />
+                  <span>{employee.email}</span>
+                </div>
+
+                <div
+                  className={`flex items-center gap-3 text-sm ${subTextClass}`}
+                >
+                  <Phone size={16} />
+                  <span>{employee.phone}</span>
+                </div>
+
+                <div
+                  className={`flex items-center gap-3 text-sm ${subTextClass}`}
+                >
+                  <MapPin size={16} />
+                  <span>{employee.location}</span>
                 </div>
               </div>
 
-              {/* employee status */}
-              <span
-                className={`text-xs font-medium px-3 py-1 rounded-full ${getStatusClasses(
-                  employee.status,
-                )}`}
-              >
-                {employee.status}
-              </span>
-            </div>
+              <div className="mt-5 flex items-center justify-end gap-2">
+                {canViewEmployees && (
+                  <button
+                    onClick={() => handleViewClick(employee)}
+                    title="View Employee"
+                    className={`p-2 rounded-lg transition cursor-pointer ${
+                      darkMode
+                        ? "bg-blue-900/40 hover:bg-blue-900/60 text-blue-400"
+                        : "bg-blue-50 hover:bg-blue-100 text-blue-600"
+                    }`}
+                  >
+                    <Eye size={16} />
+                  </button>
+                )}
 
-            {/* employee mail */}
-            <div className="mt-5 space-y-3">
-              <div
-                className={`flex items-center gap-3 text-sm ${subTextClass}`}
-              >
-                <Mail size={16} />
-                <span>{employee.email}</span>
+                {canEditEmployees && canEditEmployee(employee) && (
+                  <button
+                    onClick={() => handleEditClick(employee)}
+                    title="Edit Employee"
+                    className={`p-2 rounded-lg transition cursor-pointer ${
+                      darkMode
+                        ? "bg-green-900/40 hover:bg-green-900/60 text-green-400"
+                        : "bg-green-50 hover:bg-green-100 text-green-600"
+                    }`}
+                  >
+                    <Pencil size={16} />
+                  </button>
+                )}
+
+                {canDeleteEmployee(employee) && (
+                  <button
+                    onClick={() => handleDeleteClick(employee)}
+                    title="Delete Employee"
+                    className={`p-2 rounded-lg transition cursor-pointer ${
+                      darkMode
+                        ? "bg-red-900/40 hover:bg-red-900/60 text-red-400"
+                        : "bg-red-50 hover:bg-red-100 text-red-600"
+                    }`}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
               </div>
-
-              {/* employee phone */}
-              <div
-                className={`flex items-center gap-3 text-sm ${subTextClass}`}
-              >
-                <Phone size={16} />
-                <span>{employee.phone}</span>
-              </div>
-
-              <div
-                className={`flex items-center gap-3 text-sm ${subTextClass}`}
-              >
-                <MapPin size={16} />
-                <span>{employee.location}</span>
-              </div>
             </div>
+          ))}
+        </div>
+      )}
 
-            <div className="mt-5 flex items-center justify-end gap-2">
-              {canViewEmployees && (
-                <button
-                  onClick={() => handleViewClick(employee)}
-                  title="View Employee"
-                  className={`p-2 rounded-lg transition cursor-pointer ${
-                    darkMode
-                      ? "bg-blue-900/40 hover:bg-blue-900/60 text-blue-400"
-                      : "bg-blue-50 hover:bg-blue-100 text-blue-600"
-                  }`}
-                >
-                  <Eye size={16} />
-                </button>
-              )}
-
-              {canEditEmployees && canEditEmployee(employee) && (
-                <button
-                  onClick={() => handleEditClick(employee)}
-                  title="Edit Employee"
-                  className={`p-2 rounded-lg transition cursor-pointer ${
-                    darkMode
-                      ? "bg-green-900/40 hover:bg-green-900/60 text-green-400"
-                      : "bg-green-50 hover:bg-green-100 text-green-600"
-                  }`}
-                >
-                  <Pencil size={16} />
-                </button>
-              )}
-
-              {canDeleteEmployee(employee) && (
-                <button
-                  onClick={() => handleDeleteClick(employee)}
-                  title="Delete Employee"
-                  className={`p-2 rounded-lg transition cursor-pointer ${
-                    darkMode
-                      ? "bg-red-900/40 hover:bg-red-900/60 text-red-400"
-                      : "bg-red-50 hover:bg-red-100 text-red-600"
-                  }`}
-                >
-                  <Trash2 size={16} />
-                </button>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {filteredEmployees.length === 0 && (
+      {!loading && !error && filteredEmployees.length === 0 && (
         <div
           className={`mt-6 rounded-2xl p-10 text-center shadow-sm ${cardClass}`}
         >

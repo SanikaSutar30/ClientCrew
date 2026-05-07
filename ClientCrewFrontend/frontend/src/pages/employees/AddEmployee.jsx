@@ -6,68 +6,62 @@ export default function AddEmployee({
   setShowAddModal,
   onAddEmployee,
 }) {
-
-
   const { userRole } = useOutletContext();
-  // Store form values
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    role: "Employee",
-    department: "",
+    role: userRole === "Admin" ? "Employee" : "Employee",
     status: "Active",
     joinedDate: "",
-    location: "",
-    projects: "",
     image: "",
+    password: "123456",
   });
 
-  // Store validation errors
   const [errors, setErrors] = useState({});
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  // Handle image file selection
-const handleImageChange = (e) => {
-  const file = e.target.files[0];
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
 
-  if (!file) return;
+    if (!file) return;
 
-  const validTypes = ["image/png", "image/jpeg", "image/jpg"];
+    const validTypes = ["image/png", "image/jpeg", "image/jpg"];
 
-  if (!validTypes.includes(file.type)) {
-    setErrors((prev) => ({
-      ...prev,
-      image: "Only PNG, JPG and JPEG images are allowed",
-    }));
-    return;
-  }
+    if (!validTypes.includes(file.type)) {
+      setErrors((prev) => ({
+        ...prev,
+        image: "Only PNG, JPG and JPEG images are allowed",
+      }));
+      return;
+    }
 
-  const reader = new FileReader();
+    const reader = new FileReader();
 
-  reader.onloadend = () => {
-    setFormData((prev) => ({
-      ...prev,
-      image: reader.result,
-    }));
+    reader.onloadend = () => {
+      setFormData((prev) => ({
+        ...prev,
+        image: reader.result,
+      }));
 
-    setErrors((prev) => ({
-      ...prev,
-      image: "",
-    }));
+      setErrors((prev) => ({
+        ...prev,
+        image: "",
+      }));
+    };
+
+    reader.readAsDataURL(file);
   };
 
-  reader.readAsDataURL(file);
-};
-  // Validate form before submit
   const validateForm = () => {
     const newErrors = {};
 
@@ -85,69 +79,51 @@ const handleImageChange = (e) => {
       newErrors.phone = "Phone number is required";
     }
 
-    if (!formData.department.trim()) {
-      newErrors.department = "Department is required";
-    }
-
-    if (!formData.location.trim()) {
-      newErrors.location = "Location is required";
-    }
-
     if (!formData.joinedDate) {
       newErrors.joinedDate = "Joined date is required";
-    }
-
-    if (!formData.projects.toString().trim()) {
-      newErrors.projects = "Projects count is required";
     }
 
     if (!formData.image) {
       newErrors.image = "Profile image is required";
     }
 
+    if (userRole === "Manager" && formData.role !== "Employee") {
+      newErrors.role = "Manager can add only employees";
+    }
+
+    if (formData.role === "Admin") {
+      newErrors.role = "Admin cannot be created from Employee page";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submit employee form
-const handleSubmit = (e) => {
-  e.preventDefault();
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-  // 🔒 RBAC protection
-  if (userRole === "Manager" && formData.role !== "Employee") {
-    return;
-  }
-  if (!validateForm()) {
-    return;
-  }
+    if (!validateForm()) return;
 
-  onAddEmployee({
-    ...formData,
-    id: Date.now(),
-    projects: Number(formData.projects),
-  });
-};;
+    onAddEmployee(formData);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px] px-4">
-      {/* Modal container */}
       <div
-        className={`w-full max-w-4xl rounded-2xl p-8 shadow-xl ${
+        className={`w-full max-w-3xl rounded-2xl p-8 shadow-xl ${
           darkMode
             ? "bg-gray-800 border border-gray-600 text-white"
             : "bg-white border border-gray-200 text-black"
         }`}
       >
-        {/* Modal header */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-semibold">Add Employee</h2>
             <p className="text-sm text-gray-500 mt-1">
-              Enter employee details to create a new team record
+              Enter employee details to create a new team member
             </p>
           </div>
 
-          {/* Close button */}
           <button
             type="button"
             onClick={() => setShowAddModal(false)}
@@ -157,10 +133,8 @@ const handleSubmit = (e) => {
           </button>
         </div>
 
-        {/* Employee form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Full name */}
             <div>
               <label className="block text-sm font-medium mb-2">
                 Full Name
@@ -182,7 +156,6 @@ const handleSubmit = (e) => {
               )}
             </div>
 
-            {/* Email */}
             <div>
               <label className="block text-sm font-medium mb-2">
                 Email Address
@@ -204,7 +177,6 @@ const handleSubmit = (e) => {
               )}
             </div>
 
-            {/* Phone */}
             <div>
               <label className="block text-sm font-medium mb-2">
                 Phone Number
@@ -226,7 +198,6 @@ const handleSubmit = (e) => {
               )}
             </div>
 
-            {/* Role */}
             <div>
               <label className="block text-sm font-medium mb-2">Role</label>
               <select
@@ -239,47 +210,23 @@ const handleSubmit = (e) => {
                     : "bg-gray-50 border-gray-200 text-black"
                 }`}
               >
-                {/* Admin can see all */}
                 {userRole === "Admin" && (
                   <>
-                    <option value="Admin">Admin</option>
-                    <option value="Manager">Manager</option>
                     <option value="Employee">Employee</option>
+                    <option value="Manager">Manager</option>
                   </>
                 )}
 
-                {/* Manager can only add Employee & Customer */}
                 {userRole === "Manager" && (
-                  <>
-                    <option value="Employee">Employee</option>
-                  </>
+                  <option value="Employee">Employee</option>
                 )}
               </select>
-            </div>
 
-            {/* Department */}
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Department
-              </label>
-              <input
-                type="text"
-                name="department"
-                value={formData.department}
-                onChange={handleChange}
-                placeholder="Enter department"
-                className={`w-full px-4 py-3 rounded-xl border outline-none ${
-                  darkMode
-                    ? "bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
-                    : "bg-gray-50 border-gray-200 text-black placeholder:text-gray-400"
-                }`}
-              />
-              {errors.department && (
-                <p className="text-red-500 text-xs mt-1">{errors.department}</p>
+              {errors.role && (
+                <p className="text-red-500 text-xs mt-1">{errors.role}</p>
               )}
             </div>
 
-            {/* Status */}
             <div>
               <label className="block text-sm font-medium mb-2">Status</label>
               <select
@@ -298,7 +245,6 @@ const handleSubmit = (e) => {
               </select>
             </div>
 
-            {/* Joined Date */}
             <div>
               <label className="block text-sm font-medium mb-2">
                 Joined Date
@@ -319,49 +265,24 @@ const handleSubmit = (e) => {
               )}
             </div>
 
-            {/* Location */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Location</label>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                placeholder="Enter location"
-                className={`w-full px-4 py-3 rounded-xl border outline-none ${
-                  darkMode
-                    ? "bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
-                    : "bg-gray-50 border-gray-200 text-black placeholder:text-gray-400"
-                }`}
-              />
-              {errors.location && (
-                <p className="text-red-500 text-xs mt-1">{errors.location}</p>
-              )}
-            </div>
-
-            {/* Projects */}
             <div>
               <label className="block text-sm font-medium mb-2">
-                Total Projects
+                Default Password
               </label>
               <input
-                type="number"
-                name="projects"
-                value={formData.projects}
+                type="text"
+                name="password"
+                value={formData.password}
                 onChange={handleChange}
-                placeholder="Enter total projects"
+                placeholder="Default password"
                 className={`w-full px-4 py-3 rounded-xl border outline-none ${
                   darkMode
                     ? "bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
                     : "bg-gray-50 border-gray-200 text-black placeholder:text-gray-400"
                 }`}
               />
-              {errors.projects && (
-                <p className="text-red-500 text-xs mt-1">{errors.projects}</p>
-              )}
             </div>
 
-            {/* Profile Image */}
             <div>
               <label className="block text-sm font-medium mb-2">
                 Profile Image
@@ -382,7 +303,6 @@ const handleSubmit = (e) => {
             </div>
           </div>
 
-          {/* Action buttons */}
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"

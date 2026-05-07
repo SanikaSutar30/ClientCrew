@@ -6,7 +6,6 @@ import {
   CalendarDays,
   BadgeCheck,
   Briefcase,
-  FolderKanban,
 } from "lucide-react";
 
 export default function ViewEmployee({ darkMode, employee, setShowViewModal }) {
@@ -25,6 +24,18 @@ export default function ViewEmployee({ darkMode, employee, setShowViewModal }) {
     }
   };
 
+  const formatDate = (dateValue) => {
+    if (!dateValue) return "Not added";
+
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) {
+      return "Not added";
+    }
+
+    return date.toLocaleDateString();
+  };
+
   return (
     <div
       className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm flex items-center justify-center px-4"
@@ -39,6 +50,7 @@ export default function ViewEmployee({ darkMode, employee, setShowViewModal }) {
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold">Employee Details</h2>
+
           <button
             onClick={() => setShowViewModal(false)}
             className="p-2 rounded-lg text-gray-500 hover:text-red-500 text-xl cursor-pointer"
@@ -66,9 +78,7 @@ export default function ViewEmployee({ darkMode, employee, setShowViewModal }) {
 
               <div className="mt-4 text-center md:text-left">
                 <h3 className="text-2xl font-bold">{employee.name}</h3>
-                <p className="text-sm text-gray-500">
-                  Employee ID: {employee.id}
-                </p>
+                <p className="text-sm text-gray-500">User ID: {employee.id}</p>
               </div>
 
               <div className="mt-4">
@@ -93,7 +103,9 @@ export default function ViewEmployee({ darkMode, employee, setShowViewModal }) {
                     <Mail size={16} className="text-blue-500" />
                     <span className="text-sm font-medium">Email</span>
                   </div>
-                  <p className="text-sm break-all">{employee.email}</p>
+                  <p className="text-sm break-all">
+                    {employee.email || "Not added"}
+                  </p>
                 </div>
 
                 <div
@@ -105,7 +117,7 @@ export default function ViewEmployee({ darkMode, employee, setShowViewModal }) {
                     <Phone size={16} className="text-green-500" />
                     <span className="text-sm font-medium">Phone</span>
                   </div>
-                  <p className="text-sm">{employee.phone}</p>
+                  <p className="text-sm">{employee.phone || "Not added"}</p>
                 </div>
 
                 <div
@@ -117,7 +129,7 @@ export default function ViewEmployee({ darkMode, employee, setShowViewModal }) {
                     <Briefcase size={16} className="text-purple-500" />
                     <span className="text-sm font-medium">Role</span>
                   </div>
-                  <p className="text-sm">{employee.role}</p>
+                  <p className="text-sm">{employee.role || "Not added"}</p>
                 </div>
 
                 <div
@@ -129,7 +141,9 @@ export default function ViewEmployee({ darkMode, employee, setShowViewModal }) {
                     <BadgeCheck size={16} className="text-orange-500" />
                     <span className="text-sm font-medium">Department</span>
                   </div>
-                  <p className="text-sm">{employee.department}</p>
+                  <p className="text-sm">
+                    {employee.department || "Not added"}
+                  </p>
                 </div>
 
                 <div
@@ -141,7 +155,7 @@ export default function ViewEmployee({ darkMode, employee, setShowViewModal }) {
                     <MapPin size={16} className="text-red-500" />
                     <span className="text-sm font-medium">Location</span>
                   </div>
-                  <p className="text-sm">{employee.location}</p>
+                  <p className="text-sm">{employee.location || "Not added"}</p>
                 </div>
 
                 <div
@@ -153,22 +167,8 @@ export default function ViewEmployee({ darkMode, employee, setShowViewModal }) {
                     <CalendarDays size={16} className="text-cyan-500" />
                     <span className="text-sm font-medium">Joined Date</span>
                   </div>
-                  <p className="text-sm">
-                    {new Date(employee.joinedDate).toLocaleDateString()}
-                  </p>
+                  <p className="text-sm">{formatDate(employee.joinedDate)}</p>
                 </div>
-              </div>
-
-              <div
-                className={`p-4 rounded-xl ${
-                  darkMode ? "bg-gray-800" : "bg-white"
-                }`}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <FolderKanban size={16} className="text-indigo-500" />
-                  <span className="text-sm font-medium">Projects</span>
-                </div>
-                <p className="text-sm font-semibold">{employee.projects}</p>
               </div>
 
               <div className="flex justify-end">

@@ -8,25 +8,21 @@ export default function EditEmployee({
   setShowEditModal,
   onUpdateEmployee,
 }) {
-
   const { userRole } = useOutletContext();
+
   const [formData, setFormData] = useState({
     id: employee.id,
-    name: employee.name,
-    email: employee.email,
-    phone: employee.phone,
-    role: employee.role,
-    department: employee.department,
-    status: employee.status,
-    joinedDate: employee.joinedDate,
-    location: employee.location,
-    projects: employee.projects,
-    image: employee.image,
+    name: employee.name || "",
+    email: employee.email || "",
+    phone: employee.phone || "",
+    role: employee.role || "Employee",
+    status: employee.status || "Active",
+    joinedDate: employee.joinedDate || "",
+    image: employee.image || "",
   });
 
   const [errors, setErrors] = useState({});
 
-  // Handle text/select/date changes
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -36,39 +32,38 @@ export default function EditEmployee({
     }));
   };
 
-  // Handle image change
-const handleImageChange = (e) => {
-  const file = e.target.files[0];
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
 
-  if (!file) return;
+    if (!file) return;
 
-  const validTypes = ["image/png", "image/jpeg", "image/jpg"];
+    const validTypes = ["image/png", "image/jpeg", "image/jpg"];
 
-  if (!validTypes.includes(file.type)) {
-    setErrors((prev) => ({
-      ...prev,
-      image: "Only PNG, JPG and JPEG images are allowed",
-    }));
-    return;
-  }
+    if (!validTypes.includes(file.type)) {
+      setErrors((prev) => ({
+        ...prev,
+        image: "Only PNG, JPG and JPEG images are allowed",
+      }));
+      return;
+    }
 
-  const reader = new FileReader();
+    const reader = new FileReader();
 
-  reader.onloadend = () => {
-    setFormData((prev) => ({
-      ...prev,
-      image: reader.result,
-    }));
+    reader.onloadend = () => {
+      setFormData((prev) => ({
+        ...prev,
+        image: reader.result,
+      }));
 
-    setErrors((prev) => ({
-      ...prev,
-      image: "",
-    }));
+      setErrors((prev) => ({
+        ...prev,
+        image: "",
+      }));
+    };
+
+    reader.readAsDataURL(file);
   };
 
-  reader.readAsDataURL(file);
-};
-  // Validate form
   const validateForm = () => {
     const newErrors = {};
 
@@ -76,46 +71,32 @@ const handleImageChange = (e) => {
       newErrors.name = "Employee name is required";
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Invalid email format";
-    }
-
     if (!formData.phone.trim()) {
       newErrors.phone = "Phone number is required";
-    }
-
-    if (!formData.department.trim()) {
-      newErrors.department = "Department is required";
-    }
-
-    if (!formData.location.trim()) {
-      newErrors.location = "Location is required";
     }
 
     if (!formData.joinedDate) {
       newErrors.joinedDate = "Joined date is required";
     }
 
-    if (formData.projects === "" || Number(formData.projects) < 0) {
-      newErrors.projects = "Projects must be 0 or more";
+    if (userRole === "Manager" && formData.role !== "Employee") {
+      newErrors.role = "Manager can edit only employees";
+    }
+
+    if (formData.role === "Admin" || formData.role === "Customer") {
+      newErrors.role = "Invalid role for Employee page";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submit updated employee data
   const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!validateForm()) return;
 
-    onUpdateEmployee({
-      ...formData,
-      projects: Number(formData.projects),
-    });
+    onUpdateEmployee(formData);
   };
 
   return (
@@ -125,9 +106,9 @@ const handleImageChange = (e) => {
           darkMode ? "bg-gray-800 text-white" : "bg-white text-black"
         }`}
       >
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold">Edit Employee</h2>
+
           <button
             onClick={() => setShowEditModal(false)}
             className="p-2 rounded-lg text-gray-500 hover:text-red-500 text-xl cursor-pointer"
@@ -136,12 +117,10 @@ const handleImageChange = (e) => {
           </button>
         </div>
 
-        {/* Form */}
         <form
           onSubmit={handleSubmit}
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
-          {/* Name */}
           <div>
             <label className="text-sm font-medium">Full Name</label>
             <input
@@ -160,26 +139,24 @@ const handleImageChange = (e) => {
             )}
           </div>
 
-          {/* Email */}
           <div>
             <label className="text-sm font-medium">Email</label>
             <input
               type="email"
               name="email"
               value={formData.email}
-              onChange={handleChange}
-              className={`w-full mt-1 px-4 py-2 rounded-xl border outline-none ${
+              disabled
+              className={`w-full mt-1 px-4 py-2 rounded-xl border outline-none cursor-not-allowed ${
                 darkMode
-                  ? "bg-gray-700 border-gray-600 text-white"
-                  : "bg-white border-gray-300 text-black"
+                  ? "bg-gray-700 border-gray-600 text-gray-400"
+                  : "bg-gray-100 border-gray-300 text-gray-500"
               }`}
             />
-            {errors.email && (
-              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-            )}
+            <p className="text-xs text-gray-400 mt-1">
+              Email cannot be changed.
+            </p>
           </div>
 
-          {/* Phone */}
           <div>
             <label className="text-sm font-medium">Phone</label>
             <input
@@ -198,77 +175,45 @@ const handleImageChange = (e) => {
             )}
           </div>
 
-          {/* Role */}
           <div>
             <label className="text-sm font-medium">Role</label>
             <select
               name="role"
               value={formData.role}
               onChange={handleChange}
+              disabled={userRole === "Manager"}
               className={`w-full mt-1 px-4 py-2 rounded-xl border outline-none ${
+                userRole === "Manager" ? "cursor-not-allowed" : "cursor-pointer"
+              } ${
                 darkMode
                   ? "bg-gray-700 border-gray-600 text-white"
                   : "bg-white border-gray-300 text-black"
               }`}
             >
-              {/* ADMIN → full control */}
               {userRole === "Admin" && (
                 <>
-                  <option value="Admin">Admin</option>
                   <option value="Manager">Manager</option>
                   <option value="Employee">Employee</option>
                 </>
               )}
 
-              {/* MANAGER → restricted */}
               {userRole === "Manager" && (
-                <>
-                  {/* Editing Manager */}
-                  {employee.role === "Manager" && (
-                    <>
-                      <option value="Manager">Manager</option>
-                      <option value="Employee">Employee</option>
-                    </>
-                  )}
-
-                  {/* Editing Employee */}
-                  {employee.role === "Employee" && (
-                    <>
-                      <option value="Employee">Employee</option>
-                    </>
-                  )}
-                </>
+                <option value="Employee">Employee</option>
               )}
             </select>
-          </div>
 
-          {/* Department */}
-          <div>
-            <label className="text-sm font-medium">Department</label>
-            <input
-              type="text"
-              name="department"
-              value={formData.department}
-              onChange={handleChange}
-              className={`w-full mt-1 px-4 py-2 rounded-xl border outline-none ${
-                darkMode
-                  ? "bg-gray-700 border-gray-600 text-white"
-                  : "bg-white border-gray-300 text-black"
-              }`}
-            />
-            {errors.department && (
-              <p className="text-red-500 text-xs mt-1">{errors.department}</p>
+            {errors.role && (
+              <p className="text-red-500 text-xs mt-1">{errors.role}</p>
             )}
           </div>
 
-          {/* Status */}
           <div>
             <label className="text-sm font-medium">Status</label>
             <select
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className={`w-full mt-1 px-4 py-2 rounded-xl border outline-none ${
+              className={`w-full mt-1 px-4 py-2 rounded-xl border outline-none cursor-pointer ${
                 darkMode
                   ? "bg-gray-700 border-gray-600 text-white"
                   : "bg-white border-gray-300 text-black"
@@ -280,7 +225,6 @@ const handleImageChange = (e) => {
             </select>
           </div>
 
-          {/* Joined Date */}
           <div>
             <label className="text-sm font-medium">Joined Date</label>
             <input
@@ -299,45 +243,6 @@ const handleImageChange = (e) => {
             )}
           </div>
 
-          {/* Location */}
-          <div>
-            <label className="text-sm font-medium">Location</label>
-            <input
-              type="text"
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              className={`w-full mt-1 px-4 py-2 rounded-xl border outline-none ${
-                darkMode
-                  ? "bg-gray-700 border-gray-600 text-white"
-                  : "bg-white border-gray-300 text-black"
-              }`}
-            />
-            {errors.location && (
-              <p className="text-red-500 text-xs mt-1">{errors.location}</p>
-            )}
-          </div>
-
-          {/* Projects */}
-          <div>
-            <label className="text-sm font-medium">Projects</label>
-            <input
-              type="number"
-              name="projects"
-              value={formData.projects}
-              onChange={handleChange}
-              className={`w-full mt-1 px-4 py-2 rounded-xl border outline-none ${
-                darkMode
-                  ? "bg-gray-700 border-gray-600 text-white"
-                  : "bg-white border-gray-300 text-black"
-              }`}
-            />
-            {errors.projects && (
-              <p className="text-red-500 text-xs mt-1">{errors.projects}</p>
-            )}
-          </div>
-
-          {/* Profile Image */}
           <div>
             <label className="text-sm font-medium">Profile Image</label>
             <input
@@ -355,7 +260,6 @@ const handleImageChange = (e) => {
             )}
           </div>
 
-          {/* Preview */}
           <div className="md:col-span-2">
             <label className="text-sm font-medium block mb-2">
               Current Preview
@@ -369,7 +273,6 @@ const handleImageChange = (e) => {
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="md:col-span-2 flex justify-end gap-3 mt-4">
             <button
               type="button"
