@@ -2,11 +2,13 @@ package com.clientcrew.controller;
 
 import java.util.List;
 
+
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.clientcrew.entity.User;
 import com.clientcrew.service.CustomerService;
+import com.clientcrew.dto.CustomerRequest;
 
 @RestController
 @RequestMapping("/api/customers")
@@ -31,8 +33,9 @@ public class CustomerController {
 
         return customerService.getCustomersByRole(email, role);
     }
+    
     @PostMapping
-    public User addCustomer(@RequestBody User customer, Authentication authentication) {
+    public User addCustomer(@RequestBody CustomerRequest request, Authentication authentication) {
 
         String role = authentication.getAuthorities()
                 .iterator()
@@ -40,9 +43,7 @@ public class CustomerController {
                 .getAuthority()
                 .replace("ROLE_", "");
 
-        System.out.println("ROLE = " + role);
-        System.out.println("EMAIL = " + authentication.getName());
+        String email = authentication.getName();
 
-        return customerService.addCustomer(customer, role);
-    }
-}
+        return customerService.addCustomer(request, role, email);
+    }}

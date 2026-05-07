@@ -2,6 +2,7 @@ package com.clientcrew.service;
 
 import java.util.List;
 
+
 import org.springframework.stereotype.Service;
 
 import com.clientcrew.entity.Project;
@@ -10,6 +11,8 @@ import com.clientcrew.entity.User;
 import com.clientcrew.repository.ProjectRepository;
 import com.clientcrew.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import com.clientcrew.dto.CustomerRequest;
 
 @Service
 public class CustomerService {
@@ -51,19 +54,47 @@ this.passwordEncoder = passwordEncoder;
         throw new RuntimeException("Access denied: Customers page not allowed");
     }
     
-    public User addCustomer(User customer, String role) {
+    public User addCustomer(CustomerRequest request, String role, String loggedInEmail) {
         if (!role.equals("ADMIN") && !role.equals("MANAGER")) {
             throw new RuntimeException("Access denied");
         }
 
-        customer.setUserRole(Role.CUSTOMER);
-
-        if (customer.getUserPassword() == null || customer.getUserPassword().isBlank()) {
-            customer.setUserPassword(passwordEncoder.encode("Customer@123"));
-        } else {
-            customer.setUserPassword(passwordEncoder.encode(customer.getUserPassword()));
+        if (userRepository.existsByUserEmail(request.getUserEmail())) {
+            throw new RuntimeException("Customer email already exists");
         }
 
-        return userRepository.save(customer);
+        Project project = projectRepository.findById(request.getProjectId())
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        if (role.equals("MANAGER")) {
+            boolean isManagerAssigned = project.getAssignedEmployees()
+                    .stream()
+                    .anyMatch(user ->
+                            user.getUserEmail().equals(loggedInEmail)
+                            && user.getUserRole().name().equals("MANAGER")
+                    );
+
+            if (!isManagerAssigned) {
+                throw new RuntimeException("Access denied: You can assign customer only to your project");
+            }
+        }
+
+        User customer = new User();
+        customer.setUserFullName(request.getUserFullName());
+        customer.setUserEmail(request.getUserEmail());
+        customer.setUserImage(request.getUserImage());
+        customer.setUserRole(Role.CUSTOMER);
+        customer.setUserPassword(passwordEncoder.encode("Customer@123"));
+        customer.setUserPhone(request.getUserPhone());
+        customer.setStatus(request.getStatus());
+        customer.setJoinedDate(request.getJoinedDate());
+
+        User savedCustomer = userRepository.save(customer);
+
+        project.setCustomerEmail(savedCustomer.getUserEmail());
+        project.setClientName(savedCustomer.getUserFullName());
+        projectRepository.save(project);
+
+        return savedCustomer;
     }
 }

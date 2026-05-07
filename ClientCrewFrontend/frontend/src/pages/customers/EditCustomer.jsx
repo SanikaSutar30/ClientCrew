@@ -33,38 +33,38 @@ export default function EditCustomer({
     }));
   };
 
-const handleImageChange = (e) => {
-  const file = e.target.files[0];
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
 
-  if (!file) return;
+    if (!file) return;
 
-  const validTypes = ["image/png", "image/jpeg", "image/jpg"];
+    const validTypes = ["image/png", "image/jpeg", "image/jpg"];
 
-  if (!validTypes.includes(file.type)) {
-    setErrors((prev) => ({
-      ...prev,
-      image: "Only PNG, JPG and JPEG images are allowed",
-    }));
-    return;
-  }
+    if (!validTypes.includes(file.type)) {
+      setErrors((prev) => ({
+        ...prev,
+        image: "Only PNG, JPG and JPEG images are allowed",
+      }));
+      return;
+    }
 
-  const reader = new FileReader();
+    const reader = new FileReader();
 
-  reader.onloadend = () => {
-    setFormData((prev) => ({
-      ...prev,
-      image: reader.result,
-    }));
+    reader.onloadend = () => {
+      setFormData((prev) => ({
+        ...prev,
+        image: reader.result,
+      }));
 
-    setErrors((prev) => ({
-      ...prev,
-      image: "",
-    }));
+      setErrors((prev) => ({
+        ...prev,
+        image: "",
+      }));
+    };
+
+    reader.readAsDataURL(file);
   };
 
-  reader.readAsDataURL(file);
-  };
-  
   const validateForm = () => {
     const newErrors = {};
 
@@ -176,7 +176,7 @@ const handleImageChange = (e) => {
             <label className="text-sm font-medium">Status</label>
             <select
               name="status"
-              value={formData.status}
+              value={formData.status || "Active"}
               onChange={handleChange}
               className={inputClass}
             >

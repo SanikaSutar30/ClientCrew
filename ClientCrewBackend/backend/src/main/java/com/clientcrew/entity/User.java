@@ -37,6 +37,10 @@ public class User {
     @Column(name = "user_image", columnDefinition = "LONGTEXT")
     private String userImage;
 
+    private String userPhone;
+    private String status;
+    private String joinedDate;
+    
     public User() {
     }
 
@@ -96,4 +100,29 @@ public class User {
     public void setUserImage(String userImage) {
         this.userImage = userImage;
     }
+
+	public String getUserPhone() {
+		return userPhone;
+	}
+
+	public void setUserPhone(String userPhone) {
+		this.userPhone = userPhone;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+	public String getJoinedDate() {
+		return joinedDate;
+	}
+
+	public void setJoinedDate(String joinedDate) {
+		this.joinedDate = joinedDate;
+	}
+    
 }

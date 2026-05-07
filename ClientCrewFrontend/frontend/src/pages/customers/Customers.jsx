@@ -103,6 +103,7 @@ export default function Customers() {
       status: newCustomer.status,
       joinedDate: newCustomer.joinedDate,
       userImage: newCustomer.image || "",
+      projectId: newCustomer.projectId,
     });
 
     setShowAddConfirmModal(true);
@@ -114,14 +115,15 @@ export default function Customers() {
     try {
       console.log("Customer payload:", pendingCustomer);
 
-      await addCustomer(pendingCustomer);
+     await addCustomer(pendingCustomer);
 
-      await fetchCustomers();
+     await fetchCustomers();
+     await fetchProjects();
 
-      setCurrentPage(1);
-      setShowAddConfirmModal(false);
-      setShowAddModal(false);
-      setPendingCustomer(null);
+     setCurrentPage(1);
+     setShowAddConfirmModal(false);
+     setShowAddModal(false);
+     setPendingCustomer(null);
     } catch (error) {
       console.error("Add customer error:", error);
       alert("Customer not added. Please check backend logs.");
@@ -301,6 +303,7 @@ export default function Customers() {
           darkMode={darkMode}
           customer={selectedCustomer}
           setShowViewModal={setShowViewModal}
+          projects={projects}
         />
       )}
       <ConfirmationModal

@@ -215,7 +215,7 @@ export default function AddCustomer({
               <label className="block text-sm font-medium mb-2">Status</label>
               <select
                 name="status"
-                value={formData.status}
+                value={formData.status || "Active"}
                 onChange={handleChange}
                 className={`${inputClass} cursor-pointer`}
               >
@@ -280,7 +280,7 @@ export default function AddCustomer({
 
               <select
                 name="projectId"
-                value={formData.projectId}
+                value={formData.projectId || ""}
                 onChange={handleChange}
                 className={`${inputClass} cursor-pointer`}
               >
