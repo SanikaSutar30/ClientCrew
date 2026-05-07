@@ -143,6 +143,29 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.DELETE, "/api/employees/**")
                         .hasRole("ADMIN")
                         
+                        
+                        
+                     // Task view APIs - All roles
+                        .requestMatchers(HttpMethod.GET, "/api/tasks/**")
+                            .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")
+
+                        // Task create APIs - Admin and Manager
+                        .requestMatchers(HttpMethod.POST, "/api/tasks/**")
+                            .hasAnyRole("ADMIN", "MANAGER")
+
+                        // Task update APIs - Admin and Manager
+                        .requestMatchers(HttpMethod.PUT, "/api/tasks/**")
+                            .hasAnyRole("ADMIN", "MANAGER")
+
+                        // Task status update APIs - Admin, Manager, Employee
+                        .requestMatchers(HttpMethod.PATCH, "/api/tasks/**")
+                            .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
+
+                        // Task delete APIs - Admin only
+                        .requestMatchers(HttpMethod.DELETE, "/api/tasks/**")
+                            .hasRole("ADMIN")
+                            
+                        
                 // All remaining APIs require login
                 .anyRequest()
                     .authenticated()
@@ -166,7 +189,7 @@ public class SecurityConfig {
 
         config.setAllowedOrigins(List.of("http://localhost:5173"));
         config.setAllowedMethods(
-                List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         );
         config.setAllowedHeaders(
                 List.of("Authorization", "Content-Type")

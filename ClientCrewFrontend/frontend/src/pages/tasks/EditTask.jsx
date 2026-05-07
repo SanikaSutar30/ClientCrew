@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import { X, CalendarDays, ChevronDown, Check } from "lucide-react";
 
 export default function EditTask({
@@ -19,20 +20,59 @@ export default function EditTask({
   };
 
   const [formData, setFormData] = useState({
-    ...task,
+    id: task.id,
+    title: task.title || "",
+    description: task.description || "",
+    projectId: task.projectId || "",
+    project: task.project || "",
+    assigneeId: task.assigneeId || "",
+    assignee: task.assignee || "",
     dueDate: formatDateForInput(task.dueDate),
     priority: task.priority || "Medium",
-    description: task.description || "",
-    createdBy: task.createdBy || "Admin",
-    subtasks: task.subtasks || "",
+    status: task.status || "To Do",
+    createdBy: task.createdBy || "",
     tag: task.tag || "",
+    subtasks: task.subtasks || "",
   });
 
   const [errors, setErrors] = useState({});
   const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
 
+  const [projects, setProjects] = useState([]);
+  const [employees, setEmployees] = useState([]);
+
   const priorityOptions = ["Low", "Medium", "High"];
   const statusOptions = ["To Do", "In Progress", "Review", "Blocked", "Done"];
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+  };
+
+  const fetchDropdownData = async () => {
+    try {
+      const [projectsRes, employeesRes] = await Promise.all([
+        axios.get("http://localhost:8080/api/projects", getAuthHeaders()),
+        axios.get("http://localhost:8080/api/employees", getAuthHeaders()),
+      ]);
+
+      setProjects(projectsRes.data || []);
+      setEmployees(employeesRes.data || []);
+    } catch (error) {
+      console.error("Failed to load dropdown data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchDropdownData();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const getTagByPriority = (priority) => {
     switch (priority) {
@@ -71,6 +111,45 @@ export default function EditTask({
       ...prev,
       [name]: value,
     }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+  };
+
+  const handleProjectChange = (e) => {
+    const selectedProject = projects.find(
+      (project) => String(project.id) === String(e.target.value),
+    );
+
+    setFormData((prev) => ({
+      ...prev,
+      projectId: e.target.value,
+      project: selectedProject?.projectName || "",
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      projectId: "",
+    }));
+  };
+
+  const handleAssigneeChange = (e) => {
+    const selectedEmployee = employees.find(
+      (employee) => String(employee.userId) === String(e.target.value),
+    );
+
+    setFormData((prev) => ({
+      ...prev,
+      assigneeId: e.target.value,
+      assignee: selectedEmployee?.userFullName || "",
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      assigneeId: "",
+    }));
   };
 
   const handlePrioritySelect = (priority) => {
@@ -79,6 +158,7 @@ export default function EditTask({
       priority,
       tag: getTagByPriority(priority),
     }));
+
     setShowPriorityDropdown(false);
   };
 
@@ -89,12 +169,12 @@ export default function EditTask({
       newErrors.title = "Task title is required";
     }
 
-    if (!formData.project.trim()) {
-      newErrors.project = "Project is required";
+    if (!formData.projectId) {
+      newErrors.projectId = "Project is required";
     }
 
-    if (!formData.assignee.trim()) {
-      newErrors.assignee = "Assignee is required";
+    if (!formData.assigneeId) {
+      newErrors.assigneeId = "Assignee is required";
     }
 
     if (!formData.dueDate) {
@@ -112,10 +192,8 @@ export default function EditTask({
 
     const updatedTask = {
       ...formData,
-      dueDate: new Date(formData.dueDate).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      }),
+      projectId: Number(formData.projectId),
+      assigneeId: Number(formData.assigneeId),
       borderColor: getBorderColorByStatus(formData.status),
     };
 
@@ -137,7 +215,6 @@ export default function EditTask({
             : "bg-white border border-gray-200 text-black"
         }`}
       >
-        {/* Header */}
         <div
           className={`flex items-center justify-between px-8 py-6 border-b ${
             darkMode ? "border-gray-700" : "border-gray-200"
@@ -158,14 +235,13 @@ export default function EditTask({
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="px-8 py-6 space-y-6">
-          {/* Row 1 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-semibold mb-2">
                 Task Name
               </label>
+
               <input
                 type="text"
                 name="title"
@@ -173,6 +249,7 @@ export default function EditTask({
                 onChange={handleChange}
                 className={inputClass}
               />
+
               {errors.title && (
                 <p className="text-red-500 text-xs mt-1">{errors.title}</p>
               )}
@@ -182,34 +259,51 @@ export default function EditTask({
               <label className="block text-sm font-semibold mb-2">
                 Project
               </label>
-              <input
-                type="text"
-                name="project"
-                value={formData.project}
-                onChange={handleChange}
-                className={inputClass}
-              />
-              {errors.project && (
-                <p className="text-red-500 text-xs mt-1">{errors.project}</p>
+
+              <select
+                name="projectId"
+                value={formData.projectId}
+                onChange={handleProjectChange}
+                className={`${inputClass} cursor-pointer`}
+              >
+                <option value="">Select Project</option>
+
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.projectName}
+                  </option>
+                ))}
+              </select>
+
+              {errors.projectId && (
+                <p className="text-red-500 text-xs mt-1">{errors.projectId}</p>
               )}
             </div>
           </div>
 
-          {/* Row 2 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-semibold mb-2">
                 Assigned To
               </label>
-              <input
-                type="text"
-                name="assignee"
-                value={formData.assignee}
-                onChange={handleChange}
-                className={inputClass}
-              />
-              {errors.assignee && (
-                <p className="text-red-500 text-xs mt-1">{errors.assignee}</p>
+
+              <select
+                name="assigneeId"
+                value={formData.assigneeId}
+                onChange={handleAssigneeChange}
+                className={`${inputClass} cursor-pointer`}
+              >
+                <option value="">Select Assignee</option>
+
+                {employees.map((employee) => (
+                  <option key={employee.userId} value={employee.userId}>
+                    {employee.userFullName}
+                  </option>
+                ))}
+              </select>
+
+              {errors.assigneeId && (
+                <p className="text-red-500 text-xs mt-1">{errors.assigneeId}</p>
               )}
             </div>
 
@@ -217,22 +311,23 @@ export default function EditTask({
               <label className="block text-sm font-semibold mb-2">
                 Created By
               </label>
+
               <input
                 type="text"
                 name="createdBy"
                 value={formData.createdBy}
-                onChange={handleChange}
-                className={inputClass}
+                disabled
+                className={`${inputClass} cursor-not-allowed opacity-80`}
               />
             </div>
           </div>
 
-          {/* Row 3 */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div>
               <label className="block text-sm font-semibold mb-2">
                 Due Date
               </label>
+
               <div className="relative">
                 <input
                   type="date"
@@ -241,11 +336,13 @@ export default function EditTask({
                   onChange={handleChange}
                   className={`${inputClass} pr-10`}
                 />
+
                 <CalendarDays
                   size={18}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
                 />
               </div>
+
               {errors.dueDate && (
                 <p className="text-red-500 text-xs mt-1">{errors.dueDate}</p>
               )}
@@ -302,6 +399,7 @@ export default function EditTask({
 
             <div>
               <label className="block text-sm font-semibold mb-2">Status</label>
+
               <select
                 name="status"
                 value={formData.status}
@@ -317,39 +415,11 @@ export default function EditTask({
             </div>
           </div>
 
-          {/* Row 4 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-sm font-semibold mb-2">Tag</label>
-              <input
-                type="text"
-                name="tag"
-                value={formData.tag}
-                onChange={handleChange}
-                className={inputClass}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-2">
-                Subtasks
-              </label>
-              <input
-                type="text"
-                name="subtasks"
-                value={formData.subtasks}
-                onChange={handleChange}
-                placeholder="Example: 3 / 5"
-                className={inputClass}
-              />
-            </div>
-          </div>
-
-          {/* Description */}
           <div>
             <label className="block text-sm font-semibold mb-2">
               Description
             </label>
+
             <textarea
               name="description"
               value={formData.description}
@@ -359,7 +429,6 @@ export default function EditTask({
             />
           </div>
 
-          {/* Footer */}
           <div
             className={`flex justify-end gap-3 pt-6 border-t ${
               darkMode ? "border-gray-700" : "border-gray-200"

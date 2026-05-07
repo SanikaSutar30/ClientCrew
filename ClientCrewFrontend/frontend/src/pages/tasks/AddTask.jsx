@@ -1,10 +1,6 @@
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
+import axios from "axios";
 import { X, Search } from "lucide-react";
-
-// Components
-import AddEmployee from "../employees/AddEmployee";
-import AddProject from "../projects/AddProject";
 
 export default function AddTask({
   darkMode,
@@ -13,47 +9,17 @@ export default function AddTask({
   defaultStatus = "To Do",
   userRole,
 }) {
-  const storedUser = JSON.parse(localStorage.getItem("user")) || {};
-  const loggedInEmail = storedUser.email || "";
   const [projectSearch, setProjectSearch] = useState("");
-  const [teamMembers, setTeamMembers] = useState([
-    {
-      name: "Priya Singh",
-      email: "priya@gmail.com",
-      role: "Manager",
-      avatar: "../assets/Profile.jpg",
-    },
-    {
-      name: "Rahul Sharma",
-      email: "rahul@gmail.com",
-      role: "Employee",
-      avatar: "../assets/Profile2.jpg",
-    },
-    {
-      name: "John Doe",
-      email: "john@gmail.com",
-      role: "Employee",
-      avatar: "../assets/Profile3.jpg",
-    },
-    {
-      name: "Jennifer Brown",
-      email: "jennifer@gmail.com",
-      role: "Employee",
-      avatar: "../assets/Profile4.jpg",
-    },
-    {
-      name: "Amit Patil",
-      email: "amit@gmail.com",
-      role: "Employee",
-      avatar: "../assets/Profile5.jpg",
-    },
-  ]);
+  const [employeeSearch, setEmployeeSearch] = useState("");
 
-  const [showAddEmployee, setShowAddEmployee] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
 
   const [formData, setFormData] = useState({
     title: "",
+    projectId: "",
     project: "",
+    assigneeId: "",
     assignee: "",
     avatar: "../assets/Profile.jpg",
     dueDate: "",
@@ -63,35 +29,122 @@ export default function AddTask({
   });
 
   const [errors, setErrors] = useState({});
-  const [employeeSearch, setEmployeeSearch] = useState("");
-  const canAddProject = ["Admin", "Manager"].includes(userRole);
 
-  const [showAddProjectModal, setShowAddProjectModal] = useState(false);
+  const normalizedRole = userRole?.toUpperCase();
+  const canCreateTask =
+    normalizedRole === "ADMIN" ||
+    normalizedRole === "MANAGER" ||
+    userRole === "Admin" ||
+    userRole === "Manager";
 
-  const [projectOptions, setProjectOptions] = useState([
-    "E-commerce Website",
-    "Mobile App Development",
-    "CRM Platform Enhancement",
-    "Digital Marketing Campaign",
-    "Healthcare Management System",
-  ]);
-  const visibleTeamMembers =
-    userRole === "Admin"
-      ? teamMembers
-      : userRole === "Manager"
-        ? teamMembers.filter((member) => member.role === "Employee")
-        : userRole === "Employee"
-          ? teamMembers.filter((member) => member.email === loggedInEmail)
-          : [];
+  const getLoggedInEmailFromToken = () => {
+    const token = localStorage.getItem("token");
+    if (!token) return "";
 
-  const filteredProjects = projectOptions.filter((project) =>
-    project.toLowerCase().includes(projectSearch.toLowerCase()),
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return payload.sub || payload.email || payload.userEmail || "";
+    } catch {
+      return "";
+    }
+  };
+
+  const loggedInEmail = getLoggedInEmailFromToken();
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+  };
+
+  const fetchDropdownData = async () => {
+    try {
+      const [projectsRes, employeesRes] = await Promise.all([
+        axios.get("http://localhost:8080/api/projects", getAuthHeaders()),
+        axios.get("http://localhost:8080/api/employees", getAuthHeaders()),
+      ]);
+
+      setProjects(projectsRes.data || []);
+      setTeamMembers(employeesRes.data || []);
+    } catch (error) {
+      console.error("Failed to fetch task dropdown data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchDropdownData();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const getProjectId = (project) => project.id || project.projectId;
+
+  const getProjectName = (project) =>
+    project.projectName || project.name || project.title || "";
+
+  const getEmployeeId = (emp) => emp.userId || emp.id || emp.employeeId;
+
+  const getEmployeeName = (emp) =>
+    emp.userFullName || emp.fullName || emp.name || emp.employeeName || "";
+
+  const getEmployeeEmail = (emp) =>
+    emp.userEmail || emp.email || emp.employeeEmail || "";
+
+  const getEmployeeRole = (emp) =>
+    emp.userRole || emp.role || emp.employeeRole || "Employee";
+
+  const getEmployeeImage = (emp) =>
+    emp.userImage || emp.image || emp.avatar || "../assets/Profile.jpg";
+
+  const filteredProjects = projects.filter((project) =>
+    getProjectName(project).toLowerCase().includes(projectSearch.toLowerCase()),
   );
-  const filteredEmployees = visibleTeamMembers.filter(
-    (emp) =>
-      emp.name.toLowerCase().includes(employeeSearch.toLowerCase()) ||
-      emp.role.toLowerCase().includes(employeeSearch.toLowerCase()),
+
+  const selectedProject = projects.find(
+    (project) => String(getProjectId(project)) === String(formData.projectId),
   );
+
+  const selectedProjectMemberIds =
+    selectedProject?.assignedEmployees?.map((emp) => getEmployeeId(emp)) || [];
+
+const employeeSource =
+  selectedProject?.assignedEmployees?.length > 0
+    ? selectedProject.assignedEmployees
+    : teamMembers;
+
+const filteredEmployees = employeeSource.filter((emp) => {
+  const employeeId = getEmployeeId(emp);
+  const name = getEmployeeName(emp).toLowerCase();
+  const role = String(getEmployeeRole(emp)).toLowerCase();
+
+  const isSearchMatch =
+    name.includes(employeeSearch.toLowerCase()) ||
+    role.includes(employeeSearch.toLowerCase());
+
+  if (!isSearchMatch) return false;
+
+  if (!formData.projectId) return false;
+
+  return selectedProjectMemberIds.includes(employeeId);
+});
+
+  const canAssignMember = (member) => {
+    const role = String(getEmployeeRole(member)).toUpperCase();
+
+    if (normalizedRole === "ADMIN" || userRole === "Admin") {
+      return true;
+    }
+
+    if (normalizedRole === "MANAGER" || userRole === "Manager") {
+      return role === "EMPLOYEE";
+    }
+
+    return false;
+  };
 
   const inputClass = `w-full px-4 py-3 rounded-xl border outline-none ${
     darkMode
@@ -102,10 +155,25 @@ export default function AddTask({
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    if (name === "projectId") {
+      const selected = projects.find(
+        (project) => String(getProjectId(project)) === String(value),
+      );
+
+      setFormData((prev) => ({
+        ...prev,
+        projectId: value,
+        project: selected ? getProjectName(selected) : "",
+        assigneeId: "",
+        assignee: "",
+        avatar: "../assets/Profile.jpg",
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
 
     setErrors((prev) => ({
       ...prev,
@@ -114,46 +182,19 @@ export default function AddTask({
   };
 
   const handleAssigneeSelect = (member) => {
+    if (!canAssignMember(member)) return;
+
     setFormData((prev) => ({
       ...prev,
-      assignee: member.name,
-      avatar: member.avatar,
+      assigneeId: getEmployeeId(member),
+      assignee: getEmployeeName(member),
+      avatar: getEmployeeImage(member),
     }));
 
     setErrors((prev) => ({
       ...prev,
-      assignee: "",
+      assigneeId: "",
     }));
-  };
-
-  const getTagByPriority = (priority) => {
-    switch (priority) {
-      case "High":
-        return "Critical";
-      case "Medium":
-        return "Development";
-      case "Low":
-        return "Marketing";
-      default:
-        return "";
-    }
-  };
-
-  const getBorderColorByStatus = (status) => {
-    switch (status) {
-      case "To Do":
-        return "border-l-blue-400";
-      case "In Progress":
-        return "border-l-amber-400";
-      case "Review":
-        return "border-l-purple-400";
-      case "Blocked":
-        return "border-l-red-400";
-      case "Done":
-        return "border-l-emerald-400";
-      default:
-        return "border-l-gray-400";
-    }
   };
 
   const validateForm = () => {
@@ -163,12 +204,12 @@ export default function AddTask({
       newErrors.title = "Task name is required";
     }
 
-    if (!formData.project) {
-      newErrors.project = "Project is required";
+    if (!formData.projectId) {
+      newErrors.projectId = "Project is required";
     }
 
-    if (!formData.assignee) {
-      newErrors.assignee = "Please select an assignee";
+    if (!formData.assigneeId) {
+      newErrors.assigneeId = "Please select an assignee";
     }
 
     if (!formData.dueDate) {
@@ -185,69 +226,20 @@ export default function AddTask({
     if (!validateForm()) return;
 
     const newTask = {
-      id: Date.now().toString(),
       ...formData,
-      dueDate: new Date(formData.dueDate).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      }),
-      tag: getTagByPriority(formData.priority),
-      borderColor: getBorderColorByStatus(formData.status),
+      projectId: Number(formData.projectId),
+      assigneeId: Number(formData.assigneeId),
+      dueDate: formData.dueDate,
     };
 
     onAddTask?.(newTask);
     onClose?.();
   };
 
-  // keep this AFTER all hooks
-  if (userRole === "Customer") return null;
+  if (!canCreateTask) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4 py-6 bg-black/20 backdrop-blur-[3px]">
-      {showAddEmployee && (
-        <AddEmployee
-          darkMode={darkMode}
-          setShowAddModal={setShowAddEmployee}
-          onAddEmployee={(newEmployee) => {
-            const employeeToAdd = {
-              ...newEmployee,
-              email: newEmployee.email,
-              avatar: newEmployee.image || "../assets/Profile.jpg",
-            };
-
-            setTeamMembers((prev) => [...prev, employeeToAdd]);
-
-            setFormData((prev) => ({
-              ...prev,
-              assignee: employeeToAdd.name,
-              avatar: employeeToAdd.avatar,
-            }));
-          }}
-        />
-      )}
-
-      {showAddProjectModal && (
-        <AddProject
-          darkMode={darkMode}
-          setShowAdd={setShowAddProjectModal}
-          userRole={userRole}
-          onAddProject={(newProject) => {
-            const projectName = newProject.projectName;
-
-            setProjectOptions((prev) => {
-              if (prev.includes(projectName)) return prev;
-              return [...prev, projectName];
-            });
-
-            setFormData((prev) => ({
-              ...prev,
-              project: projectName,
-            }));
-
-            setShowAddProjectModal(false);
-          }}
-        />
-      )}
       <div
         className={`w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-xl ${
           darkMode ? "bg-gray-800 text-white" : "bg-white text-black"
@@ -259,6 +251,7 @@ export default function AddTask({
           }`}
         >
           <h2 className="text-2xl font-bold">Add Task</h2>
+
           <button
             type="button"
             onClick={onClose}
@@ -274,6 +267,7 @@ export default function AddTask({
               <label className="block text-sm font-semibold mb-2">
                 Task Name <span className="text-red-500">*</span>
               </label>
+
               <input
                 name="title"
                 placeholder="Enter task name"
@@ -281,25 +275,16 @@ export default function AddTask({
                 onChange={handleChange}
                 className={inputClass}
               />
+
               {errors.title && (
                 <p className="text-red-500 text-xs mt-1">{errors.title}</p>
               )}
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium">Project</label>
-
-                {canAddProject && (
-                  <button
-                    type="button"
-                    onClick={() => setShowAddProjectModal(true)}
-                    className="text-sm font-medium text-[#0f766e] hover:underline cursor-pointer"
-                  >
-                    + Add Project
-                  </button>
-                )}
-              </div>
+              <label className="block text-sm font-medium mb-2">
+                Project <span className="text-red-500">*</span>
+              </label>
 
               <div
                 className={`flex items-center px-4 py-3 rounded-xl border mb-3 ${
@@ -323,21 +308,25 @@ export default function AddTask({
               </div>
 
               <select
-                name="project"
-                value={formData.project}
+                name="projectId"
+                value={formData.projectId}
                 onChange={handleChange}
                 className={`${inputClass} cursor-pointer`}
               >
                 <option value="">Select project</option>
+
                 {filteredProjects.map((project) => (
-                  <option key={project} value={project}>
-                    {project}
+                  <option
+                    key={getProjectId(project)}
+                    value={getProjectId(project)}
+                  >
+                    {getProjectName(project)}
                   </option>
                 ))}
               </select>
 
-              {errors.project && (
-                <p className="text-red-500 text-xs mt-1">{errors.project}</p>
+              {errors.projectId && (
+                <p className="text-red-500 text-xs mt-1">{errors.projectId}</p>
               )}
             </div>
           </div>
@@ -347,20 +336,10 @@ export default function AddTask({
               <label className="block text-sm font-semibold">
                 Assign To{" "}
                 <span className="text-gray-400 font-normal">
-                  ({filteredEmployees.length} person
+                  ({filteredEmployees.length} project member
                   {filteredEmployees.length !== 1 ? "s" : ""})
                 </span>
               </label>
-
-              {(userRole === "Admin" || userRole === "Manager") && (
-                <button
-                  type="button"
-                  onClick={() => setShowAddEmployee(true)}
-                  className="text-sm text-[#0f766e] font-medium hover:underline cursor-pointer"
-                >
-                  + Add Employee
-                </button>
-              )}
             </div>
 
             <div
@@ -371,6 +350,7 @@ export default function AddTask({
               }`}
             >
               <Search size={16} className="text-gray-500" />
+
               <input
                 type="text"
                 placeholder="Search team members..."
@@ -393,38 +373,63 @@ export default function AddTask({
             >
               {filteredEmployees.length > 0 ? (
                 <div className="flex flex-wrap gap-3">
-                  {filteredEmployees.map((m) => {
-                    const isSelected = formData.assignee === m.name;
+                  {filteredEmployees.map((member) => {
+                    const memberId = getEmployeeId(member);
+                    const memberName = getEmployeeName(member);
+                    const memberEmail = getEmployeeEmail(member);
+                    const memberRole = getEmployeeRole(member);
+                    const memberImage = getEmployeeImage(member);
+                    const allowedToAssign = canAssignMember(member);
+
+                    const displayName =
+                      memberEmail?.toLowerCase() ===
+                      loggedInEmail?.toLowerCase()
+                        ? "You"
+                        : memberName;
+
+                    const isSelected =
+                      String(formData.assigneeId) === String(memberId);
 
                     return (
                       <button
-                        key={m.email}
+                        key={memberId}
                         type="button"
-                        onClick={() => handleAssigneeSelect(m)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition ${
-                          isSelected
-                            ? "border-[#0f766e] bg-[#0f766e]/10"
-                            : darkMode
-                              ? "border-gray-600 bg-gray-800 hover:bg-gray-600"
-                              : "border-gray-200 bg-white hover:bg-gray-100"
+                        disabled={!allowedToAssign}
+                        onClick={() => handleAssigneeSelect(member)}
+                        title={
+                          allowedToAssign
+                            ? "Assign task"
+                            : "Manager can assign task only to employees"
+                        }
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition ${
+                          !allowedToAssign
+                            ? "opacity-50 cursor-not-allowed bg-gray-100 border-gray-200"
+                            : isSelected
+                              ? "cursor-pointer border-[#0f766e] bg-[#0f766e]/10"
+                              : darkMode
+                                ? "cursor-pointer border-gray-600 bg-gray-800 hover:bg-gray-600"
+                                : "cursor-pointer border-gray-200 bg-white hover:bg-gray-100"
                         }`}
                       >
                         <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-300 shrink-0">
                           <img
-                            src={m.avatar}
-                            alt={m.name}
+                            src={memberImage}
+                            alt={memberName}
                             className="w-full h-full object-cover object-top"
                           />
                         </div>
 
                         <div className="flex flex-col text-left">
-                          <span className="text-sm font-medium">{m.name}</span>
+                          <span className="text-sm font-medium">
+                            {displayName}
+                          </span>
+
                           <span
                             className={`text-xs ${
                               darkMode ? "text-gray-300" : "text-gray-500"
                             }`}
                           >
-                            {m.role}
+                            {memberRole}
                           </span>
                         </div>
                       </button>
@@ -437,36 +442,59 @@ export default function AddTask({
                     darkMode ? "text-gray-300" : "text-gray-500"
                   }`}
                 >
-                  No team members found
+                  Select a project first or no team members are assigned to this
+                  project.
                 </p>
               )}
             </div>
 
-            {errors.assignee && (
-              <p className="text-red-500 text-xs mt-1">{errors.assignee}</p>
+            {errors.assigneeId && (
+              <p className="text-red-500 text-xs mt-1">{errors.assigneeId}</p>
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold mb-2">
-              Due Date <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              name="dueDate"
-              value={formData.dueDate}
-              onChange={handleChange}
-              className={inputClass}
-            />
-            {errors.dueDate && (
-              <p className="text-red-500 text-xs mt-1">{errors.dueDate}</p>
-            )}
+          <div className="grid md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-sm font-semibold mb-2">
+                Due Date <span className="text-red-500">*</span>
+              </label>
+
+              <input
+                type="date"
+                name="dueDate"
+                value={formData.dueDate}
+                onChange={handleChange}
+                className={inputClass}
+              />
+
+              {errors.dueDate && (
+                <p className="text-red-500 text-xs mt-1">{errors.dueDate}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-2">
+                Priority
+              </label>
+
+              <select
+                name="priority"
+                value={formData.priority}
+                onChange={handleChange}
+                className={`${inputClass} cursor-pointer`}
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
           </div>
 
           <div>
             <label className="block text-sm font-semibold mb-2">
               Description
             </label>
+
             <textarea
               name="description"
               value={formData.description}
@@ -493,6 +521,7 @@ export default function AddTask({
             >
               Cancel
             </button>
+
             <button
               type="submit"
               className="bg-[#0f766e] text-white px-6 py-3 rounded-xl cursor-pointer hover:opacity-90"

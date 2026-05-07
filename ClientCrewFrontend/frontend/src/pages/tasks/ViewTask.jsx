@@ -1,18 +1,25 @@
 import { X, Pencil, Trash2, CalendarDays, Folder, User } from "lucide-react";
 
-
 export default function ViewTask({
   darkMode,
   task,
   setShowViewTask,
   onEditTask,
   onDeleteTask,
+  userRole,
 }) {
   if (!task) return null;
 
+  const normalizedRole = userRole?.toUpperCase();
+
+  const isAdmin = normalizedRole === "ADMIN" || userRole === "Admin";
+  const isManager = normalizedRole === "MANAGER" || userRole === "Manager";
+
+  const canEdit = isAdmin || isManager;
+  const canDelete = isAdmin;
+
   return (
     <div className="fixed inset-0 z-[999] flex justify-center pt-20 px-4">
-      {/* Modal */}
       <div
         className={`w-full max-w-3xl rounded-3xl shadow-xl p-6 ${
           darkMode
@@ -20,7 +27,6 @@ export default function ViewTask({
             : "bg-white border border-gray-200 text-black"
         }`}
       >
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold">Task Details</h2>
 
@@ -36,10 +42,8 @@ export default function ViewTask({
           </button>
         </div>
 
-        {/* Title */}
         <h3 className="text-xl font-semibold mb-2">{task.title}</h3>
 
-        {/* Status + Priority */}
         <div className="flex items-center gap-2 mb-5 flex-wrap">
           <span
             className={`text-xs px-3 py-1 rounded-full font-medium ${
@@ -70,7 +74,6 @@ export default function ViewTask({
           )}
         </div>
 
-        {/* Description */}
         <div className="mb-6">
           <p className="text-sm font-medium mb-1">Description</p>
           <p
@@ -82,9 +85,7 @@ export default function ViewTask({
           </p>
         </div>
 
-        {/* Info Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Project */}
           <div className="flex items-center gap-3">
             <Folder size={18} className="text-[#0f766e]" />
             <div>
@@ -93,7 +94,6 @@ export default function ViewTask({
             </div>
           </div>
 
-          {/* Assigned To */}
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-300">
               <img
@@ -102,13 +102,13 @@ export default function ViewTask({
                 className="w-full h-full object-cover"
               />
             </div>
+
             <div>
               <p className="text-xs text-gray-500">Assigned To</p>
               <p className="text-sm font-medium">{task.assignee}</p>
             </div>
           </div>
 
-          {/* Created By (Manager) */}
           <div className="flex items-center gap-3">
             <User size={18} className="text-blue-500" />
             <div>
@@ -117,25 +117,30 @@ export default function ViewTask({
             </div>
           </div>
 
-          {/* Due Date */}
           <div className="flex items-center gap-3">
             <CalendarDays size={18} className="text-orange-500" />
             <div>
               <p className="text-xs text-gray-500">Due Date</p>
-              <p className="text-sm font-medium">{task.dueDate}</p>
+              <p className="text-sm font-medium">
+                {task.dueDate || "No due date"}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Subtasks */}
         {task.subtasks && (
           <div className="mb-6">
             <p className="text-sm font-medium mb-2">Subtasks</p>
-            <div className="text-sm text-gray-600">{task.subtasks}</div>
+            <div
+              className={`text-sm ${
+                darkMode ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
+              {task.subtasks}
+            </div>
           </div>
         )}
 
-        {/* Progress */}
         {typeof task.progress === "number" && (
           <div className="mb-6">
             <p className="text-sm mb-2 font-medium">Progress</p>
@@ -148,26 +153,29 @@ export default function ViewTask({
           </div>
         )}
 
-        {/* Footer */}
-        <div className="flex justify-end gap-3">
-          {/* Delete */}
-          <button
-            onClick={() => onDeleteTask(task)}
-            className="flex cursor-pointer items-center gap-2 px-4 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100"
-          >
-            <Trash2 size={16} />
-            Delete
-          </button>
+        {(canEdit || canDelete) && (
+          <div className="flex justify-end gap-3">
+            {canDelete && (
+              <button
+                onClick={() => onDeleteTask(task)}
+                className="flex cursor-pointer items-center gap-2 px-4 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100"
+              >
+                <Trash2 size={16} />
+                Delete
+              </button>
+            )}
 
-          {/* Edit */}
-          <button
-            onClick={() => onEditTask(task)}
-            className="flex items-center gap-2 px-4 py-2 cursor-pointer rounded-xl bg-green-50 text-green-600 hover:bg-green-100"
-          >
-            <Pencil size={16} />
-            Edit
-          </button>
-        </div>
+            {canEdit && (
+              <button
+                onClick={() => onEditTask(task)}
+                className="flex items-center gap-2 px-4 py-2 cursor-pointer rounded-xl bg-green-50 text-green-600 hover:bg-green-100"
+              >
+                <Pencil size={16} />
+                Edit
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

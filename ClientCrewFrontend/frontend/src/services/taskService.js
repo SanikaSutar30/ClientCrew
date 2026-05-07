@@ -1,80 +1,54 @@
-let tasks = JSON.parse(localStorage.getItem("tasks")) || [
-  {
-    id: 1,
-    title: "Design Login UI",
-    project: "CRM Dashboard",
-    assignee: "Rahul Sharma",
-    avatar: "../assets/Profile.jpg",
-    dueDate: "2026-04-25",
-    priority: "High",
-    description: "Create login screen UI for ClientCrew",
-    status: "To Do",
-  },
-  {
-    id: 2,
-    title: "Build Customer Table",
-    project: "CRM Dashboard",
-    assignee: "Priya Singh",
-    avatar: "../assets/Profile2.jpg",
-    dueDate: "2026-04-28",
-    priority: "Medium",
-    description: "Implement customers table with filters",
-    status: "In Progress",
-  },
-];
+import axios from "axios";
 
-const saveToStorage = () => {
-  localStorage.setItem("tasks", JSON.stringify(tasks));
-};
+const API_BASE_URL = "http://localhost:8080/api/tasks";
 
-export const getAllTasks = () => {
-  return [...tasks];
-};
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
 
-export const getTaskById = (id) => {
-  const task = tasks.find((task) => task.id === id);
-  return task ? { ...task } : null;
-};
-
-export const addTask = (newTask) => {
-  const taskWithId = {
-    ...newTask,
-    id: tasks.length ? Math.max(...tasks.map((t) => t.id)) + 1 : 1,
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   };
-
-  tasks = [taskWithId, ...tasks];
-  saveToStorage();
-  return taskWithId;
 };
 
-export const updateTask = (updatedTask) => {
-  let updated = false;
-
-  tasks = tasks.map((task) => {
-    if (task.id === updatedTask.id) {
-      updated = true;
-      return updatedTask;
-    }
-    return task;
-  });
-
-  if (updated) {
-    saveToStorage();
-    return updatedTask;
-  }
-
-  return null;
+export const getAllTasks = async () => {
+  const response = await axios.get(API_BASE_URL, getAuthHeaders());
+  return response.data;
 };
 
-export const deleteTask = (id) => {
-  const initialLength = tasks.length;
+export const getTaskById = async (id) => {
+  const response = await axios.get(`${API_BASE_URL}/${id}`, getAuthHeaders());
+  return response.data;
+};
 
-  tasks = tasks.filter((task) => task.id !== id);
+export const addTask = async (taskData) => {
+  const response = await axios.post(API_BASE_URL, taskData, getAuthHeaders());
+  return response.data;
+};
 
-  if (tasks.length < initialLength) {
-    saveToStorage();
-    return true;
-  }
+export const updateTask = async (id, taskData) => {
+  const response = await axios.put(
+    `${API_BASE_URL}/${id}`,
+    taskData,
+    getAuthHeaders(),
+  );
+  return response.data;
+};
 
-  return false;
+export const updateTaskStatus = async (id, status) => {
+  const response = await axios.patch(
+    `${API_BASE_URL}/${id}/status`,
+    { status },
+    getAuthHeaders(),
+  );
+  return response.data;
+};
+
+export const deleteTask = async (id) => {
+  const response = await axios.delete(
+    `${API_BASE_URL}/${id}`,
+    getAuthHeaders(),
+  );
+  return response.data;
 };
