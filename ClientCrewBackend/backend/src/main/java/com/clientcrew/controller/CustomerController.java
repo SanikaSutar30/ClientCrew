@@ -46,4 +46,23 @@ public class CustomerController {
         String email = authentication.getName();
 
         return customerService.addCustomer(request, role, email);
-    }}
+    }
+
+    
+    @PutMapping("/{id}")
+    public User updateCustomer(
+            @PathVariable Long id,
+            @RequestBody CustomerRequest request,
+            Authentication authentication) {
+
+        String role = authentication.getAuthorities()
+                .iterator()
+                .next()
+                .getAuthority()
+                .replace("ROLE_", "");
+
+        String email = authentication.getName();
+
+        return customerService.updateCustomer(id, request, role, email);
+    }
+}

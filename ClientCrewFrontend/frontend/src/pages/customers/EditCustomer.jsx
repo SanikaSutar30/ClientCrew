@@ -8,13 +8,13 @@ export default function EditCustomer({
   onUpdateCustomer,
 }) {
   const [formData, setFormData] = useState({
-    id: customer.id,
-    name: customer.name,
-    email: customer.email,
-    phone: customer.phone,
-    status: customer.status,
-    joinedDate: customer.joinedDate,
-    image: customer.image,
+    userId: customer.userId,
+    userFullName: customer.userFullName || "",
+    userEmail: customer.userEmail || "",
+    userPhone: customer.userPhone || "",
+    status: customer.status || "Active",
+    joinedDate: customer.joinedDate || "",
+    userImage: customer.userImage || "",
   });
 
   const [errors, setErrors] = useState({});
@@ -53,7 +53,7 @@ export default function EditCustomer({
     reader.onloadend = () => {
       setFormData((prev) => ({
         ...prev,
-        image: reader.result,
+        userImage: reader.result,
       }));
 
       setErrors((prev) => ({
@@ -68,29 +68,30 @@ export default function EditCustomer({
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
+    if (!formData.userFullName.trim()) {
+      newErrors.userFullName = "Name is required";
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Invalid email format";
+    if (!formData.userEmail.trim()) {
+      newErrors.userEmail = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.userEmail)) {
+      newErrors.userEmail = "Invalid email format";
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
+    if (!formData.userPhone.trim()) {
+      newErrors.userPhone = "Phone number is required";
     }
 
     if (!formData.joinedDate) {
       newErrors.joinedDate = "Joined date is required";
     }
 
-    if (!formData.image) {
+    if (!formData.userImage) {
       newErrors.image = "Profile image is required";
     }
 
     setErrors(newErrors);
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -134,13 +135,13 @@ export default function EditCustomer({
             <label className="text-sm font-medium">Name</label>
             <input
               type="text"
-              name="name"
-              value={formData.name}
+              name="userFullName"
+              value={formData.userFullName || ""}
               onChange={handleChange}
               className={inputClass}
             />
-            {errors.name && (
-              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+            {errors.userFullName && (
+              <p className="text-red-500 text-xs mt-1">{errors.userFullName}</p>
             )}
           </div>
 
@@ -148,13 +149,13 @@ export default function EditCustomer({
             <label className="text-sm font-medium">Email</label>
             <input
               type="email"
-              name="email"
-              value={formData.email}
+              name="userEmail"
+              value={formData.userEmail || ""}
               onChange={handleChange}
               className={inputClass}
             />
-            {errors.email && (
-              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+            {errors.userEmail && (
+              <p className="text-red-500 text-xs mt-1">{errors.userEmail}</p>
             )}
           </div>
 
@@ -162,13 +163,13 @@ export default function EditCustomer({
             <label className="text-sm font-medium">Phone</label>
             <input
               type="text"
-              name="phone"
-              value={formData.phone}
+              name="userPhone"
+              value={formData.userPhone || ""}
               onChange={handleChange}
               className={inputClass}
             />
-            {errors.phone && (
-              <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+            {errors.userPhone && (
+              <p className="text-red-500 text-xs mt-1">{errors.userPhone}</p>
             )}
           </div>
 
@@ -191,7 +192,7 @@ export default function EditCustomer({
             <input
               type="date"
               name="joinedDate"
-              value={formData.joinedDate}
+              value={formData.joinedDate || ""}
               onChange={handleChange}
               className={inputClass}
             />
@@ -221,12 +222,18 @@ export default function EditCustomer({
             <label className="text-sm font-medium block mb-2">
               Current Preview
             </label>
-            <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-300">
-              <img
-                src={formData.image}
-                alt={formData.name}
-                className="w-full h-full object-cover object-top"
-              />
+            <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-300 flex items-center justify-center">
+              {formData.userImage ? (
+                <img
+                  src={formData.userImage}
+                  alt={formData.userFullName || "Customer"}
+                  className="w-full h-full object-cover object-top"
+                />
+              ) : (
+                <span className="text-xl font-semibold text-gray-700">
+                  {formData.userFullName?.charAt(0).toUpperCase() || "C"}
+                </span>
+              )}
             </div>
           </div>
 

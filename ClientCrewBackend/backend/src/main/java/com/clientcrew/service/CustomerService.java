@@ -97,4 +97,52 @@ this.passwordEncoder = passwordEncoder;
 
         return savedCustomer;
     }
+    
+    public User updateCustomer(Long id, CustomerRequest request, String role, String loggedInEmail) {
+        if (!role.equals("ADMIN") && !role.equals("MANAGER")) {
+            throw new RuntimeException("Access denied");
+        }
+
+        User existingCustomer = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        if (existingCustomer.getUserRole() != Role.CUSTOMER) {
+            throw new RuntimeException("User is not a customer");
+        }
+
+        if (role.equals("MANAGER")) {
+            List<Project> managerProjects =
+                    projectRepository.findByAssignedEmployees_UserEmail(loggedInEmail);
+
+            boolean canEditCustomer = managerProjects.stream()
+                    .anyMatch(project ->
+                            project.getCustomerEmail() != null
+                            && project.getCustomerEmail().equals(existingCustomer.getUserEmail())
+                    );
+
+            if (!canEditCustomer) {
+                throw new RuntimeException("Access denied: You can edit only your project customers");
+            }
+        }
+
+        existingCustomer.setUserFullName(request.getUserFullName());
+        existingCustomer.setUserPhone(request.getUserPhone());
+        existingCustomer.setStatus(request.getStatus());
+        existingCustomer.setJoinedDate(request.getJoinedDate());
+        existingCustomer.setUserImage(request.getUserImage());
+
+        User updatedCustomer = userRepository.save(existingCustomer);
+
+        List<Project> linkedProjects =
+                projectRepository.findByCustomerEmail(existingCustomer.getUserEmail());
+
+        linkedProjects.forEach(project -> {
+            project.setClientName(updatedCustomer.getUserFullName());
+            projectRepository.save(project);
+        });
+
+        return updatedCustomer;
+    }
+    
+    
 }
