@@ -115,15 +115,15 @@ export default function Customers() {
     try {
       console.log("Customer payload:", pendingCustomer);
 
-     await addCustomer(pendingCustomer);
+      await addCustomer(pendingCustomer);
 
-     await fetchCustomers();
-     await fetchProjects();
+      await fetchCustomers();
+      await fetchProjects();
 
-     setCurrentPage(1);
-     setShowAddConfirmModal(false);
-     setShowAddModal(false);
-     setPendingCustomer(null);
+      setCurrentPage(1);
+      setShowAddConfirmModal(false);
+      setShowAddModal(false);
+      setPendingCustomer(null);
     } catch (error) {
       console.error("Add customer error:", error);
       alert("Customer not added. Please check backend logs.");
@@ -535,14 +535,13 @@ export default function Customers() {
 
         <div className="px-4 pt-3">
           <div
-            className={`grid grid-cols-[60px_2.2fr_2fr_1.6fr_1fr_1.4fr_1.2fr] px-4 py-3 text-sm font-semibold rounded-lg ${
+            className={`grid grid-cols-[60px_2.5fr_2.2fr_1fr_1.4fr_1.2fr] px-4 py-3 text-sm font-semibold rounded-lg ${
               darkMode ? "bg-gray-600 text-white" : "bg-gray-100 text-gray-700"
             }`}
           >
             <span>ID</span>
             <span>Customer Name</span>
             <span>Email</span>
-            <span>Phone</span>
             <span>Status</span>
             <span>Joined</span>
             <span>Actions</span>
@@ -558,7 +557,7 @@ export default function Customers() {
             paginatedCustomers.map((customer) => (
               <div
                 key={customer.userId}
-                className={`grid grid-cols-[60px_2.2fr_2fr_1.6fr_1fr_1.4fr_1.2fr] items-center px-3 py-2 border-b last:border-b-0 hover:bg-gray-100 rounded-xl transition ${
+                className={`grid grid-cols-[60px_2.5fr_2.2fr_1fr_1.4fr_1.2fr] items-center px-3 py-2 border-b last:border-b-0 hover:bg-gray-100 rounded-xl transition ${
                   darkMode
                     ? "border-gray-600 hover:bg-gray-500"
                     : "border-gray-100"
@@ -597,10 +596,6 @@ export default function Customers() {
                   }`}
                 >
                   {customer.userEmail}
-                </span>
-
-                <span className={darkMode ? "text-gray-300" : "text-gray-500"}>
-                  {customer.userPhone || "N/A"}
                 </span>
 
                 <span

@@ -47,7 +47,10 @@ export default function DeleteCustomer({
             }`}
           >
             Are you sure you want to delete{" "}
-            <span className="font-semibold text-red-500">{customer.name}</span>?
+            <span className="font-semibold text-red-500">
+              {customer.userFullName}
+            </span>
+            ?
           </p>
 
           <p className="text-sm mt-2 text-gray-400">
@@ -71,7 +74,7 @@ export default function DeleteCustomer({
 
           <button
             type="button"
-            onClick={() => onDeleteCustomer(customer.id)}
+            onClick={() => onDeleteCustomer(customer.userId)}
             className="min-w-[140px] px-5 py-2.5 rounded-xl font-medium bg-red-500 hover:bg-red-600 text-white transition cursor-pointer"
           >
             Delete
