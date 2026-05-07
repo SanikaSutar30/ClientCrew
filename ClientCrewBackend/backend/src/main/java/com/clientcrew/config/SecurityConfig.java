@@ -1,12 +1,12 @@
 package com.clientcrew.config;
 
+// Spring Security configuration for JWT, CORS, and role-based API access
 
-// Spring
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
-
-import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Configuration;
-
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -22,9 +22,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
-
-// Security + Service
 import com.clientcrew.security.JwtAuthenticationFilter;
 import com.clientcrew.service.CustomUserDetailsService;
 
@@ -42,87 +39,125 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http)
+            throws Exception {
 
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .cors(cors ->
+                    cors.configurationSource(corsConfigurationSource())
+            )
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
 
-                // Allow preflight (CORS)
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // Allow CORS preflight requests
+                .requestMatchers(HttpMethod.OPTIONS, "/**")
+                    .permitAll()
 
-                // Auth APIs
-                .requestMatchers("/api/auth/**").permitAll()
+                // Allow login/register APIs
+                .requestMatchers("/api/auth/**")
+                    .permitAll()
 
-                // Role-based base APIs
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/manager/**").hasAnyRole("ADMIN", "MANAGER")
-                .requestMatchers("/api/employee/**").hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
-                .requestMatchers("/api/customer/**").hasAnyRole("ADMIN", "CUSTOMER")
+                // Users page APIs - Admin only
+                .requestMatchers(HttpMethod.GET, "/api/users/all")
+                    .hasRole("ADMIN")
 
-                // =======================
-                // PROJECTS (FINAL RULES)
-                // =======================
+                // Add user API - Admin only
+                .requestMatchers(HttpMethod.POST, "/api/users")
+                    .hasRole("ADMIN")
 
-                // View → All roles
+                // Edit user API - Admin only
+                .requestMatchers(HttpMethod.PUT, "/api/users/**")
+                    .hasRole("ADMIN")
+
+                // Delete user API - Admin only
+                .requestMatchers(HttpMethod.DELETE, "/api/users/**")
+                    .hasRole("ADMIN")
+
+                // Users dropdown APIs - Admin and Manager
+                .requestMatchers(HttpMethod.GET, "/api/users", "/api/users/**")
+                    .hasAnyRole("ADMIN", "MANAGER")
+
+                // Admin base APIs
+                .requestMatchers("/api/admin/**")
+                    .hasRole("ADMIN")
+
+                // Manager base APIs
+                .requestMatchers("/api/manager/**")
+                    .hasAnyRole("ADMIN", "MANAGER")
+
+                // Employee base APIs
+                .requestMatchers("/api/employee/**")
+                    .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
+
+                // Customer base APIs
+                .requestMatchers("/api/customer/**")
+                    .hasAnyRole("ADMIN", "CUSTOMER")
+
+                // Project view APIs - All roles
                 .requestMatchers(HttpMethod.GET, "/api/projects/**")
                     .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")
 
-                // Create → Admin + Manager
+                // Project create APIs - Admin and Manager
                 .requestMatchers(HttpMethod.POST, "/api/projects/**")
                     .hasAnyRole("ADMIN", "MANAGER")
 
-                // Update → Admin + Manager (ownership check in service layer)
+                // Project update APIs - Admin and Manager
                 .requestMatchers(HttpMethod.PUT, "/api/projects/**")
                     .hasAnyRole("ADMIN", "MANAGER")
 
-                // Delete → ONLY Admin
+                // Project delete APIs - Admin only
                 .requestMatchers(HttpMethod.DELETE, "/api/projects/**")
                     .hasRole("ADMIN")
 
-                 // Users (dropdowns etc.)
-                    .requestMatchers(HttpMethod.GET, "/api/users", "/api/users/**")
-                        .hasAnyRole("ADMIN", "MANAGER")
-                        
-                        
-                        
-                     // CUSTOMERS PAGE
-                        .requestMatchers(HttpMethod.GET, "/api/customers/**")
-                            .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
+                // Customer view APIs - Admin, Manager, Employee
+                .requestMatchers(HttpMethod.GET, "/api/customers/**")
+                    .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
 
-                        .requestMatchers(HttpMethod.POST, "/api/customers/**")
-                            .hasAnyRole("ADMIN", "MANAGER")
+                // Customer create APIs - Admin and Manager
+                .requestMatchers(HttpMethod.POST, "/api/customers/**")
+                    .hasAnyRole("ADMIN", "MANAGER")
 
-                        .requestMatchers(HttpMethod.PUT, "/api/customers/**")
-                            .hasAnyRole("ADMIN", "MANAGER")
+                // Customer update APIs - Admin and Manager
+                .requestMatchers(HttpMethod.PUT, "/api/customers/**")
+                    .hasAnyRole("ADMIN", "MANAGER")
 
-                        .requestMatchers(HttpMethod.DELETE, "/api/customers/**")
-                            .hasRole("ADMIN")
+                // Customer delete APIs - Admin only
+                .requestMatchers(HttpMethod.DELETE, "/api/customers/**")
+                    .hasRole("ADMIN")
 
-                // Everything else
-                .anyRequest().authenticated()
+                // All remaining APIs require login
+                .anyRequest()
+                    .authenticated()
             )
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(
+                jwtAuthenticationFilter,
+                UsernamePasswordAuthenticationFilter.class
+            );
 
         return http.build();
     }
-    
-    
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of("http://localhost:5173"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowedMethods(
+                List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")
+        );
+        config.setAllowedHeaders(
+                List.of("Authorization", "Content-Type")
+        );
         config.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
         source.registerCorsConfiguration("/**", config);
 
         return source;
@@ -130,7 +165,9 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+
+        DaoAuthenticationProvider provider =
+                new DaoAuthenticationProvider();
 
         provider.setUserDetailsService(customUserDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
@@ -140,15 +177,15 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
+
         return new BCryptPasswordEncoder();
     }
-    
-//    if(user.getPassword().equals(inputPassword)) {
-//        // login success
-//    }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config
+    ) throws Exception {
+
         return config.getAuthenticationManager();
     }
 }

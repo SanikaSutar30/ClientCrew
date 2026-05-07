@@ -84,7 +84,7 @@ this.passwordEncoder = passwordEncoder;
         customer.setUserEmail(request.getUserEmail());
         customer.setUserImage(request.getUserImage());
         customer.setUserRole(Role.CUSTOMER);
-        customer.setUserPassword(passwordEncoder.encode("Customer@123"));
+        customer.setUserPassword(passwordEncoder.encode("123456"));
         customer.setUserPhone(request.getUserPhone());
         customer.setStatus(request.getStatus());
         customer.setJoinedDate(request.getJoinedDate());
