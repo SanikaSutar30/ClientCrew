@@ -65,4 +65,17 @@ public class CustomerController {
 
         return customerService.updateCustomer(id, request, role, email);
     }
+    @DeleteMapping("/{id}")
+    public void deleteCustomer(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        String role = authentication.getAuthorities()
+                .iterator()
+                .next()
+                .getAuthority()
+                .replace("ROLE_", "");
+
+        customerService.deleteCustomer(id, role);
+    }
 }

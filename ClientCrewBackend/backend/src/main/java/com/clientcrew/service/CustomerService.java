@@ -145,4 +145,31 @@ this.passwordEncoder = passwordEncoder;
     }
     
     
+    public void deleteCustomer(Long id, String role) {
+        if (!role.equals("ADMIN")) {
+            throw new RuntimeException("Only admin can delete customer");
+        }
+
+        User customer = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        if (customer.getUserRole() != Role.CUSTOMER) {
+            throw new RuntimeException("Only customer records can be deleted");
+        }
+
+        List<Project> linkedProjects = projectRepository.findByCustomerEmail(
+                customer.getUserEmail()
+        );
+
+        linkedProjects.forEach(project -> {
+            project.setCustomerEmail(null);
+            project.setClientName(null);
+        });
+
+        projectRepository.saveAll(linkedProjects);
+
+        userRepository.delete(customer);
+    }
+    
+    
 }
