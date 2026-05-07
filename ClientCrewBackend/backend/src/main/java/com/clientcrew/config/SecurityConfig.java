@@ -125,6 +125,24 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/customers/**")
                     .hasRole("ADMIN")
 
+                    
+                    
+                 // Employee / Teams view APIs - All roles
+                    .requestMatchers(HttpMethod.GET, "/api/employees/**")
+                        .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")
+
+                    // Employee / Teams create APIs - Admin and Manager
+                    .requestMatchers(HttpMethod.POST, "/api/employees/**")
+                        .hasAnyRole("ADMIN", "MANAGER")
+
+                    // Employee / Teams update APIs - Admin and Manager
+                    .requestMatchers(HttpMethod.PUT, "/api/employees/**")
+                        .hasAnyRole("ADMIN", "MANAGER")
+
+                    // Employee / Teams delete APIs - Admin only
+                    .requestMatchers(HttpMethod.DELETE, "/api/employees/**")
+                        .hasRole("ADMIN")
+                        
                 // All remaining APIs require login
                 .anyRequest()
                     .authenticated()
