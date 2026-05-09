@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 
 import AddCustomer from "../customers/AddCustomer";
+import { getDashboardData } from "../../services/dashboardService";
 
-import { getAllProjects } from "../../services/projectService";
 import {
   LineChart,
   Line,
@@ -31,154 +31,108 @@ import {
 } from "recharts";
 
 export default function AdminDashboard({ darkMode }) {
+  const navigate = useNavigate();
 
-  const dashboardData = {
-    Today: {
-      customers: 5,
-      employees: 2,
-      projects: 1,
-      interactions: 8,
-    },
-    "This Week": {
-      customers: 12,
-      employees: 6,
-      projects: 4,
-      interactions: 25,
-    },
-    "This Month": {
-      customers: 24,
-      employees: 132,
-      projects: 18,
-      interactions: 120,
-    },
-    "This Year": {
-      customers: 120,
-      employees: 300,
-      projects: 80,
-      interactions: 600,
-    },
-  };
-
-  const customerGrowthData = [
-    { month: "Jan", customers: 70 },
-    { month: "Feb", customers: 120 },
-    { month: "Mar", customers: 140 },
-    { month: "Apr", customers: 160 },
-    { month: "May", customers: 210 },
-    { month: "Jun", customers: 250 },
-  ];
-
-  // Modal visibility state
   const [showAddModal, setShowAddModal] = useState(false);
-
-  const [projects, setProjects] = useState([]);
-
+  const [apiData, setApiData] = useState(null);
   const [selectedFilter, setSelectedFilter] = useState("This Month");
-
   const [open, setOpen] = useState(false);
-
-  const [customers, setCustomers] = useState([
-    {
-      id: 1,
-      name: "Rahul Sharma",
-      email: "rahul@gmail.com",
-      phone: "+91 9876543210",
-      status: "Active",
-      joinedDate: "2024-01-12",
-      image: "../assets/Profile.jpg",
-    },
-    {
-      id: 2,
-      name: "Amit Patil",
-      email: "amit@gmail.com",
-      phone: "+91 9123456789",
-      status: "Active",
-      joinedDate: "2024-02-03",
-      image: "../assets/Profile2.jpg",
-    },
-    {
-      id: 3,
-      name: "Priya Singh",
-      email: "priya@gmail.com",
-      phone: "+91 9988776655",
-      status: "Pending",
-      joinedDate: "2024-03-18",
-      image: "../assets/Profile3.jpg",
-    },
-    {
-      id: 4,
-      name: "John Doe",
-      email: "john@gmail.com",
-      phone: "+91 8877655443",
-      status: "Inactive",
-      joinedDate: "2024-04-02",
-      image: "../assets/Profile4.jpg",
-    },
-    {
-      id: 5,
-      name: "Neha Verma",
-      email: "neha@gmail.com",
-      phone: "+91 9284711223",
-      status: "Active",
-      joinedDate: "2024-04-10",
-      image: "../assets/Profile5.jpg",
-    },
-    {
-      id: 6,
-      name: "Suresh Reddy",
-      email: "suresh@gmail.com",
-      phone: "+91 9032144556",
-      status: "Active",
-      joinedDate: "2024-05-22",
-      image: "../assets/Profile6.jpg",
-    },
-  ]);
+  const [chartFilter, setChartFilter] = useState("Monthly");
 
   const options = ["Today", "This Week", "This Month", "This Year"];
 
-  const currentData = dashboardData[selectedFilter];
-
-  // initialize navigate for view all button
-  const navigate = useNavigate();
-
-  // state for chart filter (monthly/weekly)
-  const [chartFilter, setChartFilter] = useState("Monthly");
-
-  // dummy data for source distribution and top customers, replace with real data when API is ready
   const sourceData = [
-    { name: "Direct", value: 45, color: "#0f766e" },
-    { name: "Referral", value: 25, color: "#3b82f6" },
-    { name: "Organic", value: 20, color: "#f59e0b" },
-    { name: "Others", value: 10, color: "#6366f1" },
+    {
+      label: "Projects",
+      value: apiData?.stats?.totalProjects || 0,
+      color: "#0f766e",
+    },
+    {
+      label: "Tasks",
+      value: apiData?.stats?.totalTasks || 0,
+      color: "#3b82f6",
+    },
+    {
+      label: "Employees",
+      value: apiData?.stats?.totalEmployees || 0,
+      color: "#f59e0b",
+    },
+    {
+      label: "Customers",
+      value: apiData?.stats?.totalCustomers || 0,
+      color: "#6366f1",
+    },
   ];
 
-  const handleAddCustomer = (newCustomer) => {
-    setCustomers((prev) => [
-      {
-        id: prev.length + 1,
-        ...newCustomer,
-      },
-      ...prev,
-    ]);
-    setShowAddModal(false);
+  const getBackendFilter = (filter) => {
+    switch (filter) {
+      case "Today":
+        return "TODAY";
+      case "This Week":
+        return "THIS_WEEK";
+      case "This Month":
+        return "THIS_MONTH";
+      case "This Year":
+        return "THIS_YEAR";
+      default:
+        return "THIS_MONTH";
+    }
   };
 
   useEffect(() => {
-    const loadProjects = async () => {
+    const loadDashboard = async () => {
       try {
-        const res = await getAllProjects();
-        setProjects(res.data);
+        const data = await getDashboardData(getBackendFilter(selectedFilter));
+        setApiData(data);
       } catch (error) {
-        console.error("Error fetching projects:", error);
+        console.error("Error fetching dashboard:", error);
       }
     };
 
-    loadProjects();
-  }, []);
+    loadDashboard();
+  }, [selectedFilter]);
+  const handleAddCustomer = () => {
+    setShowAddModal(false);
+  };
+
+  if (!apiData) {
+    return (
+      <div
+        className={`flex items-center justify-center h-[70vh] ${
+          darkMode ? "text-white" : "text-black"
+        }`}
+      >
+        Loading dashboard...
+      </div>
+    );
+  }
+
+  const customerGrowthData =
+    apiData.customerGrowth?.length > 0
+      ? apiData.customerGrowth
+      : [
+          { label: "Projects", value: apiData.stats?.totalProjects || 0 },
+          { label: "Tasks", value: apiData.stats?.totalTasks || 0 },
+          { label: "Employees", value: apiData.stats?.totalEmployees || 0 },
+          { label: "Customers", value: apiData.stats?.totalCustomers || 0 },
+        ];
+
+  const monthlyChartData = customerGrowthData;
+
+  const weeklyChartData = [
+    { label: "Week 1", value: apiData.stats?.totalProjects || 0 },
+    { label: "Week 2", value: apiData.stats?.totalTasks || 0 },
+    { label: "Week 3", value: apiData.stats?.totalEmployees || 0 },
+    { label: "Week 4", value: apiData.stats?.totalCustomers || 0 },
+  ];
+
+  const systemOverviewData =
+    chartFilter === "Monthly" ? monthlyChartData : weeklyChartData;
+
+  const recentCustomers = apiData.recentCustomers || [];
 
   return (
     <div className="space-y-6">
-
       {showAddModal && (
         <AddCustomer
           darkMode={darkMode}
@@ -187,7 +141,9 @@ export default function AdminDashboard({ darkMode }) {
         />
       )}
 
+      {/* //first row  header + filter */}
       <div className="flex items-center justify-between">
+        {/* // header */}
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
           <p className="text-sm text-gray-500">
@@ -195,6 +151,7 @@ export default function AdminDashboard({ darkMode }) {
           </p>
         </div>
 
+        {/* // filter dropdown */}
         <div className="relative">
           <div
             onClick={() => setOpen(!open)}
@@ -244,36 +201,38 @@ export default function AdminDashboard({ darkMode }) {
             </div>
           )}
         </div>
-
       </div>
 
+      {/* //second row - cards */}
+
       {/* cards */}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           {
             title: "Total Customers",
-            value: currentData.customers,
+            value: apiData.stats?.totalCustomers || 0,
             icon: Users,
             bg: "bg-[#0f766e]/10",
             color: "text-[#0f766e]",
           },
           {
             title: "Total Employees",
-            value: currentData.employees,
+            value: apiData.stats?.totalEmployees || 0,
             icon: UserCheck,
             bg: "bg-blue-100",
             color: "text-blue-600",
           },
           {
             title: "Total Projects",
-            value: projects.length,
+            value: apiData.stats?.totalProjects || 0,
             icon: Folder,
             bg: "bg-purple-100",
             color: "text-purple-600",
           },
           {
-            title: "Interactions",
-            value: currentData.interactions,
+            title: "Total Tasks",
+            value: apiData.stats?.totalTasks || 0,
             icon: Activity,
             bg: "bg-orange-100",
             color: "text-orange-600",
@@ -290,7 +249,6 @@ export default function AdminDashboard({ darkMode }) {
                   : "bg-white border border-gray-100"
               }`}
             >
-              {/* LEFT: text */}
               <div>
                 <p
                   className={`text-sm font-medium ${
@@ -309,7 +267,6 @@ export default function AdminDashboard({ darkMode }) {
                 </h2>
               </div>
 
-              {/* RIGHT: centered icon box (like project cards) */}
               <div
                 className={`w-12 h-12 flex items-center justify-center rounded-xl ${item.bg}`}
               >
@@ -320,15 +277,16 @@ export default function AdminDashboard({ darkMode }) {
         })}
       </div>
 
-      {/* Chart */}
+      {/* // third row - System Overview  charts + recent customers */}
+
       <div
-        className={`grid grid-cols-1 lg:grid-cols-3 gap-6 bg-gray-100 ${
+        className={`grid grid-cols-1 lg:grid-cols-3 gap-6 ${
           darkMode ? "bg-gray-800" : "bg-gray-100"
         } p-6 rounded-2xl border ${
           darkMode ? "border-gray-600" : "border-gray-200"
         }`}
       >
-        {/*  customer growth*/}
+        {/* //System Overview */}
         <div
           className={`lg:col-span-2 p-6 rounded-2xl shadow-sm ${
             darkMode
@@ -342,7 +300,7 @@ export default function AdminDashboard({ darkMode }) {
                 darkMode ? "text-white" : "text-black"
               }`}
             >
-              Customer Growth
+              System Overview
             </h2>
 
             <div
@@ -350,50 +308,35 @@ export default function AdminDashboard({ darkMode }) {
                 darkMode ? "bg-gray-600" : "bg-gray-100"
               }`}
             >
-              {/* Monthly */}
-              <button
-                onClick={() => setChartFilter("Monthly")}
-                className={`px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition ${
-                  chartFilter === "Monthly"
-                    ? darkMode
-                      ? "bg-gray-500 text-white"
-                      : "bg-white text-gray-700 shadow-sm"
-                    : darkMode
-                      ? "text-gray-300"
-                      : "text-gray-500"
-                }`}
-              >
-                Monthly
-              </button>
-
-              {/* Weekly */}
-              <button
-                onClick={() => setChartFilter("Weekly")}
-                className={`px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition ${
-                  chartFilter === "Weekly"
-                    ? darkMode
-                      ? "bg-gray-500 text-white"
-                      : "bg-white text-gray-700 shadow-sm"
-                    : darkMode
-                      ? "text-gray-300"
-                      : "text-gray-500"
-                }`}
-              >
-                Weekly
-              </button>
+              {["Monthly", "Weekly"].map((item) => (
+                <button
+                  key={item}
+                  onClick={() => setChartFilter(item)}
+                  className={`px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition ${
+                    chartFilter === item
+                      ? darkMode
+                        ? "bg-gray-500 text-white"
+                        : "bg-white text-gray-700 shadow-sm"
+                      : darkMode
+                        ? "text-gray-300"
+                        : "text-gray-500"
+                  }`}
+                >
+                  {item}
+                </button>
+              ))}
             </div>
           </div>
 
           <div className="w-full h-[320px]">
-            {/* ResponsiveContainer  is used for */}
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={customerGrowthData}>
+              <LineChart data={systemOverviewData}>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke={darkMode ? "#4b5563" : "#e5e7eb"}
                 />
                 <XAxis
-                  dataKey="month"
+                  dataKey="label"
                   stroke={darkMode ? "#d1d5db" : "#6b7280"}
                   tickLine={false}
                   axisLine={false}
@@ -414,7 +357,7 @@ export default function AdminDashboard({ darkMode }) {
                 />
                 <Line
                   type="monotone"
-                  dataKey="customers"
+                  dataKey="value"
                   stroke="#0f766e"
                   strokeWidth={3}
                   dot={{
@@ -447,7 +390,6 @@ export default function AdminDashboard({ darkMode }) {
               Recent Customers
             </h2>
             <button
-              //   Navigate to customers page on click
               onClick={() => navigate("/customers")}
               className="text-sm cursor-pointer font-medium text-[#0f766e] hover:underline hover:text-[#115e59] transition"
             >
@@ -455,70 +397,73 @@ export default function AdminDashboard({ darkMode }) {
             </button>
           </div>
 
-          <div className="space-y-4 max-h-[320px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-            {customers.map((customer) => (
-              <div
-                key={customer.id}
-                className="flex items-center justify-between gap-3"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-300 shrink-0">
-                    <img
-                      src={customer.image}
-                      alt={customer.name}
-                      className="w-full h-full object-cover object-top"
-                    />
-                  </div>
-                  <div>
-                    <h3
-                      className={`text-base font-semibold ${
-                        darkMode ? "text-white" : "text-black"
-                      }`}
-                    >
-                      {customer.name}
-                    </h3>
-                    <p
-                      className={`text-sm ${
-                        darkMode ? "text-gray-300" : "text-gray-500"
-                      }`}
-                    >
-                      {customer.email}
-                    </p>
-                  </div>
-                </div>
-
-                <span
-                  className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                    customer.status === "New"
-                      ? "bg-green-100 text-green-600"
-                      : customer.status === "Active"
-                        ? "bg-blue-100 text-blue-600"
-                        : customer.status === "Pending"
-                          ? "bg-orange-100 text-orange-600"
-                          : "bg-gray-100 text-gray-500"
-                  }`}
+          <div className="space-y-4 max-h-[320px] overflow-y-auto pr-2">
+            {recentCustomers.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                No recent customers found.
+              </p>
+            ) : (
+              recentCustomers.map((customer) => (
+                <div
+                  key={customer.userId}
+                  className="flex items-center justify-between gap-3"
                 >
-                  {customer.status}
-                </span>
-              </div>
-            ))}
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-300 shrink-0">
+                      {customer.userImage ? (
+                        <img
+                          src={customer.userImage}
+                          alt={customer.fullName}
+                          className="w-full h-full object-cover object-top"
+                        />
+                      ) : (
+                        <Users className="m-2 text-gray-500" />
+                      )}
+                    </div>
+                    <div>
+                      <h3
+                        className={`text-base font-semibold ${
+                          darkMode ? "text-white" : "text-black"
+                        }`}
+                      >
+                        {customer.fullName}
+                      </h3>
+                      <p
+                        className={`text-sm ${
+                          darkMode ? "text-gray-300" : "text-gray-500"
+                        }`}
+                      >
+                        {customer.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-600">
+                    {customer.status || "Active"}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
 
+      {/* // fourth row - system distribution + top employees + quick actions */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
         {/* Customer Source */}
         <div
-          className={`lg:col-span-3 p-6 rounded-2xl shadow-sm ${
+          className={`lg:col-span-4 p-6 rounded-2xl shadow-sm ${
             darkMode
               ? "bg-gray-700 border border-gray-600"
               : "bg-white border border-gray-100"
           }`}
         >
           <h2
-            className={`text-xl font-semibold mb-4 ${darkMode ? "text-white" : "text-black"}`}
+            className={`text-xl font-semibold mb-4 ${
+              darkMode ? "text-white" : "text-black"
+            }`}
           >
-            Customer Source
+            System Distribution
           </h2>
 
           <div className="flex items-center justify-between gap-4">
@@ -549,11 +494,13 @@ export default function AdminDashboard({ darkMode }) {
                   ></span>
                   <div>
                     <p
-                      className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"}`}
+                      className={`text-sm ${
+                        darkMode ? "text-gray-300" : "text-gray-600"
+                      }`}
                     >
-                      {item.name}
+                      {item.label}
                     </p>
-                    <p className="font-semibold">{item.value}%</p>
+                    <p className="font-semibold">{item.value}</p>
                   </div>
                 </div>
               ))}
@@ -561,80 +508,82 @@ export default function AdminDashboard({ darkMode }) {
           </div>
         </div>
 
-        {/* Top Customers */}
-
+        {/* Top Employees */}
         <div
-          className={`lg:col-span-5 p-3 rounded-2xl shadow-sm ${
+          className={`lg:col-span-4 p-3 rounded-2xl shadow-sm ${
             darkMode
               ? "bg-gray-700 border border-gray-600"
               : "bg-white border border-gray-100"
           }`}
         >
-          <h2
-            className={`text-xl font-semibold mb-4 ${darkMode ? "text-white" : "text-black"}`}
-          >
-            Top Customers
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2
+              className={`text-xl font-semibold ${
+                darkMode ? "text-white" : "text-black"
+              }`}
+            >
+              Top Employees
+            </h2>
 
-          {/* Header */}
+            <button
+              onClick={() => navigate("/employees")}
+              className="text-sm cursor-pointer font-medium text-[#0f766e] hover:underline hover:text-[#115e59] transition"
+            >
+              View All
+            </button>
+          </div>
           <div
             className={`grid grid-cols-[2fr_2fr_auto] px-3 py-2 rounded-xl text-sm font-semibold ${
               darkMode ? "bg-gray-600 text-white" : "bg-gray-100 text-gray-700"
             }`}
           >
             <span>Name</span>
-            <span>Email</span>
+            <span>Role</span>
             <span className="text-right">Status</span>
           </div>
 
-          {/* Rows */}
           <div className="space-y-3">
-            {customers.slice(0, 4).map((customer) => (
-              <div
-                key={customer.id}
-                className={`grid grid-cols-[2fr_2fr_auto] items-center px-3 py-2 rounded-xl transition cursor-pointer ${
-                  darkMode ? "hover:bg-gray-600" : "hover:bg-gray-100"
-                }`}
-              >
-                {/* Name */}
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-gray-300 rounded-full">
-                    <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-300 shrink-0">
-                      <img
-                        src={customer.image}
-                        alt={customer.name}
-                        className="w-full h-full object-cover object-top"
-                      />
+            {(apiData?.teamMembers || []).length === 0 ? (
+              <p className="text-sm text-gray-500 px-3 py-4">
+                No employees found.
+              </p>
+            ) : (
+              (apiData?.teamMembers || []).map((employee) => (
+                <div
+                  key={employee.userId}
+                  className={`grid grid-cols-[2fr_2fr_auto] items-center px-3 py-2 rounded-xl transition cursor-pointer ${
+                    darkMode ? "hover:bg-gray-600" : "hover:bg-gray-100"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gray-300 rounded-full overflow-hidden flex items-center justify-center">
+                      {employee.userImage ? (
+                        <img
+                          src={employee.userImage}
+                          alt={employee.fullName}
+                          className="w-full h-full object-cover object-top"
+                        />
+                      ) : (
+                        <Users size={16} className="text-gray-500" />
+                      )}
                     </div>
+                    <span className="font-medium">{employee.fullName}</span>
                   </div>
-                  <span className="font-medium">{customer.name}</span>
+
+                  <span
+                    className={`truncate ${
+                      darkMode ? "text-gray-300" : "text-gray-500"
+                    }`}
+                  >
+                    {employee.role}
+                  </span>
+
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full w-fit ml-auto bg-blue-100 text-blue-600">
+                    {employee.status || "Active"}
+                  </span>
                 </div>
-
-                {/* Email */}
-                <span
-                  className={`truncate ${
-                    darkMode ? "text-gray-300" : "text-gray-500"
-                  }`}
-                >
-                  {customer.email}
-                </span>
-
-                {/* Status */}
-                <span
-                  className={`text-xs font-semibold px-3 py-1 rounded-full w-fit ml-auto ${
-                    customer.status === "New"
-                      ? "bg-green-100 text-green-600"
-                      : customer.status === "Active"
-                        ? "bg-blue-100 text-blue-600"
-                        : customer.status === "Pending"
-                          ? "bg-orange-100 text-orange-600"
-                          : "bg-gray-100 text-gray-500"
-                  }`}
-                >
-                  {customer.status}
-                </span>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -655,7 +604,6 @@ export default function AdminDashboard({ darkMode }) {
           </h2>
 
           <div className="grid grid-cols-2 gap-2">
-            {/* Add Customer */}
             <button
               onClick={() => setShowAddModal(true)}
               className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
@@ -668,13 +616,14 @@ export default function AdminDashboard({ darkMode }) {
                 <UserPlus size={18} />
               </div>
               <p
-                className={`font-medium ${darkMode ? "text-white" : "text-black"}`}
+                className={`font-medium ${
+                  darkMode ? "text-white" : "text-black"
+                }`}
               >
                 Add Customer
               </p>
             </button>
 
-            {/* View Reports */}
             <button
               onClick={() => navigate("/reports")}
               className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
@@ -687,13 +636,14 @@ export default function AdminDashboard({ darkMode }) {
                 <FileText size={18} />
               </div>
               <p
-                className={`font-medium ${darkMode ? "text-white" : "text-black"}`}
+                className={`font-medium ${
+                  darkMode ? "text-white" : "text-black"
+                }`}
               >
                 View Reports
               </p>
             </button>
 
-            {/* Manage Users */}
             <button
               onClick={() => navigate("/users")}
               className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
@@ -706,13 +656,14 @@ export default function AdminDashboard({ darkMode }) {
                 <ShieldCheck size={18} />
               </div>
               <p
-                className={`font-medium ${darkMode ? "text-white" : "text-black"}`}
+                className={`font-medium ${
+                  darkMode ? "text-white" : "text-black"
+                }`}
               >
                 Manage Users
               </p>
             </button>
 
-            {/* Settings */}
             <button
               onClick={() => navigate("/settings")}
               className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
@@ -725,7 +676,9 @@ export default function AdminDashboard({ darkMode }) {
                 <Settings size={18} />
               </div>
               <p
-                className={`font-medium ${darkMode ? "text-white" : "text-black"}`}
+                className={`font-medium ${
+                  darkMode ? "text-white" : "text-black"
+                }`}
               >
                 Settings
               </p>
@@ -733,7 +686,6 @@ export default function AdminDashboard({ darkMode }) {
           </div>
         </div>
       </div>
-      
     </div>
   );
 }

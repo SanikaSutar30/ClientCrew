@@ -6,105 +6,88 @@ import {
   CheckCircle2,
   Users,
   FileText,
-  Bell,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getAllProjects } from "../../services/projectService";
+import { getDashboardData } from "../../services/dashboardService";
 
 export default function EmployeeDashboard({ darkMode }) {
   const navigate = useNavigate();
 
-  const [projects, setProjects] = useState([]);
+  const [apiData, setApiData] = useState(null);
 
-  const loggedInEmployeeId = localStorage.getItem("userId");
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        const data = await getDashboardData();
+        setApiData(data);
+      } catch (error) {
+        console.error("Error fetching employee dashboard:", error);
+      }
+    };
 
-  const assignedProjects = projects.filter((project) =>
-    project.assignedEmployees?.some((emp) => emp.id == loggedInEmployeeId),
-  );
+    loadDashboard();
+  }, []);
+
+  if (!apiData) {
+    return (
+      <div
+        className={`flex items-center justify-center h-[70vh] ${
+          darkMode ? "text-white" : "text-black"
+        }`}
+      >
+        Loading dashboard...
+      </div>
+    );
+  }
+
+  const myTasks = apiData.recentTasks || [];
+  const myProjects = apiData.recentProjects || [];
+
   const stats = [
     {
       title: "My Tasks",
-      value: assignedProjects.length,
+      value: apiData.stats?.totalTasks || 0,
       icon: CheckSquare,
       bg: "bg-blue-100",
       color: "text-blue-600",
     },
     {
       title: "Active Projects",
-      value: assignedProjects.length,
+      value: apiData.stats?.activeProjects || myProjects.length || 0,
       icon: FolderKanban,
       bg: "bg-purple-100",
       color: "text-purple-600",
     },
     {
       title: "Due This Week",
-      value: assignedProjects.length,
+      value: apiData.stats?.dueThisWeek || 0,
       icon: Clock3,
       bg: "bg-orange-100",
       color: "text-orange-600",
     },
     {
       title: "Completed Tasks",
-      value: assignedProjects.length,
+      value: apiData.stats?.completedTasks || 0,
       icon: CheckCircle2,
       bg: "bg-green-100",
       color: "text-green-600",
     },
   ];
 
-  const myTasks = [
-    {
-      id: 1,
-      title: "Design dashboard cards",
-      project: "ClientCrew CRM",
-      status: "In Progress",
-      priority: "High",
-    },
-    {
-      id: 2,
-      title: "Fix project table layout",
-      project: "Project Management",
-      status: "Review",
-      priority: "Medium",
-    },
-    {
-      id: 3,
-      title: "Update customer modal",
-      project: "Customer Module",
-      status: "To Do",
-      priority: "High",
-    },
-  ];
-
-  const myProjects = [
-    {
-      id: 1,
-      name: "ClientCrew CRM",
-      progress: 80,
-      dueDate: "2026-05-10",
-    },
-    {
-      id: 2,
-      name: "Customer Portal",
-      progress: 65,
-      dueDate: "2026-05-18",
-    },
-    {
-      id: 3,
-      name: "Reports Module",
-      progress: 45,
-      dueDate: "2026-05-25",
-    },
-  ];
-
   const getStatusClasses = (status) => {
     switch (status) {
+      case "IN_PROGRESS":
       case "In Progress":
         return "bg-blue-100 text-blue-700";
+      case "REVIEW":
       case "Review":
         return "bg-purple-100 text-purple-700";
+      case "DONE":
       case "Done":
+      case "Completed":
         return "bg-green-100 text-green-700";
+      case "BLOCKED":
+        return "bg-red-100 text-red-700";
       default:
         return "bg-orange-100 text-orange-700";
     }
@@ -112,26 +95,16 @@ export default function EmployeeDashboard({ darkMode }) {
 
   const getPriorityClasses = (priority) => {
     switch (priority) {
+      case "HIGH":
       case "High":
         return "bg-red-100 text-red-700";
+      case "MEDIUM":
       case "Medium":
         return "bg-yellow-100 text-yellow-700";
       default:
         return "bg-green-100 text-green-700";
     }
   };
-  useEffect(() => {
-    const loadProjects = async () => {
-      try {
-        const res = await getAllProjects();
-        setProjects(res.data);
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      }
-    };
-
-    loadProjects();
-  }, []);
 
   return (
     <div className="space-y-6">
@@ -217,51 +190,55 @@ export default function EmployeeDashboard({ darkMode }) {
           </div>
 
           <div className="space-y-3">
-            {myTasks.map((task) => (
-              <div
-                key={task.id}
-                className={`p-4 rounded-xl ${
-                  darkMode ? "bg-gray-600" : "bg-gray-50"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3
-                      className={`font-semibold ${
-                        darkMode ? "text-white" : "text-black"
-                      }`}
+            {myTasks.length === 0 ? (
+              <p className="text-sm text-gray-500">No assigned tasks found.</p>
+            ) : (
+              myTasks.map((task) => (
+                <div
+                  key={task.id}
+                  className={`p-4 rounded-xl ${
+                    darkMode ? "bg-gray-600" : "bg-gray-50"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3
+                        className={`font-semibold ${
+                          darkMode ? "text-white" : "text-black"
+                        }`}
+                      >
+                        {task.title}
+                      </h3>
+                      <p
+                        className={`text-sm mt-1 ${
+                          darkMode ? "text-gray-300" : "text-gray-500"
+                        }`}
+                      >
+                        {task.projectName}
+                      </p>
+                    </div>
+
+                    <span
+                      className={`text-xs font-semibold px-3 py-1 rounded-full ${getPriorityClasses(
+                        task.priority,
+                      )}`}
                     >
-                      {task.title}
-                    </h3>
-                    <p
-                      className={`text-sm mt-1 ${
-                        darkMode ? "text-gray-300" : "text-gray-500"
-                      }`}
-                    >
-                      {task.project}
-                    </p>
+                      {task.priority}
+                    </span>
                   </div>
 
-                  <span
-                    className={`text-xs font-semibold px-3 py-1 rounded-full ${getPriorityClasses(
-                      task.priority,
-                    )}`}
-                  >
-                    {task.priority}
-                  </span>
+                  <div className="mt-3">
+                    <span
+                      className={`text-xs font-semibold px-3 py-1 rounded-full ${getStatusClasses(
+                        task.status,
+                      )}`}
+                    >
+                      {task.status}
+                    </span>
+                  </div>
                 </div>
-
-                <div className="mt-3">
-                  <span
-                    className={`text-xs font-semibold px-3 py-1 rounded-full ${getStatusClasses(
-                      task.status,
-                    )}`}
-                  >
-                    {task.status}
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -291,46 +268,55 @@ export default function EmployeeDashboard({ darkMode }) {
           </div>
 
           <div className="space-y-4">
-            {myProjects.map((project) => (
-              <div
-                key={project.id}
-                className={`p-4 rounded-xl ${
-                  darkMode ? "bg-gray-600" : "bg-gray-50"
-                }`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <h3
-                    className={`font-semibold ${
-                      darkMode ? "text-white" : "text-black"
-                    }`}
-                  >
-                    {project.name}
-                  </h3>
-                  <span
-                    className={`text-sm ${
+            {myProjects.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                No assigned projects found.
+              </p>
+            ) : (
+              myProjects.map((project) => (
+                <div
+                  key={project.id}
+                  className={`p-4 rounded-xl ${
+                    darkMode ? "bg-gray-600" : "bg-gray-50"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <h3
+                      className={`font-semibold ${
+                        darkMode ? "text-white" : "text-black"
+                      }`}
+                    >
+                      {project.projectName}
+                    </h3>
+                    <span
+                      className={`text-sm ${
+                        darkMode ? "text-gray-300" : "text-gray-500"
+                      }`}
+                    >
+                      {project.progress || 0}%
+                    </span>
+                  </div>
+
+                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#0f766e] rounded-full"
+                      style={{ width: `${project.progress || 0}%` }}
+                    ></div>
+                  </div>
+
+                  <p
+                    className={`text-sm mt-3 ${
                       darkMode ? "text-gray-300" : "text-gray-500"
                     }`}
                   >
-                    {project.progress}%
-                  </span>
+                    Due:{" "}
+                    {project.dueDate
+                      ? new Date(project.dueDate).toLocaleDateString()
+                      : "N/A"}
+                  </p>
                 </div>
-
-                <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-[#0f766e] rounded-full"
-                    style={{ width: `${project.progress}%` }}
-                  ></div>
-                </div>
-
-                <p
-                  className={`text-sm mt-3 ${
-                    darkMode ? "text-gray-300" : "text-gray-500"
-                  }`}
-                >
-                  Due: {new Date(project.dueDate).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>

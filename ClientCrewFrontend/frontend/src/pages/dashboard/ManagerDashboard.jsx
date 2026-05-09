@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllProjects } from "../../services/projectService";
+import { getDashboardData } from "../../services/dashboardService";
+
 import {
   Folder,
   FolderKanban,
@@ -9,9 +10,9 @@ import {
   Users,
   Clock3,
   Plus,
-  Eye,
   UserCheck,
 } from "lucide-react";
+
 import {
   ResponsiveContainer,
   LineChart,
@@ -27,91 +28,97 @@ import {
 
 export default function ManagerDashboard({ darkMode }) {
   const navigate = useNavigate();
-  const [projects, setProjects] = useState([]);
 
+  const [apiData, setApiData] = useState(null);
   const [chartFilter, setChartFilter] = useState("Monthly");
 
-  const monthlyProjectData = [
-    { month: "Jan", projects: 3 },
-    { month: "Feb", projects: 5 },
-    { month: "Mar", projects: 7 },
-    { month: "Apr", projects: 9 },
-    { month: "May", projects: 12 },
-    { month: "Jun", projects: 15 },
-  ];
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        const data = await getDashboardData();
+        setApiData(data);
+      } catch (error) {
+        console.error("Error fetching manager dashboard:", error);
+      }
+    };
 
-  const weeklyProjectData = [
-    { month: "Week 1", projects: 4 },
-    { month: "Week 2", projects: 7 },
-    { month: "Week 3", projects: 10 },
-    { month: "Week 4", projects: 15 },
-  ];
+    loadDashboard();
+  }, []);
+
+  if (!apiData) {
+    return (
+      <div
+        className={`flex items-center justify-center h-[70vh] ${
+          darkMode ? "text-white" : "text-black"
+        }`}
+      >
+        Loading dashboard...
+      </div>
+    );
+  }
 
   const chartData =
-    chartFilter === "Monthly" ? monthlyProjectData : weeklyProjectData;
+    apiData.projectProgressChart?.length > 0
+      ? apiData.projectProgressChart
+      : [
+          { label: "Projects", value: apiData.stats?.totalProjects || 0 },
+          { label: "Tasks", value: apiData.stats?.totalTasks || 0 },
+          { label: "Completed", value: apiData.stats?.completedTasks || 0 },
+          { label: "Pending", value: apiData.stats?.pendingTasks || 0 },
+        ];
 
-  const projectStatusData = [
-    { name: "In Progress", value: 6, color: "#0f766e" },
-    { name: "Completed", value: 4, color: "#22c55e" },
-    { name: "On Hold", value: 2, color: "#f97316" },
-    { name: "Planning", value: 3, color: "#3b82f6" },
-  ];
+  const projectStatusData =
+    apiData.projectStatusChart?.length > 0
+      ? apiData.projectStatusChart.map((item, index) => ({
+          ...item,
+          color: ["#0f766e", "#22c55e", "#f97316", "#3b82f6"][index % 4],
+        }))
+      : [
+          {
+            label: "Projects",
+            value: apiData.stats?.totalProjects || 0,
+            color: "#0f766e",
+          },
+          {
+            label: "Tasks",
+            value: apiData.stats?.totalTasks || 0,
+            color: "#3b82f6",
+          },
+          {
+            label: "Completed",
+            value: apiData.stats?.completedTasks || 0,
+            color: "#22c55e",
+          },
+        ];
 
-  const recentTasks = [
-    {
-      id: 1,
-      title: "Review CRM dashboard UI",
-      project: "CRM Platform",
-      status: "In Progress",
-      priority: "High",
-    },
-    {
-      id: 2,
-      title: "Assign API integration tasks",
-      project: "ClientCrew Backend",
-      status: "Pending",
-      priority: "Medium",
-    },
-    {
-      id: 3,
-      title: "Check customer feedback module",
-      project: "Customer Portal",
-      status: "Completed",
-      priority: "Low",
-    },
-  ];
-
-  const teamMembers = [
-    { id: 1, name: "Rohan Deshmukh", role: "Developer", status: "Active" },
-    { id: 2, name: "Sneha Kulkarni", role: "UI/UX Designer", status: "Active" },
-    { id: 3, name: "Neha Jadhav", role: "Tester", status: "On Leave" },
-  ];
+  const recentTasks = apiData.recentTasks || [];
+  const teamMembers = apiData.teamMembers || [];
 
   const stats = [
     {
       title: "My Projects",
-      value: projects.length,
+      value: apiData.stats?.totalProjects || 0,
       icon: Folder,
       bg: "bg-purple-100",
       color: "text-purple-600",
     },
     {
       title: "Pending Tasks",
-      value: projects.length,
+      value: apiData.stats?.pendingTasks || 0,
       icon: CheckSquare,
       bg: "bg-orange-100",
       color: "text-orange-600",
     },
     {
       title: "Team Members",
-      value: projects.length,
+      value: teamMembers.length,
       icon: Users,
       bg: "bg-blue-100",
       color: "text-blue-600",
     },
     {
       title: "Due This Week",
-      value: projects.length,
+      value: apiData.stats?.dueThisWeek || 0,
       icon: Clock3,
       bg: "bg-red-100",
       color: "text-red-600",
@@ -120,10 +127,17 @@ export default function ManagerDashboard({ darkMode }) {
 
   const getStatusClasses = (status) => {
     switch (status) {
+      case "DONE":
       case "Completed":
         return "bg-green-100 text-green-700";
+      case "IN_PROGRESS":
       case "In Progress":
         return "bg-blue-100 text-blue-700";
+      case "REVIEW":
+        return "bg-purple-100 text-purple-700";
+      case "BLOCKED":
+      case "On Hold":
+        return "bg-red-100 text-red-700";
       case "On Leave":
         return "bg-yellow-100 text-yellow-700";
       default:
@@ -131,22 +145,8 @@ export default function ManagerDashboard({ darkMode }) {
     }
   };
 
-  useEffect(() => {
-    const loadProjects = async () => {
-      try {
-        const res = await getAllProjects();
-        setProjects(res.data);
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      }
-    };
-
-    loadProjects();
-  }, []);
-
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1
@@ -174,7 +174,6 @@ export default function ManagerDashboard({ darkMode }) {
         </button>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((item) => {
           const Icon = item.icon;
@@ -215,7 +214,6 @@ export default function ManagerDashboard({ darkMode }) {
         })}
       </div>
 
-      {/* Chart + Team */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div
           className={`lg:col-span-2 p-6 rounded-2xl shadow-sm ${
@@ -266,7 +264,7 @@ export default function ManagerDashboard({ darkMode }) {
                   stroke={darkMode ? "#4b5563" : "#e5e7eb"}
                 />
                 <XAxis
-                  dataKey="month"
+                  dataKey="label"
                   stroke={darkMode ? "#d1d5db" : "#6b7280"}
                   tickLine={false}
                   axisLine={false}
@@ -279,7 +277,7 @@ export default function ManagerDashboard({ darkMode }) {
                 <Tooltip />
                 <Line
                   type="monotone"
-                  dataKey="projects"
+                  dataKey="value"
                   stroke="#0f766e"
                   strokeWidth={3}
                 />
@@ -313,8 +311,8 @@ export default function ManagerDashboard({ darkMode }) {
                   outerRadius={80}
                   paddingAngle={3}
                 >
-                  {projectStatusData.map((entry) => (
-                    <Cell key={entry.name} fill={entry.color} />
+                  {projectStatusData.map((entry, index) => (
+                    <Cell key={index} fill={entry.color} />
                   ))}
                 </Pie>
               </PieChart>
@@ -322,11 +320,8 @@ export default function ManagerDashboard({ darkMode }) {
           </div>
 
           <div className="space-y-3 mt-4">
-            {projectStatusData.map((item) => (
-              <div
-                key={item.name}
-                className="flex items-center justify-between"
-              >
+            {projectStatusData.map((item, index) => (
+              <div key={index} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span
                     className="w-3 h-3 rounded-full"
@@ -337,7 +332,7 @@ export default function ManagerDashboard({ darkMode }) {
                       darkMode ? "text-gray-300" : "text-gray-600"
                     }`}
                   >
-                    {item.name}
+                    {item.label}
                   </span>
                 </div>
                 <span className={darkMode ? "text-white" : "text-black"}>
@@ -349,7 +344,6 @@ export default function ManagerDashboard({ darkMode }) {
         </div>
       </div>
 
-      {/* Recent Tasks + Team */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div
           className={`p-6 rounded-2xl shadow-sm ${
@@ -375,39 +369,43 @@ export default function ManagerDashboard({ darkMode }) {
           </div>
 
           <div className="space-y-3">
-            {recentTasks.map((task) => (
-              <div
-                key={task.id}
-                className={`p-4 rounded-xl flex items-center justify-between gap-4 ${
-                  darkMode ? "bg-gray-600" : "bg-gray-50"
-                }`}
-              >
-                <div>
-                  <h3
-                    className={`font-semibold ${
-                      darkMode ? "text-white" : "text-black"
-                    }`}
-                  >
-                    {task.title}
-                  </h3>
-                  <p
-                    className={`text-sm ${
-                      darkMode ? "text-gray-300" : "text-gray-500"
-                    }`}
-                  >
-                    {task.project}
-                  </p>
-                </div>
-
-                <span
-                  className={`text-xs font-semibold px-3 py-1 rounded-full ${getStatusClasses(
-                    task.status,
-                  )}`}
+            {recentTasks.length === 0 ? (
+              <p className="text-sm text-gray-500">No recent tasks found.</p>
+            ) : (
+              recentTasks.map((task) => (
+                <div
+                  key={task.id}
+                  className={`p-4 rounded-xl flex items-center justify-between gap-4 ${
+                    darkMode ? "bg-gray-600" : "bg-gray-50"
+                  }`}
                 >
-                  {task.status}
-                </span>
-              </div>
-            ))}
+                  <div>
+                    <h3
+                      className={`font-semibold ${
+                        darkMode ? "text-white" : "text-black"
+                      }`}
+                    >
+                      {task.title}
+                    </h3>
+                    <p
+                      className={`text-sm ${
+                        darkMode ? "text-gray-300" : "text-gray-500"
+                      }`}
+                    >
+                      {task.projectName}
+                    </p>
+                  </div>
+
+                  <span
+                    className={`text-xs font-semibold px-3 py-1 rounded-full ${getStatusClasses(
+                      task.status,
+                    )}`}
+                  >
+                    {task.status}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -435,49 +433,60 @@ export default function ManagerDashboard({ darkMode }) {
           </div>
 
           <div className="space-y-3">
-            {teamMembers.map((member) => (
-              <div
-                key={member.id}
-                className={`p-4 rounded-xl flex items-center justify-between ${
-                  darkMode ? "bg-gray-600" : "bg-gray-50"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                    <UserCheck size={18} className="text-gray-600" />
-                  </div>
-                  <div>
-                    <h3
-                      className={`font-semibold ${
-                        darkMode ? "text-white" : "text-black"
-                      }`}
-                    >
-                      {member.name}
-                    </h3>
-                    <p
-                      className={`text-sm ${
-                        darkMode ? "text-gray-300" : "text-gray-500"
-                      }`}
-                    >
-                      {member.role}
-                    </p>
-                  </div>
-                </div>
-
-                <span
-                  className={`text-xs font-semibold px-3 py-1 rounded-full ${getStatusClasses(
-                    member.status,
-                  )}`}
+            {teamMembers.length === 0 ? (
+              <p className="text-sm text-gray-500">No team members found.</p>
+            ) : (
+              teamMembers.map((member) => (
+                <div
+                  key={member.userId}
+                  className={`p-4 rounded-xl flex items-center justify-between ${
+                    darkMode ? "bg-gray-600" : "bg-gray-50"
+                  }`}
                 >
-                  {member.status}
-                </span>
-              </div>
-            ))}
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden">
+                      {member.userImage ? (
+                        <img
+                          src={member.userImage}
+                          alt={member.fullName}
+                          className="w-full h-full object-cover object-top"
+                        />
+                      ) : (
+                        <UserCheck size={18} className="text-gray-600" />
+                      )}
+                    </div>
+                    <div>
+                      <h3
+                        className={`font-semibold ${
+                          darkMode ? "text-white" : "text-black"
+                        }`}
+                      >
+                        {member.fullName}
+                      </h3>
+                      <p
+                        className={`text-sm ${
+                          darkMode ? "text-gray-300" : "text-gray-500"
+                        }`}
+                      >
+                        {member.role}
+                      </p>
+                    </div>
+                  </div>
+
+                  <span
+                    className={`text-xs font-semibold px-3 py-1 rounded-full ${getStatusClasses(
+                      member.status,
+                    )}`}
+                  >
+                    {member.status || "Active"}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
 
-      {/* Quick Actions */}
       <div
         className={`p-3 rounded-2xl shadow-sm ${
           darkMode
@@ -494,7 +503,6 @@ export default function ManagerDashboard({ darkMode }) {
         </h2>
 
         <div className="grid grid-cols-2 gap-2">
-          {/* Manage Projects */}
           <button
             onClick={() => navigate("/projects")}
             className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
@@ -513,7 +521,6 @@ export default function ManagerDashboard({ darkMode }) {
             </p>
           </button>
 
-          {/* Manage Tasks */}
           <button
             onClick={() => navigate("/tasks")}
             className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
@@ -532,7 +539,6 @@ export default function ManagerDashboard({ darkMode }) {
             </p>
           </button>
 
-          {/* View Team */}
           <button
             onClick={() => navigate("/employees")}
             className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
@@ -551,7 +557,6 @@ export default function ManagerDashboard({ darkMode }) {
             </p>
           </button>
 
-          {/* View Reports */}
           <button
             onClick={() => navigate("/reports")}
             className={`p-5 rounded-2xl border text-center transition hover:shadow-md cursor-pointer ${
