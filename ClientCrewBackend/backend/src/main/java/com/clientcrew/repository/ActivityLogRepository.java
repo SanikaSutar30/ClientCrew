@@ -16,7 +16,24 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> 
             String managerEmail,
             String performedByEmail
     );
-    List<ActivityLog> findTop10ByTargetUserEmailOrderByCreatedAtDesc(String targetUserEmail);
 
-    List<ActivityLog> findTop10ByCustomerEmailOrderByCreatedAtDesc(String customerEmail);
+    List<ActivityLog> findTop10ByTargetUserEmailOrderByCreatedAtDesc(
+            String targetUserEmail
+    );
+
+    List<ActivityLog> findTop10ByCustomerEmailOrderByCreatedAtDesc(
+            String customerEmail
+    );
+
+    long countByTargetUserEmailAndIsReadFalse(
+            String targetUserEmail
+    );
+
+    long countByManagerEmailAndIsReadFalse(
+            String managerEmail
+    );
+
+    long countByCustomerEmailAndIsReadFalse(
+            String customerEmail
+    );
 }

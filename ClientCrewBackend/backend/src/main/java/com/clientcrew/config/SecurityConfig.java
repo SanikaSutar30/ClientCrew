@@ -53,16 +53,18 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**")
                     .permitAll()
 
-             
+                // Login/register APIs
+                .requestMatchers("/api/auth/login", "/api/auth/register")
+                    .permitAll()
 
-                 // Login/register APIs
-                    .requestMatchers("/api/auth/login", "/api/auth/register")
-                        .permitAll()
+                // Logout API needs login
+                .requestMatchers(HttpMethod.POST, "/api/auth/logout")
+                    .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")
 
-                    // Logout API needs login
-                    .requestMatchers(HttpMethod.POST, "/api/auth/logout")
-                        .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")
-                        
+                // Dashboard APIs - All logged-in roles
+                .requestMatchers(HttpMethod.GET, "/api/dashboard/**")
+                    .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")
+
                 // Users page APIs - Admin only
                 .requestMatchers(HttpMethod.GET, "/api/users/all")
                     .hasRole("ADMIN")
@@ -131,57 +133,50 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/customers/**")
                     .hasRole("ADMIN")
 
-                    
-                    
-                 // Employee / Teams view APIs - All roles
-                    .requestMatchers(HttpMethod.GET, "/api/employees/**")
-                        .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")
+                // Employee / Teams view APIs - All roles
+                .requestMatchers(HttpMethod.GET, "/api/employees/**")
+                    .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")
 
-                    // Employee / Teams create APIs - Admin and Manager
-                    .requestMatchers(HttpMethod.POST, "/api/employees/**")
-                        .hasAnyRole("ADMIN", "MANAGER")
+                // Employee / Teams create APIs - Admin and Manager
+                .requestMatchers(HttpMethod.POST, "/api/employees/**")
+                    .hasAnyRole("ADMIN", "MANAGER")
 
-                    // Employee / Teams update APIs - Admin and Manager
-                    .requestMatchers(HttpMethod.PUT, "/api/employees/**")
-                        .hasAnyRole("ADMIN", "MANAGER")
+                // Employee / Teams update APIs - Admin and Manager
+                .requestMatchers(HttpMethod.PUT, "/api/employees/**")
+                    .hasAnyRole("ADMIN", "MANAGER")
 
-                    // Employee / Teams delete APIs - Admin only
-                    .requestMatchers(HttpMethod.DELETE, "/api/employees/**")
-                        .hasRole("ADMIN")
-                        
-                        
-                        
-                     // Task view APIs - All roles
-                        .requestMatchers(HttpMethod.GET, "/api/tasks/**")
-                            .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")
+                // Employee / Teams delete APIs - Admin only
+                .requestMatchers(HttpMethod.DELETE, "/api/employees/**")
+                    .hasRole("ADMIN")
 
-                        // Task create APIs - Admin and Manager
-                        .requestMatchers(HttpMethod.POST, "/api/tasks/**")
-                            .hasAnyRole("ADMIN", "MANAGER")
+                // Task view APIs - All roles
+                .requestMatchers(HttpMethod.GET, "/api/tasks/**")
+                    .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")
 
-                        // Task update APIs - Admin and Manager
-                        .requestMatchers(HttpMethod.PUT, "/api/tasks/**")
-                            .hasAnyRole("ADMIN", "MANAGER")
+                // Task create APIs - Admin and Manager
+                .requestMatchers(HttpMethod.POST, "/api/tasks/**")
+                    .hasAnyRole("ADMIN", "MANAGER")
 
-                        // Task status update APIs - Admin, Manager, Employee
-                        .requestMatchers(HttpMethod.PATCH, "/api/tasks/**")
-                            .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
+                // Task update APIs - Admin and Manager
+                .requestMatchers(HttpMethod.PUT, "/api/tasks/**")
+                    .hasAnyRole("ADMIN", "MANAGER")
 
-                        // Task delete APIs - Admin only
-                        .requestMatchers(HttpMethod.DELETE, "/api/tasks/**")
-                            .hasRole("ADMIN")
-                            
-                            
-                         // Reports APIs - All roles
-                            .requestMatchers(HttpMethod.GET, "/api/reports/**")
-                                .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")
-                                
-                                
-                             // Activities APIs
-                                .requestMatchers("/api/activities/**")
-                                .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")      
-                            
-                        
+                // Task status update APIs - Admin, Manager, Employee
+                .requestMatchers(HttpMethod.PATCH, "/api/tasks/**")
+                    .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
+
+                // Task delete APIs - Admin only
+                .requestMatchers(HttpMethod.DELETE, "/api/tasks/**")
+                    .hasRole("ADMIN")
+
+                // Reports APIs - All roles
+                .requestMatchers(HttpMethod.GET, "/api/reports/**")
+                    .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")
+
+                // Activities APIs
+                .requestMatchers("/api/activities/**")
+                    .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")
+
                 // All remaining APIs require login
                 .anyRequest()
                     .authenticated()
