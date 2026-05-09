@@ -16,7 +16,7 @@ import {
   getActivities,
   markActivityAsRead,
   markAllActivitiesAsRead,
-} from "../../services/activityService";
+} from "../services/activityService";
 
 export default function Notifications() {
   const { darkMode } = useOutletContext();
@@ -308,7 +308,8 @@ export default function Notifications() {
                         darkMode ? "text-gray-400" : "text-gray-400"
                       }`}
                     >
-                      By {item.performedByEmail || "System"}
+                      By {item.performedByName || "System"} •{" "}
+                      {item.performedByEmail || "No email"}
                       {item.performedByRole ? ` • ${item.performedByRole}` : ""}
                     </p>
                   </div>

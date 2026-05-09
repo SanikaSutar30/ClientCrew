@@ -12,4 +12,5 @@ public interface AuthService {
     AuthResponse registerUser(RegisterRequest registerRequest);
 
     AuthResponse loginUser(LoginRequest loginRequest);
+    void logoutUser(String email);
 }

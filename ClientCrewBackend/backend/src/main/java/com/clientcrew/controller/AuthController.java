@@ -1,6 +1,7 @@
 package com.clientcrew.controller;
 
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,6 +13,7 @@ import com.clientcrew.dto.AuthResponse;
 import com.clientcrew.dto.LoginRequest;
 import com.clientcrew.dto.RegisterRequest;
 import com.clientcrew.service.AuthService;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -34,5 +36,13 @@ public class AuthController {
     public ResponseEntity<AuthResponse> loginUser(@Valid @RequestBody LoginRequest loginRequest) {
         AuthResponse response = authService.loginUser(loginRequest);
         return ResponseEntity.ok(response);
+    }
+    
+    @PostMapping("/logout")
+    public ResponseEntity<String> logoutUser(Authentication authentication) {
+
+        authService.logoutUser(authentication.getName());
+
+        return ResponseEntity.ok("Logout successful");
     }
 }

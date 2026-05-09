@@ -12,8 +12,10 @@ import {
   FileText,
   Key,
 } from "lucide-react";
+
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { logoutUser } from "../../services/api";
 import LogoutConfirmModal from "../../pages/LogoutConfirmModal";
 
 function Topbar({
@@ -137,8 +139,13 @@ function Topbar({
     navigate(path);
   };
 
-  const handleConfirmLogout = () => {
-    setShowLogoutModal(false);
+  const handleConfirmLogout = async () => {
+    try {
+      await logoutUser();
+    } catch (error) {
+      console.error("Logout activity failed:", error);
+    }
+
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("userRole");
@@ -147,7 +154,6 @@ function Topbar({
     sessionStorage.clear();
     navigate("/login");
   };
-
   return (
     <div
       className={`h-16 w-full shrink-0 flex items-center justify-between px-6 ${

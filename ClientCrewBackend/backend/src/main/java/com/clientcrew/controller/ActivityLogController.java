@@ -65,6 +65,11 @@ public class ActivityLogController {
             allowed = true;
         }
 
+        if (activity.getPerformedByEmail() != null &&
+                loggedInUser.getUserEmail().equalsIgnoreCase(activity.getPerformedByEmail())) {
+            allowed = true;
+        }
+
         if (loggedInUser.getUserRole() == Role.MANAGER &&
                 loggedInUser.getUserEmail().equalsIgnoreCase(activity.getManagerEmail())) {
             allowed = true;
@@ -107,10 +112,11 @@ public class ActivityLogController {
 
         } else if (loggedInUser.getUserRole() == Role.MANAGER) {
 
-            activities = activityLogRepository
-                    .findTop10ByManagerEmailOrderByCreatedAtDesc(
-                            loggedInUser.getUserEmail()
-                    );
+        	activities = activityLogRepository
+        	        .findTop10ByManagerEmailOrPerformedByEmailOrderByCreatedAtDesc(
+        	                loggedInUser.getUserEmail(),
+        	                loggedInUser.getUserEmail()
+        	        );
 
         } else if (loggedInUser.getUserRole() == Role.EMPLOYEE) {
 

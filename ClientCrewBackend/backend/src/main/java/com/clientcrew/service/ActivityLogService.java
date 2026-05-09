@@ -59,12 +59,15 @@ public class ActivityLogService {
         Role role = user.getUserRole();
 
         if (role == Role.ADMIN) {
-            return activityLogRepository.findTop10ByOrderByCreatedAtDesc();
+            return activityLogRepository.findAllByOrderByCreatedAtDesc();
         }
 
         if (role == Role.MANAGER) {
             return activityLogRepository
-                    .findTop10ByManagerEmailOrderByCreatedAtDesc(user.getUserEmail());
+                    .findTop10ByManagerEmailOrPerformedByEmailOrderByCreatedAtDesc(
+                            user.getUserEmail(),
+                            user.getUserEmail()
+                    );
         }
 
         if (role == Role.EMPLOYEE) {

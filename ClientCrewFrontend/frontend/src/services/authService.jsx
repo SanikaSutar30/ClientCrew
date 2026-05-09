@@ -28,4 +28,10 @@ export const registerUser = (registerData) => {
   return api.post("/auth/register", registerData);
 };
 
+// Logout API
+export const logoutUser = async () => {
+  const response = await api.post("/auth/logout");
+  return response.data;
+};
+
 export default api;

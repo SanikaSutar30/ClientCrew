@@ -131,4 +131,31 @@ this.activityLogService = activityLogService;
                 user.getUserFullName()
         );
     }
+    
+    
+    @Override
+    public void logoutUser(String email) {
+
+        User user = userRepository.findByUserEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        activityLogService.createActivity(
+                ActivityType.USER_LOGOUT,
+                "AUTH",
+                user.getUserId(),
+                user.getUserFullName(),
+                "User Logout",
+                user.getUserFullName() + " logged out",
+                null,
+                null,
+                user,
+                user.getUserRole().name().equals("MANAGER")
+                        ? user.getUserEmail()
+                        : null,
+                user.getUserRole().name().equals("CUSTOMER")
+                        ? user.getUserEmail()
+                        : null,
+                user.getUserEmail()
+        );
+    }
 }

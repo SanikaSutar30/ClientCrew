@@ -53,10 +53,16 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**")
                     .permitAll()
 
-                // Allow login/register APIs
-                .requestMatchers("/api/auth/**")
-                    .permitAll()
+             
 
+                 // Login/register APIs
+                    .requestMatchers("/api/auth/login", "/api/auth/register")
+                        .permitAll()
+
+                    // Logout API needs login
+                    .requestMatchers(HttpMethod.POST, "/api/auth/logout")
+                        .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")
+                        
                 // Users page APIs - Admin only
                 .requestMatchers(HttpMethod.GET, "/api/users/all")
                     .hasRole("ADMIN")

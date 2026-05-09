@@ -21,6 +21,7 @@ public enum ActivityType {
     USER_CREATED,
     USER_UPDATED,
     USER_DELETED,
+    USER_LOGOUT,
 
     EMPLOYEE_CREATED,
     EMPLOYEE_UPDATED,
