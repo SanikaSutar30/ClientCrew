@@ -177,6 +177,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/activities/**")
                     .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")
 
+                    
+                 // Messages APIs - All logged-in roles
+                    .requestMatchers("/api/messages/**")
+                        .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")
+                        
                 // All remaining APIs require login
                 .anyRequest()
                     .authenticated()

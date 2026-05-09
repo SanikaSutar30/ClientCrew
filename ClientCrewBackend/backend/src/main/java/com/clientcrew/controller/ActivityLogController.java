@@ -113,7 +113,7 @@ public class ActivityLogController {
         } else if (loggedInUser.getUserRole() == Role.MANAGER) {
 
         	activities = activityLogRepository
-        	        .findTop10ByManagerEmailOrPerformedByEmailOrderByCreatedAtDesc(
+        	        .findTop10ByManagerEmailOrTargetUserEmailOrderByCreatedAtDesc(
         	                loggedInUser.getUserEmail(),
         	                loggedInUser.getUserEmail()
         	        );

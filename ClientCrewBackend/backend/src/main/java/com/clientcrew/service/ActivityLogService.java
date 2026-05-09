@@ -57,27 +57,66 @@ public class ActivityLogService {
 
     public List<ActivityLog> getRecentActivitiesByRole(User user) {
         Role role = user.getUserRole();
+        String email = user.getUserEmail();
 
         if (role == Role.ADMIN) {
-            return activityLogRepository.findAllByOrderByCreatedAtDesc();
+            return activityLogRepository.findAllByOrderByCreatedAtDesc()
+                    .stream()
+                    .filter(activity ->
+                            activity.getActivityType() != ActivityType.MESSAGE_SENT
+                            || email.equalsIgnoreCase(activity.getPerformedByEmail())
+                            || email.equalsIgnoreCase(activity.getTargetUserEmail())
+                    )
+                    .toList();
         }
 
         if (role == Role.MANAGER) {
-            return activityLogRepository
-                    .findTop10ByManagerEmailOrPerformedByEmailOrderByCreatedAtDesc(
-                            user.getUserEmail(),
-                            user.getUserEmail()
-                    );
+            return activityLogRepository.findAllByOrderByCreatedAtDesc()
+                    .stream()
+                    .filter(activity ->
+                            (
+                                    activity.getActivityType() == ActivityType.MESSAGE_SENT
+                                    && (
+                                            email.equalsIgnoreCase(activity.getPerformedByEmail())
+                                            || email.equalsIgnoreCase(activity.getTargetUserEmail())
+                                    )
+                            )
+                            || email.equalsIgnoreCase(activity.getManagerEmail())
+                            || email.equalsIgnoreCase(activity.getPerformedByEmail())
+                    )
+                    .toList();
         }
 
         if (role == Role.EMPLOYEE) {
-            return activityLogRepository
-                    .findTop10ByTargetUserEmailOrderByCreatedAtDesc(user.getUserEmail());
+            return activityLogRepository.findAllByOrderByCreatedAtDesc()
+                    .stream()
+                    .filter(activity ->
+                            (
+                                    activity.getActivityType() == ActivityType.MESSAGE_SENT
+                                    && (
+                                            email.equalsIgnoreCase(activity.getPerformedByEmail())
+                                            || email.equalsIgnoreCase(activity.getTargetUserEmail())
+                                    )
+                            )
+                            || email.equalsIgnoreCase(activity.getTargetUserEmail())
+                    )
+                    .toList();
         }
 
         if (role == Role.CUSTOMER) {
-            return activityLogRepository
-                    .findTop10ByCustomerEmailOrderByCreatedAtDesc(user.getUserEmail());
+            return activityLogRepository.findAllByOrderByCreatedAtDesc()
+                    .stream()
+                    .filter(activity ->
+                            (
+                                    activity.getActivityType() == ActivityType.MESSAGE_SENT
+                                    && (
+                                            email.equalsIgnoreCase(activity.getPerformedByEmail())
+                                            || email.equalsIgnoreCase(activity.getTargetUserEmail())
+                                    )
+                            )
+                            || email.equalsIgnoreCase(String.valueOf(activity.getTargetUserEmail()))
+                    )
+                    .toList();
         }
 
         return List.of();

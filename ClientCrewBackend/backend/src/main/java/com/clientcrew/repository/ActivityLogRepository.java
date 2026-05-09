@@ -36,4 +36,9 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> 
     long countByCustomerEmailAndIsReadFalse(
             String customerEmail
     );
+    
+    List<ActivityLog> findTop10ByManagerEmailOrTargetUserEmailOrderByCreatedAtDesc(
+            String managerEmail,
+            String targetUserEmail
+    );
 }
