@@ -12,6 +12,7 @@ import com.clientcrew.repository.ProjectRepository;
 import com.clientcrew.dto.ProjectRequest;
 import com.clientcrew.entity.User;
 import com.clientcrew.repository.UserRepository;
+import com.clientcrew.entity.ActivityType;
 
 
 @Service
@@ -23,6 +24,9 @@ public class ProjectService {
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private ActivityLogService activityLogService;
 
     // Get all projects (mainly for admin)
     public List<Project> getAllProjects() {
@@ -45,13 +49,34 @@ public class ProjectService {
 
         if (role.equals("MANAGER")) {
             project.setManagerEmail(loggedInEmail);
+        } else {
+            project.setManagerEmail(request.getManagerEmail());
         }
 
         List<User> employees = userRepository.findAllById(request.getEmployeeIds());
         project.setAssignedEmployees(employees);
 
-        return projectRepository.save(project);
-    }
+        Project savedProject = projectRepository.save(project);
+
+        User performedBy = userRepository.findByUserEmail(loggedInEmail)
+                .orElseThrow(() -> new RuntimeException("Logged-in user not found"));
+
+        activityLogService.createActivity(
+                ActivityType.PROJECT_CREATED,
+                "PROJECT",
+                savedProject.getId(),
+                savedProject.getProjectName(),
+                "Project Created",
+                performedBy.getUserFullName() + " created project " + savedProject.getProjectName(),
+                null,
+                savedProject.getStatus(),
+                performedBy,
+                savedProject.getManagerEmail(),
+                savedProject.getCustomerEmail(),
+                null
+        );
+
+        return savedProject;    }
 
     // Return projects based on logged-in user role
     public List<Project> getProjectsByRole(String email, String role) {
@@ -61,11 +86,12 @@ public class ProjectService {
         }
 
         if (role.equals("MANAGER")) {
-            return projectRepository.findByAssignedEmployees_UserEmail(email);
+            return projectRepository.findByManagerEmail(email);
         }
 
         if (role.equals("EMPLOYEE")) {
-        	return projectRepository.findByAssignedEmployees_UserEmail(email);        }
+            return projectRepository.findByAssignedEmployees_UserEmail(email);
+        }
 
         if (role.equals("CUSTOMER")) {
             return projectRepository.findByCustomerEmail(email);
@@ -83,6 +109,10 @@ public class ProjectService {
 
         Project existing = projectRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Project not found"));
+        
+        String oldProjectName = existing.getProjectName();
+        String oldStatus = existing.getStatus();
+        String oldProgress = String.valueOf(existing.getProgress());
 
         // Manager restriction
         if (role.equals("MANAGER")) {
@@ -123,13 +153,49 @@ public class ProjectService {
         	}
 
         	existing.setAssignedEmployees(requestedUsers);
-        return projectRepository.save(existing);
-    }
-    
-    
-    
-    public void deleteProject(Long id, String role) {
+        	
+        	
+        	
+        	Project savedProject = projectRepository.save(existing);
 
+        	User performedBy = userRepository.findByUserEmail(loggedInEmail)
+        	        .orElseThrow(() -> new RuntimeException("Logged-in user not found"));
+
+        	String description = performedBy.getUserFullName()
+        	        + " updated project " + oldProjectName;
+
+        	if (!oldProjectName.equalsIgnoreCase(savedProject.getProjectName())) {
+        	    description += " to " + savedProject.getProjectName();
+        	}
+
+        	if (!oldStatus.equalsIgnoreCase(savedProject.getStatus())) {
+        	    description += " | Status: " + oldStatus + " → " + savedProject.getStatus();
+        	}
+
+        	if (!oldProgress.equals(String.valueOf(savedProject.getProgress()))) {
+        	    description += " | Progress: " + oldProgress + "% → " + savedProject.getProgress() + "%";
+        	}
+
+        	activityLogService.createActivity(
+        	        ActivityType.PROJECT_UPDATED,
+        	        "PROJECT",
+        	        savedProject.getId(),
+        	        savedProject.getProjectName(),
+        	        "Project Updated",
+        	        description,
+        	        oldProjectName,
+        	        savedProject.getProjectName(),
+        	        performedBy,
+        	        savedProject.getManagerEmail(),
+        	        savedProject.getCustomerEmail(),
+        	        null
+        	);
+
+        	return savedProject;    }
+    
+    
+    
+    public void deleteProject(Long id, String role, String loggedInEmail) {
         if (!role.equals("ADMIN")) {
             throw new RuntimeException("Only admin can delete project");
         }
@@ -137,6 +203,23 @@ public class ProjectService {
         Project project = projectRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Project not found"));
 
+        User performedBy = userRepository.findByUserEmail(loggedInEmail)
+                .orElseThrow(() -> new RuntimeException("Logged-in user not found"));
+
+        activityLogService.createActivity(
+                ActivityType.PROJECT_DELETED,
+                "PROJECT",
+                project.getId(),
+                project.getProjectName(),
+                "Project Deleted",
+                performedBy.getUserFullName() + " deleted project " + project.getProjectName(),
+                project.getProjectName(),
+                null,
+                performedBy,
+                project.getManagerEmail(),
+                project.getCustomerEmail(),
+                null
+        );
         projectRepository.delete(project);
     }
 }

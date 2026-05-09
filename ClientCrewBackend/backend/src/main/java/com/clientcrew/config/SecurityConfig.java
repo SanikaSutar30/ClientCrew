@@ -165,6 +165,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/tasks/**")
                             .hasRole("ADMIN")
                             
+                            
+                         // Reports APIs - All roles
+                            .requestMatchers(HttpMethod.GET, "/api/reports/**")
+                                .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")
+                                
+                                
+                             // Activities APIs
+                                .requestMatchers("/api/activities/**")
+                                .hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE", "CUSTOMER")      
+                            
                         
                 // All remaining APIs require login
                 .anyRequest()

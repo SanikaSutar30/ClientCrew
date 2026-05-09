@@ -1,6 +1,7 @@
 package com.clientcrew.service;
 
 import java.util.ArrayList;
+
 import java.util.List;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,6 +14,7 @@ import com.clientcrew.entity.User;
 import com.clientcrew.repository.ProjectRepository;
 import com.clientcrew.repository.UserRepository;
 import com.clientcrew.dto.EmployeeResponse;
+import com.clientcrew.entity.ActivityType;
 
 
 @Service
@@ -21,15 +23,18 @@ public class EmployeeService {
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ActivityLogService activityLogService;
 
     public EmployeeService(
             UserRepository userRepository,
             ProjectRepository projectRepository,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            ActivityLogService activityLogService
     ) {
         this.userRepository = userRepository;
         this.projectRepository = projectRepository;
         this.passwordEncoder = passwordEncoder;
+        this.activityLogService = activityLogService;
     }
 
     public List<User> getEmployeesByRole(String loggedInEmail, String role) {
@@ -157,8 +162,29 @@ public class EmployeeService {
 
         user.setUserPassword(passwordEncoder.encode(rawPassword));
 
-        return userRepository.save(user);
-    }
+        User savedUser = userRepository.save(user);
+
+        User performedBy = userRepository.findByUserEmail(loggedInEmail)
+                .orElseThrow(() -> new RuntimeException("Logged-in user not found"));
+
+        activityLogService.createActivity(
+                ActivityType.EMPLOYEE_CREATED,
+                "EMPLOYEE",
+                savedUser.getUserId(),
+                savedUser.getUserFullName(),
+                savedUser.getUserRole().name() + " Created",
+                performedBy.getUserFullName() + " created "
+                        + savedUser.getUserRole().name().toLowerCase()
+                        + " " + savedUser.getUserFullName(),
+                null,
+                savedUser.getUserEmail(),
+                performedBy,
+                role.equals("MANAGER") ? loggedInEmail : null,
+                null,
+                savedUser.getUserEmail()
+        );
+
+        return savedUser;    }
 
     public User updateEmployee(
             Long userId,
@@ -211,11 +237,54 @@ public class EmployeeService {
             }
             existingUser.setUserRole(request.getUserRole());
         }
+        
+        
+        
+        String oldName = existingUser.getUserFullName();
+        String oldStatus = existingUser.getStatus();
+        String oldRole = existingUser.getUserRole().name();
 
-        return userRepository.save(existingUser);
-    }
+        User updatedUser = userRepository.save(existingUser);
 
-    public void deleteEmployee(Long userId, String role) {
+        User performedBy = userRepository.findByUserEmail(loggedInEmail)
+                .orElseThrow(() -> new RuntimeException("Logged-in user not found"));
+
+        String description = performedBy.getUserFullName()
+                + " updated " + oldRole.toLowerCase() + " " + oldName;
+
+        if (!oldName.equalsIgnoreCase(updatedUser.getUserFullName())) {
+            description += " to " + updatedUser.getUserFullName();
+        }
+
+        if (oldStatus != null && updatedUser.getStatus() != null
+                && !oldStatus.equalsIgnoreCase(updatedUser.getStatus())) {
+            description += " | Status: " + oldStatus + " → " + updatedUser.getStatus();
+        }
+
+        if (!oldRole.equalsIgnoreCase(updatedUser.getUserRole().name())) {
+            description += " | Role: " + oldRole + " → " + updatedUser.getUserRole().name();
+        }
+
+        activityLogService.createActivity(
+                ActivityType.EMPLOYEE_UPDATED,
+                "EMPLOYEE",
+                updatedUser.getUserId(),
+                updatedUser.getUserFullName(),
+                updatedUser.getUserRole().name() + " Updated",
+                description,
+                oldName,
+                updatedUser.getUserFullName(),
+                performedBy,
+                role.equals("MANAGER") ? loggedInEmail : null,
+                null,
+                updatedUser.getUserEmail()
+        );
+
+        return updatedUser;    }
+
+    
+    
+    public void deleteEmployee(Long userId, String role, String loggedInEmail) {
 
         if (!role.equals("ADMIN")) {
             throw new RuntimeException("Only admin can delete employees");
@@ -241,8 +310,29 @@ public class EmployeeService {
         });
 
         projectRepository.saveAll(projects);
+        
+        User performedBy = userRepository.findByUserEmail(loggedInEmail)
+                .orElseThrow(() -> new RuntimeException("Logged-in user not found"));
+
+        activityLogService.createActivity(
+                ActivityType.EMPLOYEE_DELETED,
+                "EMPLOYEE",
+                user.getUserId(),
+                user.getUserFullName(),
+                user.getUserRole().name() + " Deleted",
+                performedBy.getUserFullName() + " deleted "
+                        + user.getUserRole().name().toLowerCase()
+                        + " " + user.getUserFullName(),
+                user.getUserEmail(),
+                null,
+                performedBy,
+                null,
+                null,
+                user.getUserEmail()
+        );
 
         userRepository.delete(user);
+        
     }
     
     private EmployeeResponse mapToResponse(User user, String loggedInEmail) {

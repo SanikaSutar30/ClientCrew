@@ -4,6 +4,7 @@ package com.clientcrew.controller;
 
 import java.util.List;
 
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -15,6 +16,11 @@ import com.clientcrew.entity.Role;
 import com.clientcrew.entity.User;
 import com.clientcrew.repository.UserRepository;
 
+import org.springframework.security.core.Authentication;
+
+import com.clientcrew.entity.ActivityType;
+import com.clientcrew.service.ActivityLogService;
+
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "http://localhost:5173")
@@ -25,14 +31,17 @@ public class UserController {
 
     // Password encoder dependency
     private final PasswordEncoder passwordEncoder;
+    private final ActivityLogService activityLogService;
 
     // Constructor injection
     public UserController(UserRepository userRepository,
-                          PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            ActivityLogService activityLogService) {
 
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+this.userRepository = userRepository;
+this.passwordEncoder = passwordEncoder;
+this.activityLogService = activityLogService;
+}
 
     // Get all customers for dropdowns
     @GetMapping("/customers")
@@ -80,7 +89,8 @@ public class UserController {
     // Add new user
     @PostMapping
     public ResponseEntity<?> addUser(
-            @RequestBody UserRequest dto
+            @RequestBody UserRequest dto,
+            Authentication authentication
     ) {
 
         // Prevent creating admin
@@ -122,6 +132,23 @@ public class UserController {
         );
 
         User savedUser = userRepository.save(user);
+        User performedBy = userRepository.findByUserEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Logged-in user not found"));
+
+        activityLogService.createActivity(
+                ActivityType.USER_CREATED,
+                "USER",
+                savedUser.getUserId(),
+                savedUser.getUserFullName(),
+                savedUser.getUserRole().name() + " Created",
+                performedBy.getUserFullName() + " created user " + savedUser.getUserFullName(),
+                null,
+                savedUser.getUserEmail(),
+                performedBy,
+                null,
+                savedUser.getUserRole() == Role.CUSTOMER ? savedUser.getUserEmail() : null,
+                savedUser.getUserEmail()
+        );
 
         return ResponseEntity.ok(savedUser);
     }
@@ -130,8 +157,9 @@ public class UserController {
     @PutMapping("/{userId}")
     public ResponseEntity<?> updateUser(
             @PathVariable Long userId,
-            @RequestBody UserRequest dto
-    ) {
+            @RequestBody UserRequest dto,
+            Authentication authentication
+    ){
 
         User existingUser =
                 userRepository.findById(userId)
@@ -144,6 +172,10 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("Admin user cannot be edited");
         }
+        
+        String oldName = existingUser.getUserFullName();
+        String oldRole = existingUser.getUserRole().name();
+        String oldStatus = existingUser.getStatus();
 
         existingUser.setUserFullName(dto.getUserFullName());
         existingUser.setUserPhone(dto.getUserPhone());
@@ -154,6 +186,40 @@ public class UserController {
 
         User updatedUser =
                 userRepository.save(existingUser);
+        
+        User performedBy = userRepository.findByUserEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Logged-in user not found"));
+
+        String description = performedBy.getUserFullName()
+                + " updated user " + oldName;
+
+        if (!oldName.equalsIgnoreCase(updatedUser.getUserFullName())) {
+            description += " to " + updatedUser.getUserFullName();
+        }
+
+        if (!oldRole.equalsIgnoreCase(updatedUser.getUserRole().name())) {
+            description += " | Role: " + oldRole + " → " + updatedUser.getUserRole().name();
+        }
+
+        if (oldStatus != null && updatedUser.getStatus() != null
+                && !oldStatus.equalsIgnoreCase(updatedUser.getStatus())) {
+            description += " | Status: " + oldStatus + " → " + updatedUser.getStatus();
+        }
+
+        activityLogService.createActivity(
+                ActivityType.USER_UPDATED,
+                "USER",
+                updatedUser.getUserId(),
+                updatedUser.getUserFullName(),
+                "User Updated",
+                description,
+                oldName,
+                updatedUser.getUserFullName(),
+                performedBy,
+                null,
+                updatedUser.getUserRole() == Role.CUSTOMER ? updatedUser.getUserEmail() : null,
+                updatedUser.getUserEmail()
+        );
 
         return ResponseEntity.ok(updatedUser);
     }
@@ -161,8 +227,9 @@ public class UserController {
     // Delete user
     @DeleteMapping("/{userId}")
     public ResponseEntity<String> deleteUser(
-            @PathVariable Long userId
-    ) {
+            @PathVariable Long userId,
+            Authentication authentication
+    ){
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() ->
@@ -175,7 +242,26 @@ public class UserController {
                     .body("Admin user cannot be deleted");
         }
 
+        User performedBy = userRepository.findByUserEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Logged-in user not found"));
+
+        activityLogService.createActivity(
+                ActivityType.USER_DELETED,
+                "USER",
+                user.getUserId(),
+                user.getUserFullName(),
+                user.getUserRole().name() + " Deleted",
+                performedBy.getUserFullName() + " deleted user " + user.getUserFullName(),
+                user.getUserEmail(),
+                null,
+                performedBy,
+                null,
+                user.getUserRole() == Role.CUSTOMER ? user.getUserEmail() : null,
+                user.getUserEmail()
+        );
+        
         userRepository.delete(user);
+
 
         return ResponseEntity.ok("User deleted successfully");
     }

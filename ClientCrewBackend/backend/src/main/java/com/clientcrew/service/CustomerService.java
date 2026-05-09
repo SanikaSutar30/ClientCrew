@@ -13,6 +13,7 @@ import com.clientcrew.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.clientcrew.dto.CustomerRequest;
+import com.clientcrew.entity.ActivityType;
 
 @Service
 public class CustomerService {
@@ -20,13 +21,16 @@ public class CustomerService {
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ActivityLogService activityLogService;
 
     public CustomerService(UserRepository userRepository,
             ProjectRepository projectRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            ActivityLogService activityLogService) {
 this.userRepository = userRepository;
 this.projectRepository = projectRepository;
 this.passwordEncoder = passwordEncoder;
+this.activityLogService = activityLogService;
 }
 
     public List<User> getCustomersByRole(String email, String role) {
@@ -94,6 +98,24 @@ this.passwordEncoder = passwordEncoder;
         project.setCustomerEmail(savedCustomer.getUserEmail());
         project.setClientName(savedCustomer.getUserFullName());
         projectRepository.save(project);
+        
+        User performedBy = userRepository.findByUserEmail(loggedInEmail)
+                .orElseThrow(() -> new RuntimeException("Logged-in user not found"));
+
+        activityLogService.createActivity(
+                ActivityType.CUSTOMER_CREATED,
+                "CUSTOMER",
+                savedCustomer.getUserId(),
+                savedCustomer.getUserFullName(),
+                "Customer Created",
+                performedBy.getUserFullName() + " created customer " + savedCustomer.getUserFullName(),
+                null,
+                savedCustomer.getUserEmail(),
+                performedBy,
+                project.getManagerEmail(),
+                savedCustomer.getUserEmail(),
+                savedCustomer.getUserEmail()
+        );
 
         return savedCustomer;
     }
@@ -132,7 +154,9 @@ this.passwordEncoder = passwordEncoder;
         existingCustomer.setUserImage(request.getUserImage());
 
         User updatedCustomer = userRepository.save(existingCustomer);
-
+        String oldName = existingCustomer.getUserFullName();
+        String oldStatus = existingCustomer.getStatus();
+        
         List<Project> linkedProjects =
                 projectRepository.findByCustomerEmail(existingCustomer.getUserEmail());
 
@@ -141,11 +165,44 @@ this.passwordEncoder = passwordEncoder;
             projectRepository.save(project);
         });
 
+        
+        User performedBy = userRepository.findByUserEmail(loggedInEmail)
+                .orElseThrow(() -> new RuntimeException("Logged-in user not found"));
+
+        String description = performedBy.getUserFullName()
+                + " updated customer " + oldName;
+
+        if (!oldName.equalsIgnoreCase(updatedCustomer.getUserFullName())) {
+            description += " to " + updatedCustomer.getUserFullName();
+        }
+
+        if (oldStatus != null && updatedCustomer.getStatus() != null
+                && !oldStatus.equalsIgnoreCase(updatedCustomer.getStatus())) {
+            description += " | Status: " + oldStatus + " → " + updatedCustomer.getStatus();
+        }
+
+        String managerEmail = linkedProjects.isEmpty() ? null : linkedProjects.get(0).getManagerEmail();
+
+        activityLogService.createActivity(
+                ActivityType.CUSTOMER_UPDATED,
+                "CUSTOMER",
+                updatedCustomer.getUserId(),
+                updatedCustomer.getUserFullName(),
+                "Customer Updated",
+                description,
+                oldName,
+                updatedCustomer.getUserFullName(),
+                performedBy,
+                managerEmail,
+                updatedCustomer.getUserEmail(),
+                updatedCustomer.getUserEmail()
+        );
+        
         return updatedCustomer;
     }
     
     
-    public void deleteCustomer(Long id, String role) {
+    public void deleteCustomer(Long id, String role, String loggedInEmail) {
         if (!role.equals("ADMIN")) {
             throw new RuntimeException("Only admin can delete customer");
         }
@@ -167,6 +224,26 @@ this.passwordEncoder = passwordEncoder;
         });
 
         projectRepository.saveAll(linkedProjects);
+        
+        User performedBy = userRepository.findByUserEmail(loggedInEmail)
+                .orElseThrow(() -> new RuntimeException("Logged-in user not found"));
+
+        String managerEmail = linkedProjects.isEmpty() ? null : linkedProjects.get(0).getManagerEmail();
+
+        activityLogService.createActivity(
+                ActivityType.CUSTOMER_DELETED,
+                "CUSTOMER",
+                customer.getUserId(),
+                customer.getUserFullName(),
+                "Customer Deleted",
+                performedBy.getUserFullName() + " deleted customer " + customer.getUserFullName(),
+                customer.getUserEmail(),
+                null,
+                performedBy,
+                managerEmail,
+                customer.getUserEmail(),
+                customer.getUserEmail()
+        );
 
         userRepository.delete(customer);
     }

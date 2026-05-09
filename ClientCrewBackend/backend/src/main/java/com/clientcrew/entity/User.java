@@ -4,6 +4,7 @@
 package com.clientcrew.entity;
 
 import jakarta.persistence.Column;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -11,6 +12,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+
 
 @Entity
 @Table(name = "users")
@@ -40,6 +46,9 @@ public class User {
     private String userPhone;
     private String status;
     private String joinedDate;
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
     
     public User() {
     }
@@ -123,6 +132,34 @@ public class User {
 
 	public void setJoinedDate(String joinedDate) {
 		this.joinedDate = joinedDate;
+	}
+	
+	
+	public LocalDateTime getCreatedAt() {
+	    return createdAt;
+	}
+
+	public void setCreatedAt(LocalDateTime createdAt) {
+	    this.createdAt = createdAt;
+	}
+
+	public LocalDateTime getUpdatedAt() {
+	    return updatedAt;
+	}
+
+	public void setUpdatedAt(LocalDateTime updatedAt) {
+	    this.updatedAt = updatedAt;
+	}
+	
+	@PrePersist
+	public void onCreate() {
+	    createdAt = LocalDateTime.now();
+	    updatedAt = LocalDateTime.now();
+	}
+
+	@PreUpdate
+	public void onUpdate() {
+	    updatedAt = LocalDateTime.now();
 	}
     
 }

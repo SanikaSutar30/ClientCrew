@@ -11,6 +11,7 @@ public class ProjectRequest {
     private String status;
     private int progress;
     private String customerEmail;
+    private String managerEmail;
     private String projectImage;
     private List<Long> employeeIds;
 	public String getProjectName() {
@@ -55,6 +56,14 @@ public class ProjectRequest {
 	public void setCustomerEmail(String customerEmail) {
 		this.customerEmail = customerEmail;
 	}
+	public String getManagerEmail() {
+	    return managerEmail;
+	}
+
+	public void setManagerEmail(String managerEmail) {
+	    this.managerEmail = managerEmail;
+	}
+	
 	public List<Long> getEmployeeIds() {
 		return employeeIds;
 	}

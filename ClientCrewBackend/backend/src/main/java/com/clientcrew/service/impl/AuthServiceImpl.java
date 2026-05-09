@@ -1,5 +1,6 @@
 //Actual business logic.
 
+
 //This file does:
 //register user
 //encode password
@@ -12,6 +13,7 @@
 package com.clientcrew.service.impl;
 
 import java.util.Optional;
+
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,6 +28,9 @@ import com.clientcrew.repository.UserRepository;
 import com.clientcrew.security.JwtUtil;
 import com.clientcrew.service.AuthService;
 
+import com.clientcrew.entity.ActivityType;
+import com.clientcrew.service.ActivityLogService;
+
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -33,17 +38,19 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final ActivityLogService activityLogService;
 
     public AuthServiceImpl(UserRepository userRepository,
-                           PasswordEncoder passwordEncoder,
-                           JwtUtil jwtUtil,
-                           AuthenticationManager authenticationManager) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
-        this.authenticationManager = authenticationManager;
-    }
-
+            PasswordEncoder passwordEncoder,
+            JwtUtil jwtUtil,
+            AuthenticationManager authenticationManager,
+            ActivityLogService activityLogService) {
+this.userRepository = userRepository;
+this.passwordEncoder = passwordEncoder;
+this.jwtUtil = jwtUtil;
+this.authenticationManager = authenticationManager;
+this.activityLogService = activityLogService;
+}
     @Override
     public AuthResponse registerUser(RegisterRequest registerRequest) {
 
@@ -58,15 +65,28 @@ public class AuthServiceImpl implements AuthService {
         user.setUserRole(registerRequest.getUserRole());
         user.setUserImage(registerRequest.getUserImage());
 
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
 
-        String token = jwtUtil.generateToken(user.getUserEmail(), user.getUserRole().name());
-
-        return new AuthResponse(
+        activityLogService.createActivity(
+                ActivityType.USER_REGISTERED,
+                "AUTH",
+                savedUser.getUserId(),
+                savedUser.getUserFullName(),
+                "User Registered",
+                savedUser.getUserFullName() + " registered as " + savedUser.getUserRole().name(),
+                null,
+                savedUser.getUserEmail(),
+                savedUser,
+                null,
+                savedUser.getUserRole().name().equals("CUSTOMER") ? savedUser.getUserEmail() : null,
+                savedUser.getUserEmail()
+        );
+        String token = jwtUtil.generateToken(savedUser.getUserEmail(), savedUser.getUserRole().name());
+    return new AuthResponse(
                 token,
-                user.getUserEmail(),
-                user.getUserRole().name(),
-                user.getUserFullName()
+                savedUser.getUserEmail(),
+                savedUser.getUserRole().name(),
+                savedUser.getUserFullName()
         );
     }
 
@@ -87,6 +107,20 @@ public class AuthServiceImpl implements AuthService {
         }
 
         User user = optionalUser.get();
+        activityLogService.createActivity(
+                ActivityType.USER_LOGIN,
+                "AUTH",
+                user.getUserId(),
+                user.getUserFullName(),
+                "User Login",
+                user.getUserFullName() + " logged in as " + user.getUserRole().name(),
+                null,
+                null,
+                user,
+                null,
+                user.getUserRole().name().equals("CUSTOMER") ? user.getUserEmail() : null,
+                user.getUserEmail()
+        );
 
         String token = jwtUtil.generateToken(user.getUserEmail(), user.getUserRole().name());
 

@@ -1,16 +1,48 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
-import { User, FileText, Shield, LogIn } from "lucide-react";
+import {
+  User,
+  FileText,
+  Shield,
+  LogIn,
+  FolderKanban,
+  CheckSquare,
+  Users,
+  Settings,
+  MessageSquare,
+} from "lucide-react";
+
+import {
+  getActivities,
+  markActivityAsRead,
+  markAllActivitiesAsRead,
+} from "../../services/activityService";
 
 export default function Notifications() {
-  const { darkMode, notifications, setNotifications } = useOutletContext();
+  const { darkMode } = useOutletContext();
   const navigate = useNavigate();
 
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Pagination logic
   const itemsPerPage = 5;
+
+  useEffect(() => {
+    fetchActivities();
+  }, []);
+
+  const fetchActivities = async () => {
+    try {
+      const data = await getActivities();
+      setNotifications(data);
+    } catch (error) {
+      console.error("Failed to fetch notifications:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const unreadCount = notifications.filter((item) => !item.isRead).length;
 
@@ -28,14 +60,21 @@ export default function Notifications() {
     safeCurrentPage * itemsPerPage,
   );
 
-  const handleMarkAllAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((item) => ({
-        ...item,
-        isRead: true,
-      })),
-    );
-    setCurrentPage(1);
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllActivitiesAsRead();
+
+      setNotifications((prev) =>
+        prev.map((item) => ({
+          ...item,
+          isRead: true,
+        })),
+      );
+
+      setCurrentPage(1);
+    } catch (error) {
+      console.error("Failed to mark all as read:", error);
+    }
   };
 
   const handleTabChange = (tab) => {
@@ -43,32 +82,100 @@ export default function Notifications() {
     setCurrentPage(1);
   };
 
-  const handleNotificationClick = (item) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n)),
-    );
-
-    if (item.link) {
-      navigate(item.link);
+  const getActivityLink = (item) => {
+    switch (item.moduleName) {
+      case "PROJECT":
+        return "/projects";
+      case "TASK":
+        return "/tasks";
+      case "CUSTOMER":
+        return "/customers";
+      case "EMPLOYEE":
+      case "TEAM":
+        return "/employees";
+      case "USER":
+        return "/users";
+      case "AUTH":
+        return "/dashboard";
+      case "REPORT":
+        return "/reports";
+      case "SETTINGS":
+        return "/settings";
+      case "MESSAGE":
+        return "/messages";
+      default:
+        return null;
     }
   };
 
-  const renderIcon = (type) => {
-    switch (type) {
-      case "security":
-        return <Shield size={18} />;
-      case "report":
+  const handleNotificationClick = async (item) => {
+    try {
+      await markActivityAsRead(item.id);
+
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n)),
+      );
+
+      const link = getActivityLink(item);
+
+      if (link) {
+        navigate(link);
+      }
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
+  };
+
+  const renderIcon = (moduleName, activityType) => {
+    if (moduleName === "AUTH" || activityType === "USER_LOGIN") {
+      return <LogIn size={18} />;
+    }
+
+    switch (moduleName) {
+      case "PROJECT":
+        return <FolderKanban size={18} />;
+      case "TASK":
+        return <CheckSquare size={18} />;
+      case "CUSTOMER":
+      case "EMPLOYEE":
+      case "USER":
+      case "TEAM":
+        return <Users size={18} />;
+      case "REPORT":
         return <FileText size={18} />;
-      case "login":
-        return <LogIn size={18} />;
+      case "SETTINGS":
+        return <Settings size={18} />;
+      case "MESSAGE":
+        return <MessageSquare size={18} />;
+      case "SECURITY":
+        return <Shield size={18} />;
       default:
         return <User size={18} />;
     }
   };
 
+  const getTimeLabel = (dateValue) => {
+    if (!dateValue) return "";
+
+    return new Date(dateValue).toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  if (loading) {
+    return (
+      <p className={darkMode ? "text-white" : "text-gray-700"}>
+        Loading notifications...
+      </p>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Page header */}
       <div>
         <h1
           className={`text-2xl font-bold ${
@@ -77,6 +184,7 @@ export default function Notifications() {
         >
           Notifications
         </h1>
+
         <p
           className={`text-sm mt-1 ${
             darkMode ? "text-gray-300" : "text-gray-500"
@@ -87,7 +195,6 @@ export default function Notifications() {
         </p>
       </div>
 
-      {/* Main notification card */}
       <div
         className={`rounded-2xl shadow-sm overflow-hidden ${
           darkMode
@@ -95,7 +202,6 @@ export default function Notifications() {
             : "bg-white border border-gray-200"
         }`}
       >
-        {/* Top tabs row */}
         <div
           className={`flex items-center justify-between px-6 py-2 border-b ${
             darkMode
@@ -147,7 +253,6 @@ export default function Notifications() {
           </button>
         </div>
 
-        {/* Notification list */}
         <div>
           {filteredNotifications.length === 0 ? (
             <div
@@ -155,47 +260,58 @@ export default function Notifications() {
                 darkMode ? "text-gray-300" : "text-gray-500"
               }`}
             >
-              No unread notifications
+              {activeTab === "unread"
+                ? "No unread notifications"
+                : "No notifications found"}
             </div>
           ) : (
             paginatedNotifications.map((item) => (
               <div
                 key={item.id}
                 onClick={() => handleNotificationClick(item)}
-                className={`flex items-center justify-between px-6 py-2 border-b last:border-b-0 cursor-pointer transition-all duration-200 ${
+                className={`flex items-center justify-between px-6 py-3 border-b last:border-b-0 cursor-pointer transition-all duration-200 ${
                   darkMode
                     ? "border-gray-600 hover:bg-gray-600"
                     : "border-gray-200 hover:bg-gray-50"
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  {item.type === "customer" ? (
-                    <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300 shrink-0">
-                      <img
-                        src={item.image}
-                        alt="notification avatar"
-                        className="w-full h-full object-cover object-top"
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                        darkMode
-                          ? "bg-gray-500 text-white"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {renderIcon(item.type)}
-                    </div>
-                  )}
-
-                  <p
-                    className={`text-sm md:text-base font-medium truncate ${
-                      darkMode ? "text-white" : "text-gray-800"
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                      darkMode
+                        ? "bg-gray-500 text-white"
+                        : "bg-gray-100 text-gray-600"
                     }`}
                   >
-                    {item.message}
-                  </p>
+                    {renderIcon(item.moduleName, item.activityType)}
+                  </div>
+
+                  <div className="min-w-0">
+                    <p
+                      className={`text-sm md:text-base font-semibold truncate ${
+                        darkMode ? "text-white" : "text-gray-800"
+                      }`}
+                    >
+                      {item.title}
+                    </p>
+
+                    <p
+                      className={`text-sm truncate ${
+                        darkMode ? "text-gray-300" : "text-gray-500"
+                      }`}
+                    >
+                      {item.description}
+                    </p>
+
+                    <p
+                      className={`text-xs mt-1 truncate ${
+                        darkMode ? "text-gray-400" : "text-gray-400"
+                      }`}
+                    >
+                      By {item.performedByEmail || "System"}
+                      {item.performedByRole ? ` • ${item.performedByRole}` : ""}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-5 shrink-0 ml-6">
@@ -204,7 +320,7 @@ export default function Notifications() {
                       darkMode ? "text-gray-300" : "text-gray-500"
                     }`}
                   >
-                    {item.time}
+                    {getTimeLabel(item.createdAt)}
                   </span>
 
                   {!item.isRead && (
@@ -216,7 +332,6 @@ export default function Notifications() {
           )}
         </div>
 
-        {/* Pagination section */}
         {filteredNotifications.length > 0 && (
           <div
             className={`flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-6 py-4 border-t ${

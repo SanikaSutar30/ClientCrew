@@ -15,4 +15,16 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findByProject_CustomerEmail(String customerEmail);
 
     List<Task> findByProject_ManagerEmail(String managerEmail);
+
+    // Recent activity for Admin
+    List<Task> findTop5ByOrderByUpdatedAtDesc();
+
+    // Recent activity for Manager
+    List<Task> findTop5ByProject_ManagerEmailOrderByUpdatedAtDesc(String managerEmail);
+
+    // Recent activity for Employee
+    List<Task> findTop5ByAssignee_UserEmailOrderByUpdatedAtDesc(String userEmail);
+
+    // Recent activity for Customer
+    List<Task> findTop5ByProject_CustomerEmailOrderByUpdatedAtDesc(String customerEmail);
 }

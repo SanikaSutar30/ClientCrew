@@ -1,117 +1,121 @@
-import { useState } from "react";
-import { Users, Folder, IndianRupee, FileText, MapPin } from "lucide-react";
+import { useEffect, useState } from "react";
+
+import {
+  Users,
+  Folder,
+  CheckCircle2,
+  Clock3,
+  AlertCircle,
+  ListChecks,
+} from "lucide-react";
+
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   Tooltip,
   CartesianGrid,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
 
+import { getReportsDashboard } from "../../services/reportService";
+
 export default function AdminReports({ darkMode }) {
-  const [chartFilter, setChartFilter] = useState("Monthly");
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const monthlyGrowthData = [
-    { month: "Jan", customers: 40 },
-    { month: "Feb", customers: 80 },
-    { month: "Mar", customers: 95 },
-    { month: "Apr", customers: 110 },
-    { month: "May", customers: 160 },
-    { month: "Jun", customers: 205 },
-  ];
+  const COLORS = ["#22c55e", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
 
-  const weeklyGrowthData = [
-    { month: "Week 1", customers: 18 },
-    { month: "Week 2", customers: 42 },
-    { month: "Week 3", customers: 65 },
-    { month: "Week 4", customers: 88 },
-  ];
+  useEffect(() => {
+    fetchReport();
+  }, []);
 
-  const growthData =
-    chartFilter === "Monthly" ? monthlyGrowthData : weeklyGrowthData;
+  const fetchReport = async () => {
+    try {
+      const data = await getReportsDashboard();
+      setReport(data);
+    } catch (error) {
+      console.error("Failed to load reports:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const sourceData = [
-    { name: "Direct", value: 45, color: "#0f766e" },
-    { name: "Referral", value: 25, color: "#3b82f6" },
-    { name: "Organic", value: 20, color: "#f59e0b" },
-    { name: "Others", value: 10, color: "#6366f1" },
-  ];
+  if (loading) {
+    return (
+      <p className={darkMode ? "text-white" : "text-gray-700"}>
+        Loading reports...
+      </p>
+    );
+  }
 
-  const topCustomers = [
-    {
-      id: 1,
-      name: "Rahul Sharma",
-      orders: 32,
-      total: "₹5,800",
-      image: "../assets/Profile.jpg",
-    },
-    {
-      id: 2,
-      name: "Priya Singh",
-      orders: 24,
-      total: "₹4,900",
-      image: "../assets/Profile2.jpg",
-    },
-    {
-      id: 3,
-      name: "Amit Patil",
-      orders: 24,
-      total: "₹3,700",
-      image: "../assets/Profile3.jpg",
-    },
-    {
-      id: 4,
-      name: "John Doe",
-      orders: 20,
-      total: "₹3,200",
-      image: "../assets/Profile4.jpg",
-    },
-    {
-      id: 5,
-      name: "Anjali Kapoor",
-      orders: 18,
-      total: "₹2,900",
-      image: "../assets/Profile5.jpg",
-    },
-  ];
+  if (!report) {
+    return <p className="text-red-500">Failed to load reports.</p>;
+  }
+
+  const summary = report.summary;
+  const recentActivities = report.recentActivities || [];
 
   const reportStats = [
     {
-      title: "Total Customers",
-      value: "2,450",
+      title: "Total Users",
+      value: summary.totalUsers,
       icon: Users,
       iconBg: "bg-[#0f766e]/10",
       iconColor: "text-[#0f766e]",
-      changeClass: "text-green-600 bg-green-100",
     },
     {
       title: "Total Projects",
-      value: "186",
+      value: summary.totalProjects,
       icon: Folder,
-      iconBg: "bg-purple-100",
-      iconColor: "text-purple-600",
-      changeClass: "text-green-600 bg-green-100",
-    },
-    {
-      title: "Revenue",
-      value: "₹8,45,000",
-      icon: IndianRupee,
       iconBg: "bg-blue-100",
       iconColor: "text-blue-600",
-      changeClass: "text-green-600 bg-green-100",
     },
     {
-      title: "Reports Generated",
-      value: "128",
-      icon: FileText,
+      title: "Completed Tasks",
+      value: summary.completedTasks,
+      icon: CheckCircle2,
+      iconBg: "bg-green-100",
+      iconColor: "text-green-600",
+    },
+    {
+      title: "Blocked Tasks",
+      value: summary.blockedTasks,
+      icon: AlertCircle,
+      iconBg: "bg-red-100",
+      iconColor: "text-red-600",
+    },
+    {
+      title: "Total Employees",
+      value: summary.totalEmployees,
+      icon: Users,
+      iconBg: "bg-purple-100",
+      iconColor: "text-purple-600",
+    },
+    {
+      title: "Total Customers",
+      value: summary.totalCustomers,
+      icon: Users,
+      iconBg: "bg-amber-100",
+      iconColor: "text-amber-600",
+    },
+    {
+      title: "In Progress Tasks",
+      value: summary.inProgressTasks,
+      icon: Clock3,
+      iconBg: "bg-blue-100",
+      iconColor: "text-blue-600",
+    },
+    {
+      title: "Pending Tasks",
+      value: summary.pendingTasks,
+      icon: ListChecks,
       iconBg: "bg-orange-100",
       iconColor: "text-orange-600",
-      changeClass: "text-red-600 bg-red-100",
     },
   ];
 
@@ -119,18 +123,15 @@ export default function AdminReports({ darkMode }) {
     <div className="space-y-6">
       <div>
         <h1
-          className={`text-2xl font-bold ${
-            darkMode ? "text-white" : "text-black"
-          }`}
+          className={`text-2xl font-bold ${darkMode ? "text-white" : "text-black"}`}
         >
-          Reports
+          Admin Reports
         </h1>
         <p className="text-sm text-gray-500">
-          Analyze your customer data with detailed reports and insights
+          Full system analytics for users, projects, tasks, and productivity
         </p>
       </div>
 
-      {/* cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {reportStats.map((item) => {
           const Icon = item.icon;
@@ -144,26 +145,19 @@ export default function AdminReports({ darkMode }) {
                   : "bg-white border border-gray-100"
               }`}
             >
-              {/* LEFT */}
               <div>
                 <p
-                  className={`text-sm font-medium ${
-                    darkMode ? "text-gray-300" : "text-gray-500"
-                  }`}
+                  className={`text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-500"}`}
                 >
                   {item.title}
                 </p>
-
                 <h2
-                  className={`text-2xl font-bold mt-2 ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}
+                  className={`text-2xl font-bold mt-2 ${darkMode ? "text-white" : "text-black"}`}
                 >
                   {item.value}
                 </h2>
               </div>
 
-              {/* RIGHT ICON (centered like project cards) */}
               <div
                 className={`w-12 h-12 flex items-center justify-center rounded-xl ${item.iconBg}`}
               >
@@ -174,235 +168,53 @@ export default function AdminReports({ darkMode }) {
         })}
       </div>
 
-
-      
-
-      <div
-        className={`p-5 rounded-xl shadow-sm min-w-0 ${
-          darkMode
-            ? "bg-gray-700 border border-gray-600"
-            : "bg-white border border-gray-200"
-        }`}
-      >
-        <div className="flex items-center justify-between mb-5">
-          <h2
-            className={`text-xl font-semibold ${
-              darkMode ? "text-white" : "text-black"
-            }`}
-          >
-            Customer Growth
-          </h2>
-
-          <div
-            className={`flex items-center rounded-full p-1 ${
-              darkMode ? "bg-gray-600" : "bg-gray-100"
-            }`}
-          >
-            <button
-              onClick={() => setChartFilter("Monthly")}
-              className={`px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition ${
-                chartFilter === "Monthly"
-                  ? darkMode
-                    ? "bg-gray-500 text-white"
-                    : "bg-white text-gray-700 shadow-sm"
-                  : darkMode
-                    ? "text-gray-300"
-                    : "text-gray-500"
-              }`}
-            >
-              Monthly
-            </button>
-
-            <button
-              onClick={() => setChartFilter("Weekly")}
-              className={`px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition ${
-                chartFilter === "Weekly"
-                  ? darkMode
-                    ? "bg-gray-500 text-white"
-                    : "bg-white text-gray-700 shadow-sm"
-                  : darkMode
-                    ? "text-gray-300"
-                    : "text-gray-500"
-              }`}
-            >
-              Weekly
-            </button>
-          </div>
-        </div>
-
-        <div className="w-full h-[300px] min-w-0">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={growthData}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke={darkMode ? "#4b5563" : "#e5e7eb"}
-              />
-              <XAxis
-                dataKey="month"
-                stroke={darkMode ? "#d1d5db" : "#6b7280"}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                stroke={darkMode ? "#d1d5db" : "#6b7280"}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: darkMode ? "#374151" : "#ffffff",
-                  border: "none",
-                  borderRadius: "12px",
-                  color: darkMode ? "#ffffff" : "#111827",
-                  boxShadow: "0 4px 14px rgba(0,0,0,0.12)",
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="customers"
-                stroke="#0f766e"
-                strokeWidth={3}
-                dot={{
-                  r: 5,
-                  fill: "#ffffff",
-                  stroke: "#0f766e",
-                  strokeWidth: 3,
-                }}
-                activeDot={{ r: 6 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-w-0">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div
-          className={`lg:col-span-4 p-5 rounded-xl shadow-sm min-w-0 ${
+          className={`lg:col-span-6 p-5 rounded-xl shadow-sm ${
             darkMode
               ? "bg-gray-700 border border-gray-600"
               : "bg-white border border-gray-200"
           }`}
         >
           <h2
-            className={`text-xl font-semibold mb-4 ${
-              darkMode ? "text-white" : "text-black"
-            }`}
+            className={`text-xl font-semibold mb-4 ${darkMode ? "text-white" : "text-black"}`}
           >
-            Customers by Source
+            Task Status Distribution
           </h2>
 
-          <div className="flex items-center justify-between gap-4 min-w-0">
-            <div className="w-[170px] h-[170px] min-w-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={sourceData}
-                    dataKey="value"
-                    innerRadius={50}
-                    outerRadius={75}
-                    paddingAngle={3}
-                  >
-                    {sourceData.map((entry, index) => (
-                      <Cell key={index} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="space-y-4 min-w-0">
-              {sourceData.map((item, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <span
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: item.color }}
-                  ></span>
-                  <div>
-                    <p
-                      className={`text-sm ${
-                        darkMode ? "text-gray-300" : "text-gray-600"
-                      }`}
-                    >
-                      {item.name}
-                    </p>
-                    <p
-                      className={`font-semibold ${
-                        darkMode ? "text-white" : "text-black"
-                      }`}
-                    >
-                      {item.value}%
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div
-          className={`lg:col-span-4 p-5 rounded-xl shadow-sm min-w-0 ${
-            darkMode
-              ? "bg-gray-700 border border-gray-600"
-              : "bg-white border border-gray-200"
-          }`}
-        >
-          <h2
-            className={`text-xl font-semibold mb-4 ${
-              darkMode ? "text-white" : "text-black"
-            }`}
-          >
-            Top Customers
-          </h2>
-
-          <div
-            className={`grid grid-cols-[2fr_1fr_1fr] px-3 py-2 rounded-xl text-sm font-semibold ${
-              darkMode ? "bg-gray-600 text-white" : "bg-gray-100 text-gray-700"
-            }`}
-          >
-            <span>Name</span>
-            <span className="text-center">Orders</span>
-            <span className="text-right">Total</span>
-          </div>
-
-          <div className="space-y-2 mt-3">
-            {topCustomers.map((customer) => (
-              <div
-                key={customer.id}
-                className={`grid grid-cols-[2fr_1fr_1fr] items-center px-3 py-3 rounded-xl transition ${
-                  darkMode ? "hover:bg-gray-600" : "hover:bg-gray-100"
-                }`}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300 shrink-0">
-                    <img
-                      src={customer.image}
-                      alt={customer.name}
-                      className="w-full h-full object-cover object-top"
+          <div className="w-full h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={report.taskStatusChart}
+                  dataKey="value"
+                  innerRadius={65}
+                  outerRadius={100}
+                  paddingAngle={3}
+                >
+                  {report.taskStatusChart.map((entry, index) => (
+                    <Cell
+                      key={entry.name}
+                      fill={COLORS[index % COLORS.length]}
                     />
-                  </div>
-                  <span
-                    className={`font-medium truncate ${
-                      darkMode ? "text-white" : "text-black"
-                    }`}
-                  >
-                    {customer.name}
-                  </span>
-                </div>
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
 
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            {report.taskStatusChart.map((item, index) => (
+              <div key={item.name} className="flex items-center gap-2">
                 <span
-                  className={`text-center ${
-                    darkMode ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  {customer.orders}
-                </span>
-
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                ></span>
                 <span
-                  className={`text-right font-medium ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}
+                  className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"}`}
                 >
-                  {customer.total}
+                  {item.name}: {item.value}
                 </span>
               </div>
             ))}
@@ -410,108 +222,90 @@ export default function AdminReports({ darkMode }) {
         </div>
 
         <div
-          className={`lg:col-span-4 p-5 rounded-xl shadow-sm min-w-0 ${
+          className={`lg:col-span-6 p-5 rounded-xl shadow-sm ${
             darkMode
               ? "bg-gray-700 border border-gray-600"
               : "bg-white border border-gray-200"
           }`}
         >
           <h2
-            className={`text-xl font-semibold mb-4 ${
-              darkMode ? "text-white" : "text-black"
-            }`}
+            className={`text-xl font-semibold mb-4 ${darkMode ? "text-white" : "text-black"}`}
           >
-            Customer Locations
+            Project Progress
           </h2>
 
-          <div
-            className={`relative h-[280px] rounded-xl overflow-hidden ${
-              darkMode ? "bg-gray-600" : "bg-gray-100"
-            }`}
-          >
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg"
-              alt="World Map"
-              className="w-full h-full object-cover opacity-70"
-            />
-
-            <div className="absolute top-[28%] left-[22%]">
-              <MapPin size={24} className="text-[#0f766e] fill-[#0f766e]" />
-            </div>
-            <div className="absolute top-[58%] left-[42%]">
-              <MapPin size={24} className="text-[#0f766e] fill-[#0f766e]" />
-            </div>
-            <div className="absolute top-[28%] left-[58%]">
-              <MapPin size={24} className="text-[#0f766e] fill-[#0f766e]" />
-            </div>
-            <div className="absolute top-[30%] left-[82%]">
-              <MapPin size={24} className="text-[#0f766e] fill-[#0f766e]" />
-            </div>
-            <div className="absolute top-[70%] left-[90%]">
-              <MapPin size={24} className="text-[#0f766e] fill-[#0f766e]" />
-            </div>
+          <div className="w-full h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={report.productivityChart}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke={darkMode ? "#4b5563" : "#e5e7eb"}
+                />
+                <XAxis
+                  dataKey="name"
+                  stroke={darkMode ? "#d1d5db" : "#6b7280"}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  stroke={darkMode ? "#d1d5db" : "#6b7280"}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip cursor={false} formatter={() => null} />
+                <Bar
+                  dataKey="value"
+                  fill="#0f766e"
+                  radius={[6, 6, 0, 0]}
+                  barSize={30}
+                  minPointSize={0}
+                />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
+        </div>
+      </div>
 
-          <div className="mt-4 flex items-center justify-between">
-            <button
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition cursor-pointer ${
-                darkMode
-                  ? "bg-gray-600 text-white hover:bg-gray-500"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+      <div
+        className={`p-5 rounded-xl shadow-sm ${
+          darkMode
+            ? "bg-gray-700 border border-gray-600"
+            : "bg-white border border-gray-200"
+        }`}
+      >
+        <h2
+          className={`text-xl font-semibold mb-4 ${darkMode ? "text-white" : "text-black"}`}
+        >
+          Recent Activity
+        </h2>
+
+        <div className="space-y-3">
+          {recentActivities.length === 0 ? (
+            <p
+              className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-500"}`}
             >
-              Previous
-            </button>
-
-            <div className="flex items-center gap-2">
-              <button
-                className={`w-9 h-9 rounded-lg text-sm font-medium cursor-pointer ${
-                  darkMode
-                    ? "bg-gray-600 text-white"
-                    : "bg-gray-100 text-gray-700"
-                }`}
+              No recent activity found.
+            </p>
+          ) : (
+            recentActivities.map((activity, index) => (
+              <div
+                key={index}
+                className={`p-3 rounded-xl ${darkMode ? "bg-gray-600" : "bg-gray-50"}`}
               >
-                1
-              </button>
-              <button
-                className={`w-9 h-9 rounded-lg text-sm font-medium transition cursor-pointer ${
-                  darkMode
-                    ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                    : "bg-gray-50 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                2
-              </button>
-              <button
-                className={`w-9 h-9 rounded-lg text-sm font-medium transition cursor-pointer ${
-                  darkMode
-                    ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                    : "bg-gray-50 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                3
-              </button>
-              <button
-                className={`w-9 h-9 rounded-lg text-sm font-medium cursor-pointer ${
-                  darkMode
-                    ? "bg-gray-700 text-gray-300"
-                    : "bg-gray-50 text-gray-500"
-                }`}
-              >
-                ...
-              </button>
-            </div>
-
-            <button
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition cursor-pointer ${
-                darkMode
-                  ? "bg-gray-600 text-white hover:bg-gray-500"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              Next
-            </button>
-          </div>
+                <h3
+                  className={`font-medium ${darkMode ? "text-white" : "text-black"}`}
+                >
+                  {activity.title}
+                </h3>
+                <p
+                  className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                >
+                  {activity.description}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">{activity.date}</p>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

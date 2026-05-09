@@ -18,21 +18,24 @@ import com.clientcrew.repository.ProjectRepository;
 import com.clientcrew.repository.TaskRepository;
 import com.clientcrew.repository.UserRepository;
 
+import com.clientcrew.entity.ActivityType;
 @Service
 public class TaskService {
 
     private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final ActivityLogService activityLogService;
 
     public TaskService(TaskRepository taskRepository,
-                       ProjectRepository projectRepository,
-                       UserRepository userRepository) {
-        this.taskRepository = taskRepository;
-        this.projectRepository = projectRepository;
-        this.userRepository = userRepository;
-    }
-
+            ProjectRepository projectRepository,
+            UserRepository userRepository,
+            ActivityLogService activityLogService) {
+this.taskRepository = taskRepository;
+this.projectRepository = projectRepository;
+this.userRepository = userRepository;
+this.activityLogService = activityLogService;
+}
     public List<TaskResponse> getTasks(Authentication authentication) {
         User loggedInUser = getLoggedInUser(authentication);
 
@@ -112,12 +115,29 @@ public class TaskService {
         task.setStatus(request.getStatus());
         task.setDueDate(request.getDueDate());
 
-        return mapToResponse(taskRepository.save(task));
-    }
+        Task savedTask = taskRepository.save(task);
+
+        activityLogService.createActivity(
+                ActivityType.TASK_CREATED,
+                "TASK",
+                savedTask.getId(),
+                savedTask.getTitle(),
+                "Task Created",
+                loggedInUser.getUserFullName() + " created task " + savedTask.getTitle(),
+                null,
+                savedTask.getStatus().name(),
+                loggedInUser,
+                savedTask.getProject().getManagerEmail(),
+                savedTask.getProject().getCustomerEmail(),
+                savedTask.getAssignee().getUserEmail()
+        );
+
+        return mapToResponse(savedTask);    }
 
     public TaskResponse updateTask(Long id, TaskRequest request, Authentication authentication) {
         Task task = findTask(id);
         User loggedInUser = getLoggedInUser(authentication);
+        String oldStatus = task.getStatus().name();
 
         if (!(loggedInUser.getUserRole() == Role.ADMIN || loggedInUser.getUserRole() == Role.MANAGER)) {
             throw new AccessDeniedException("Only Admin or Manager can update tasks");
@@ -155,8 +175,24 @@ public class TaskService {
         task.setStatus(request.getStatus());
         task.setDueDate(request.getDueDate());
 
-        return mapToResponse(taskRepository.save(task));
-    }
+        Task savedTask = taskRepository.save(task);
+
+        activityLogService.createActivity(
+                ActivityType.TASK_UPDATED,
+                "TASK",
+                savedTask.getId(),
+                savedTask.getTitle(),
+                "Task Updated",
+                loggedInUser.getUserFullName() + " updated task " + savedTask.getTitle(),
+                oldStatus,
+                savedTask.getStatus().name(),
+                loggedInUser,
+                savedTask.getProject().getManagerEmail(),
+                savedTask.getProject().getCustomerEmail(),
+                savedTask.getAssignee().getUserEmail()
+        );
+
+        return mapToResponse(savedTask);    }
 
     public TaskResponse updateTaskStatus(Long id, TaskStatusRequest request, Authentication authentication) {
         Task task = findTask(id);
@@ -185,9 +221,28 @@ public class TaskService {
         }
 
         task.setStatus(newStatus);
+        String oldStatus = task.getStatus().name();
+        
 
-        return mapToResponse(taskRepository.save(task));
-    }
+        Task savedTask = taskRepository.save(task);
+
+        activityLogService.createActivity(
+                ActivityType.TASK_STATUS_CHANGED,
+                "TASK",
+                savedTask.getId(),
+                savedTask.getTitle(),
+                "Task Status Changed",
+                loggedInUser.getUserFullName() + " changed task status from "
+                        + oldStatus + " to " + newStatus.name(),
+                oldStatus,
+                newStatus.name(),
+                loggedInUser,
+                savedTask.getProject().getManagerEmail(),
+                savedTask.getProject().getCustomerEmail(),
+                savedTask.getAssignee().getUserEmail()
+        );
+
+        return mapToResponse(savedTask);    }
 
     public void deleteTask(Long id, Authentication authentication) {
         Task task = findTask(id);
@@ -261,4 +316,7 @@ public class TaskService {
 
         return response;
     }
+    
+    
+    
 }

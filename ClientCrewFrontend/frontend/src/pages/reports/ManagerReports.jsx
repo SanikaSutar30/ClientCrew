@@ -1,132 +1,89 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import { FolderKanban, CheckCircle2, Clock3, Users } from "lucide-react";
+
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
   PieChart,
   Pie,
   Cell,
   BarChart,
   Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
 } from "recharts";
 
+import { getReportsDashboard } from "../../services/reportService";
+
 export default function ManagerReports({ darkMode }) {
-  const [performanceFilter, setPerformanceFilter] = useState("Monthly");
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const monthlyPerformanceData = [
-    { name: "Jan", completed: 12, pending: 6 },
-    { name: "Feb", completed: 18, pending: 8 },
-    { name: "Mar", completed: 22, pending: 7 },
-    { name: "Apr", completed: 26, pending: 6 },
-    { name: "May", completed: 30, pending: 5 },
-    { name: "Jun", completed: 34, pending: 4 },
-  ];
+  const COLORS = ["#22c55e", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
 
-  const weeklyPerformanceData = [
-    { name: "W1", completed: 6, pending: 3 },
-    { name: "W2", completed: 8, pending: 2 },
-    { name: "W3", completed: 10, pending: 2 },
-    { name: "W4", completed: 12, pending: 1 },
-  ];
+  useEffect(() => {
+    fetchReport();
+  }, []);
 
-  const performanceData =
-    performanceFilter === "Monthly"
-      ? monthlyPerformanceData
-      : weeklyPerformanceData;
+  const fetchReport = async () => {
+    try {
+      const data = await getReportsDashboard();
+      setReport(data);
+    } catch (error) {
+      console.error("Failed to load manager reports:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const projectStatusData = [
-    { name: "Completed", value: 45, color: "#22c55e" },
-    { name: "In Progress", value: 35, color: "#3b82f6" },
-    { name: "On Hold", value: 12, color: "#f59e0b" },
-    { name: "Planning", value: 8, color: "#8b5cf6" },
-  ];
+  if (loading) {
+    return (
+      <p className={darkMode ? "text-white" : "text-gray-700"}>
+        Loading manager reports...
+      </p>
+    );
+  }
 
-  const teamMembers = [
-    { name: "Amit", tasks: 18 },
-    { name: "Priya", tasks: 22 },
-    { name: "Rahul", tasks: 16 },
-    { name: "Neha", tasks: 20 },
-  ];
+  if (!report) {
+    return <p className="text-red-500">Failed to load manager reports.</p>;
+  }
 
-  const recentProjects = [
-    {
-      id: 1,
-      name: "CRM Dashboard",
-      client: "ABC Corp",
-      status: "In Progress",
-    },
-    {
-      id: 2,
-      name: "HR Management",
-      client: "TechNova",
-      status: "Completed",
-    },
-    {
-      id: 3,
-      name: "Inventory System",
-      client: "RetailPro",
-      status: "On Hold",
-    },
-    {
-      id: 4,
-      name: "Project Tracker",
-      client: "Buildify",
-      status: "Planning",
-    },
-  ];
+  const summary = report.summary;
+
+  const recentActivities = report.recentActivities || [];
 
   const managerStats = [
     {
       title: "Assigned Projects",
-      value: "24",
+      value: summary.totalProjects,
       icon: FolderKanban,
       iconBg: "bg-blue-100",
       iconColor: "text-blue-600",
-      changeClass: "text-green-600 bg-green-100",
     },
     {
       title: "Completed Tasks",
-      value: "148",
+      value: summary.completedTasks,
       icon: CheckCircle2,
       iconBg: "bg-green-100",
       iconColor: "text-green-600",
-      changeClass: "text-green-600 bg-green-100",
     },
     {
       title: "Pending Tasks",
-      value: "32",
+      value: summary.pendingTasks,
       icon: Clock3,
       iconBg: "bg-orange-100",
       iconColor: "text-orange-600",
-      changeClass: "text-red-600 bg-red-100",
     },
     {
-      title: "Team Members",
-      value: "12",
+      title: "Total Tasks",
+      value: summary.totalTasks,
       icon: Users,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      changeClass: "text-green-600 bg-green-100",
     },
   ];
-
-  const getStatusClasses = (status) => {
-    switch (status) {
-      case "Completed":
-        return "bg-green-100 text-green-600";
-      case "In Progress":
-        return "bg-blue-100 text-blue-600";
-      case "On Hold":
-        return "bg-orange-100 text-orange-600";
-      default:
-        return "bg-purple-100 text-purple-600";
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -139,12 +96,9 @@ export default function ManagerReports({ darkMode }) {
           Manager Reports
         </h1>
         <p className="text-sm text-gray-500">
-          Track team performance, project progress, and task completion
+          Track your team projects, task progress, and workload analytics
         </p>
       </div>
-
-      
-      {/* cards */}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {managerStats.map((item) => {
@@ -159,7 +113,6 @@ export default function ManagerReports({ darkMode }) {
                   : "bg-white border border-gray-100"
               }`}
             >
-              {/* LEFT */}
               <div>
                 <p
                   className={`text-sm font-medium ${
@@ -178,7 +131,6 @@ export default function ManagerReports({ darkMode }) {
                 </h2>
               </div>
 
-              {/* RIGHT ICON */}
               <div
                 className={`w-12 h-12 flex items-center justify-center rounded-xl ${item.iconBg}`}
               >
@@ -187,105 +139,6 @@ export default function ManagerReports({ darkMode }) {
             </div>
           );
         })}
-      </div>  
-
-
-
-      <div
-        className={`p-5 rounded-xl shadow-sm min-w-0 ${
-          darkMode
-            ? "bg-gray-700 border border-gray-600"
-            : "bg-white border border-gray-200"
-        }`}
-      >
-        <div className="flex items-center justify-between mb-5">
-          <h2
-            className={`text-xl font-semibold ${
-              darkMode ? "text-white" : "text-black"
-            }`}
-          >
-            Team Performance
-          </h2>
-
-          <div
-            className={`flex items-center rounded-full p-1 ${
-              darkMode ? "bg-gray-600" : "bg-gray-100"
-            }`}
-          >
-            <button
-              onClick={() => setPerformanceFilter("Monthly")}
-              className={`px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition ${
-                performanceFilter === "Monthly"
-                  ? darkMode
-                    ? "bg-gray-500 text-white"
-                    : "bg-white text-gray-700 shadow-sm"
-                  : darkMode
-                    ? "text-gray-300"
-                    : "text-gray-500"
-              }`}
-            >
-              Monthly
-            </button>
-
-            <button
-              onClick={() => setPerformanceFilter("Weekly")}
-              className={`px-4 py-1.5 cursor-pointer rounded-full text-sm font-medium transition ${
-                performanceFilter === "Weekly"
-                  ? darkMode
-                    ? "bg-gray-500 text-white"
-                    : "bg-white text-gray-700 shadow-sm"
-                  : darkMode
-                    ? "text-gray-300"
-                    : "text-gray-500"
-              }`}
-            >
-              Weekly
-            </button>
-          </div>
-        </div>
-
-        <div className="w-full h-[300px] min-w-0">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={performanceData}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke={darkMode ? "#4b5563" : "#e5e7eb"}
-              />
-              <XAxis
-                dataKey="name"
-                stroke={darkMode ? "#d1d5db" : "#6b7280"}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                stroke={darkMode ? "#d1d5db" : "#6b7280"}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: darkMode ? "#374151" : "#ffffff",
-                  border: "none",
-                  borderRadius: "12px",
-                  color: darkMode ? "#ffffff" : "#111827",
-                  boxShadow: "0 4px 14px rgba(0,0,0,0.12)",
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="completed"
-                stroke="#22c55e"
-                strokeWidth={3}
-              />
-              <Line
-                type="monotone"
-                dataKey="pending"
-                stroke="#f59e0b"
-                strokeWidth={3}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-w-0">
@@ -301,54 +154,48 @@ export default function ManagerReports({ darkMode }) {
               darkMode ? "text-white" : "text-black"
             }`}
           >
-            Project Status
+            Task Status
           </h2>
 
-          <div className="flex items-center justify-between gap-4 min-w-0">
-            <div className="w-[170px] h-[170px] min-w-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={projectStatusData}
-                    dataKey="value"
-                    innerRadius={50}
-                    outerRadius={75}
-                    paddingAngle={3}
-                  >
-                    {projectStatusData.map((entry, index) => (
-                      <Cell key={index} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+          <div className="w-full h-[230px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={report.taskStatusChart}
+                  dataKey="value"
+                  innerRadius={55}
+                  outerRadius={85}
+                  paddingAngle={3}
+                >
+                  {report.taskStatusChart.map((entry, index) => (
+                    <Cell
+                      key={entry.name}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
 
-            <div className="space-y-4 min-w-0">
-              {projectStatusData.map((item, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <span
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: item.color }}
-                  ></span>
-                  <div>
-                    <p
-                      className={`text-sm ${
-                        darkMode ? "text-gray-300" : "text-gray-600"
-                      }`}
-                    >
-                      {item.name}
-                    </p>
-                    <p
-                      className={`font-semibold ${
-                        darkMode ? "text-white" : "text-black"
-                      }`}
-                    >
-                      {item.value}%
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="space-y-3 mt-4">
+            {report.taskStatusChart.map((item, index) => (
+              <div key={item.name} className="flex items-center gap-3">
+                <span
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                ></span>
+                <p
+                  className={`text-sm ${
+                    darkMode ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  {item.name}:{" "}
+                  <span className="font-semibold">{item.value}</span>
+                </p>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -364,12 +211,12 @@ export default function ManagerReports({ darkMode }) {
               darkMode ? "text-white" : "text-black"
             }`}
           >
-            Team Workload
+            Project Progress
           </h2>
 
-          <div className="w-full h-[250px] min-w-0">
+          <div className="w-full h-[280px] min-w-0">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={teamMembers}>
+              <BarChart data={report.productivityChart}>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke={darkMode ? "#4b5563" : "#e5e7eb"}
@@ -385,16 +232,14 @@ export default function ManagerReports({ darkMode }) {
                   tickLine={false}
                   axisLine={false}
                 />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: darkMode ? "#374151" : "#ffffff",
-                    border: "none",
-                    borderRadius: "12px",
-                    color: darkMode ? "#ffffff" : "#111827",
-                    boxShadow: "0 4px 14px rgba(0,0,0,0.12)",
-                  }}
+                <Tooltip cursor={false} formatter={() => null} />
+                <Bar
+                  dataKey="value"
+                  fill="#0f766e"
+                  radius={[6, 6, 0, 0]}
+                  barSize={30}
+                  minPointSize={0}
                 />
-                <Bar dataKey="tasks" fill="#3b82f6" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -412,45 +257,42 @@ export default function ManagerReports({ darkMode }) {
               darkMode ? "text-white" : "text-black"
             }`}
           >
-            Recent Projects
+            Recent Activity
           </h2>
 
           <div className="space-y-3">
-            {recentProjects.map((project) => (
-              <div
-                key={project.id}
-                className={`p-3 rounded-xl ${
-                  darkMode ? "bg-gray-600" : "bg-gray-50"
-                }`}
+            {recentActivities.length === 0 ? (
+              <p
+                className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-500"}`}
               >
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <h3
-                      className={`font-medium ${
-                        darkMode ? "text-white" : "text-black"
-                      }`}
-                    >
-                      {project.name}
-                    </h3>
-                    <p
-                      className={`text-sm ${
-                        darkMode ? "text-gray-300" : "text-gray-500"
-                      }`}
-                    >
-                      {project.client}
-                    </p>
-                  </div>
-
-                  <span
-                    className={`text-xs font-semibold px-3 py-1 rounded-full ${getStatusClasses(
-                      project.status,
-                    )}`}
+                No recent activity found.
+              </p>
+            ) : (
+              recentActivities.map((activity, index) => (
+                <div
+                  key={index}
+                  className={`p-3 rounded-xl ${
+                    darkMode ? "bg-gray-600" : "bg-gray-50"
+                  }`}
+                >
+                  <h3
+                    className={`font-medium ${
+                      darkMode ? "text-white" : "text-black"
+                    }`}
                   >
-                    {project.status}
-                  </span>
+                    {activity.title}
+                  </h3>
+                  <p
+                    className={`text-sm ${
+                      darkMode ? "text-gray-300" : "text-gray-500"
+                    }`}
+                  >
+                    {activity.description}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">{activity.date}</p>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>

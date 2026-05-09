@@ -83,6 +83,6 @@ public class EmployeeController {
                 .getAuthority()
                 .replace("ROLE_", "");
 
-        employeeService.deleteEmployee(userId, role);
-    }
+        String email = authentication.getName();
+        employeeService.deleteEmployee(userId, role, email);    }
 }
