@@ -18,6 +18,17 @@ import { useNavigate } from "react-router-dom";
 import { logoutUser } from "../../services/api";
 import LogoutConfirmModal from "../../pages/LogoutConfirmModal";
 
+import {
+  getRecentMessages,
+  getUnreadMessageCount,
+} from "../../services/messageService";
+
+import {
+  getActivities,
+  markActivityAsRead,
+  markAllActivitiesAsRead,
+} from "../../services/activityService";
+
 function Topbar({
   darkMode,
   setDarkMode,
@@ -26,8 +37,10 @@ function Topbar({
   userRole,
 }) {
   const navigate = useNavigate();
+
   const userName = localStorage.getItem("userName");
   const userEmail = localStorage.getItem("userEmail");
+
   const roleLabelMap = {
     Admin: "Administrator",
     Manager: "Manager",
@@ -40,27 +53,32 @@ function Topbar({
   const displayRole = roleLabelMap[userRole] || userRole || "User";
 
   const isAdmin = userRole === "Admin";
+
   const canAccessMessages = [
     "Admin",
     "Manager",
     "Employee",
     "Customer",
   ].includes(userRole);
+
   const canAccessNotifications = [
     "Admin",
     "Manager",
     "Employee",
     "Customer",
   ].includes(userRole);
+
   const canAccessProfile = [
     "Admin",
     "Manager",
     "Employee",
     "Customer",
   ].includes(userRole);
+
   const canAccessHelp = ["Admin", "Manager", "Employee", "Customer"].includes(
     userRole,
   );
+
   const canAccessSettings = isAdmin;
 
   const [showNotifications, setShowNotifications] = useState(false);
@@ -68,11 +86,44 @@ function Topbar({
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  const [recentMessages, setRecentMessages] = useState([]);
+  const [messageUnreadCount, setMessageUnreadCount] = useState(0);
+
   const messageRef = useRef(null);
   const notificationRef = useRef(null);
   const profileRef = useRef(null);
 
   const unreadCount = notifications.filter((item) => !item.isRead).length;
+
+  const formatMessageTime = (dateValue) => {
+    if (!dateValue) return "--";
+
+    return new Date(dateValue).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const loadTopbarMessages = async () => {
+    try {
+      const recentData = await getRecentMessages();
+      const unreadData = await getUnreadMessageCount();
+
+      setRecentMessages(recentData);
+      setMessageUnreadCount(unreadData);
+    } catch (error) {
+      console.error("Failed to load topbar messages:", error);
+    }
+  };
+
+  const loadTopbarNotifications = async () => {
+    try {
+      const data = await getActivities();
+      setNotifications(data);
+    } catch (error) {
+      console.error("Failed to load topbar notifications:", error);
+    }
+  };
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -99,37 +150,82 @@ function Topbar({
     };
   }, []);
 
-  const handleNotificationClick = (item) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n)),
-    );
+  useEffect(() => {
+    if (canAccessMessages) {
+      loadTopbarMessages();
+    }
+  }, [canAccessMessages]);
 
-    setShowNotifications(false);
+  useEffect(() => {
+    if (canAccessNotifications) {
+      loadTopbarNotifications();
+    }
 
-    if (item.link) {
-      navigate(item.link);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canAccessNotifications]);
+
+  const handleNotificationClick = async (item) => {
+    try {
+      await markActivityAsRead(item.id);
+
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n)),
+      );
+
+      setShowNotifications(false);
+
+      if (item.moduleName === "Messages" || item.moduleName === "MESSAGE") {
+        navigate("/messages");
+        return;
+      }
+
+      if (item.link) {
+        navigate(item.link);
+      }
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
     }
   };
 
-  const handleMarkAllAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((item) => ({
-        ...item,
-        isRead: true,
-      })),
-    );
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllActivitiesAsRead();
+
+      setNotifications((prev) =>
+        prev.map((item) => ({
+          ...item,
+          isRead: true,
+        })),
+      );
+    } catch (error) {
+      console.error("Failed to mark all notifications as read:", error);
+    }
   };
 
   const handleMessageClick = (msg) => {
     setShowMessages(false);
-    navigate("/messages", { state: { selectedChat: msg } });
+
+    navigate("/messages", {
+      state: {
+        selectedChat: {
+          userId: msg.senderId,
+          name: msg.senderName,
+        },
+      },
+    });
   };
 
   const typeIcons = {
-    security: <ShieldCheck size={16} />,
-    report: <FileText size={16} />,
-    login: <Key size={16} />,
-    customer: <User size={16} />,
+    SECURITY: <ShieldCheck size={16} />,
+    REPORT: <FileText size={16} />,
+    AUTH: <Key size={16} />,
+    CUSTOMER: <User size={16} />,
+    USER: <User size={16} />,
+    PROJECT: <FileText size={16} />,
+    TASK: <FileText size={16} />,
+    EMPLOYEE: <User size={16} />,
+    TEAM: <User size={16} />,
+    MESSAGE: <MessageCircle size={16} />,
   };
 
   const renderTypeIcon = (type) => typeIcons[type] || <Bell size={16} />;
@@ -154,6 +250,7 @@ function Topbar({
     sessionStorage.clear();
     navigate("/login");
   };
+
   return (
     <div
       className={`h-16 w-full shrink-0 flex items-center justify-between px-6 ${
@@ -180,10 +277,17 @@ function Topbar({
                 setShowMessages((prev) => !prev);
                 setShowNotifications(false);
                 setShowProfileMenu(false);
+                loadTopbarMessages();
               }}
-              className="bg-white p-2 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50"
+              className="relative bg-white p-2 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50"
             >
               <MessageCircle size={18} />
+
+              {messageUnreadCount > 0 && (
+                <span className="absolute top-0.5 right-0.5 bg-red-500 text-white text-[10px] min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full">
+                  {messageUnreadCount}
+                </span>
+              )}
             </div>
 
             {showMessages && (
@@ -191,57 +295,53 @@ function Topbar({
                 <p className="text-sm font-semibold mb-2 text-gray-800">
                   Messages
                 </p>
-                <div className="space-y-3">
-                  {[
-                    {
-                      name: "Biplab Roy",
-                      message: "Sounds good! Let's schedule...",
-                      time: "2h ago",
-                      unread: 2,
-                    },
-                    {
-                      name: "John Doe",
-                      message: "Please send latest report",
-                      time: "4h ago",
-                      unread: 1,
-                    },
-                  ].map((msg, index) => (
-                    <div
-                      key={index}
-                      onClick={() => handleMessageClick(msg)}
-                      className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-gray-300"></div>
 
-                        <div>
-                          <p className="text-sm font-medium text-gray-800">
-                            {msg.name}
+                <div className="space-y-3">
+                  {recentMessages.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center py-4">
+                      No recent messages
+                    </p>
+                  ) : (
+                    recentMessages.slice(0, 5).map((msg) => (
+                      <div
+                        key={msg.messageId}
+                        onClick={() => handleMessageClick(msg)}
+                        className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-9 h-9 rounded-full bg-gray-300 shrink-0"></div>
+
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-800 truncate">
+                              {msg.senderName}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate w-32">
+                              {msg.content}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <p className="text-xs text-gray-400">
+                            {formatMessageTime(msg.sentAt)}
                           </p>
-                          <p className="text-xs text-gray-500 truncate w-32">
-                            {msg.message}
-                          </p>
+
+                          {!msg.readStatus && (
+                            <span className="bg-[#0f766e] text-white text-xs px-2 py-0.5 rounded-full">
+                              new
+                            </span>
+                          )}
                         </div>
                       </div>
-
-                      <div className="text-right">
-                        <p className="text-xs text-gray-400">{msg.time}</p>
-
-                        {msg.unread > 0 && (
-                          <span className="bg-[#0f766e] text-white text-xs px-2 py-0.5 rounded-full">
-                            {msg.unread}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
 
                   <button
                     onClick={() => {
                       setShowMessages(false);
                       navigate("/messages");
                     }}
-                    className="w-full text-sm text-[#0f766e] font-medium  cursor-pointer hover:underline mt-2"
+                    className="w-full text-sm text-[#0f766e] font-medium cursor-pointer hover:underline mt-2"
                   >
                     See all messages
                   </button>
@@ -300,15 +400,34 @@ function Topbar({
                       >
                         <div className="flex items-start gap-3 min-w-0">
                           <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center shrink-0 text-sm">
-                            {renderTypeIcon(item.type)}
+                            {renderTypeIcon(item.moduleName)}
                           </div>
 
                           <div className="min-w-0">
-                            <p className="text-sm text-gray-800 truncate">
-                              {item.message}
+                            <p className="text-sm font-medium text-gray-800 truncate">
+                              {item.activityType === "MESSAGE_SENT" &&
+                              item.targetUserEmail ===
+                                localStorage.getItem("userEmail")
+                                ? "New message received"
+                                : item.title}
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {item.time}
+                            <p className="text-xs text-gray-500 truncate w-52">
+                              {item.activityType === "MESSAGE_SENT" &&
+                              item.targetUserEmail ===
+                                localStorage.getItem("userEmail")
+                                ? `${item.performedByName} sent you a message`
+                                : item.description}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              {new Date(item.createdAt).toLocaleString(
+                                "en-IN",
+                                {
+                                  day: "2-digit",
+                                  month: "short",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}
                             </p>
                           </div>
                         </div>
@@ -449,7 +568,7 @@ function Topbar({
                       setShowProfileMenu(false);
                       setShowLogoutModal(true);
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-3 text-left text-red-500 hover:bg-red-50 rounded-xl "
+                    className="w-full flex items-center gap-3 px-3 py-3 text-left text-red-500 hover:bg-red-50 rounded-xl"
                   >
                     <LogOut size={20} />
                     <span className="text-sm font-semibold">Logout</span>

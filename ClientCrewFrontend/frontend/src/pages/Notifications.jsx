@@ -102,6 +102,7 @@ export default function Notifications() {
       case "SETTINGS":
         return "/settings";
       case "MESSAGE":
+      case "Messages":
         return "/messages";
       default:
         return null;
@@ -146,6 +147,7 @@ export default function Notifications() {
       case "SETTINGS":
         return <Settings size={18} />;
       case "MESSAGE":
+      case "Messages":
         return <MessageSquare size={18} />;
       case "SECURITY":
         return <Shield size={18} />;
@@ -292,7 +294,10 @@ export default function Notifications() {
                         darkMode ? "text-white" : "text-gray-800"
                       }`}
                     >
-                      {item.title}
+                      {item.activityType === "MESSAGE_SENT" &&
+                      item.targetUserEmail === localStorage.getItem("userEmail")
+                        ? "New message received"
+                        : item.title}
                     </p>
 
                     <p
@@ -300,7 +305,10 @@ export default function Notifications() {
                         darkMode ? "text-gray-300" : "text-gray-500"
                       }`}
                     >
-                      {item.description}
+                      {item.activityType === "MESSAGE_SENT" &&
+                      item.targetUserEmail === localStorage.getItem("userEmail")
+                        ? `${item.performedByName} sent you a message`
+                        : item.description}
                     </p>
 
                     <p
